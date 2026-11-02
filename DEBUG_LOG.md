@@ -516,3 +516,11 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **Cable routes found by a search instead of drawn:** the closed case becomes a 0.5 mm voxel map: sections of the shell, cover, board parts, the largest plausible battery and the speaker, filled layer by layer. A distance transform gives every voxel's room. Dijkstra's shortest path then runs through the voxels with room for each cable (2.8 mm speaker cable, 2.5 mm battery pair), from where each cable leaves its part to its plug.
 - **Every number new in the README since session 3** is listed automatically, and each must be traced to `case.py`, a check's result or a measurement by a written rule.
 - **The cover closing with its load:** the largest battery in each corner of its bay, the speaker in each corner of its pocket, and the spare-cable loop are swept straight down the last 20 mm with the cover (exact convex sweeps). They must miss the board and the shell.
+
+**Result of round 31 (all scripts, rounds 1–31):** 344 checks passed, the same 4 SKIPPED, 0 problems in any script. **Not clean:** reading the README and both guides against the design turned up the following.
+
+**Mistakes found and fixed (documentation):**
+- **Nothing said which way to turn the back cover over with the wires plugged in.** The battery wire has only about 16 mm to spare (round 30). Turning the cover over its top edge would swing the battery's wire end about 115 mm away from the BAT plug and yank it. The README and both guides now say to turn it over like the page of a book along the bottom edge, where the wires run, then hold it over the shell with the tab above the dial slot and lower it straight down.
+- **In both guides, pre-cutting the threads was in step 5,** after the case is closed in step 4. It said "before closing the case (step 4)", but a reader following the steps reaches it too late, and with PLA pre-cutting matters more. It is now the first thing in step 4; step 5 only drives the screws. The print section points to step 4.
+- The README said "Neither can rattle", which is only true once the battery and speaker are taped in. It now says so.
+- The fig3 legend said the tab goes in "first", which no longer matches the straight-down instruction.
