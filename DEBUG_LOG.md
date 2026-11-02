@@ -556,3 +556,9 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **Nothing checked how close the cables come to the antenna.** Moving the spare-cable loop next to the antenna end, clear of everything else, got past every check. The README tells you to keep it away, but no check held the design to that. Round 14 now requires the cable routes and the loop to stay 5 mm (in plan) from the antenna end. The loop in the design is 5.1 mm away. With that, all 5 mistakes are caught.
 
 **Check bug:** round 28 crashed in the copy because the copy had no `preview/` folder for its review image. The copy now gets one.
+
+## Round 34: different methods
+**New methods:**
+- **Volume accounting against session 3:** session 3's back cover is read from git. With the screw blocks left out of both, its volume change must equal what this session's features add and remove, worked out by hand from their sizes: the new guide bars and brackets added, the slots cut out, the old guide bars removed and the 28 old grille holes filled in. Any change nobody intended would show up as a difference.
+- **Pictures and the text that points at them:** in both guides every marker must be in its picture's legend and every legend entry must have a marker, and "marked 3 in the picture above" must point at the foam.
+- **Is the measured battery a possible battery?** 1500 mAh at 3.7 V in the measured volume must give an energy density real LiPo pouch cells have (300–750 Wh/L).
