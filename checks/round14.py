@@ -2,7 +2,9 @@
 """Debug round 14: methods not used in rounds 1-13 (battery layout).
 
 1. Antenna keep-out: metal parts (battery, speaker) must stay at least 6 mm, in plan, from the
-   ESP32 module's antenna end, and away from it in height too
+   ESP32 module's antenna end, and away from it in height too; the cables (both routes and the spare
+   speaker-cable loop) at least 5 mm (added in round 33, when a deliberate mistake moving the loop onto
+   the antenna end got past every check)
 2. Monte Carlo over real part sizes: batteries within the measuring error of the owner's cell, up to
    the largest plausible one (anywhere the guides let them sit), and speakers within 0.5 mm of the
    owner's (anywhere the brackets let them sit) must clear the cover, the guides and each other
@@ -49,6 +51,13 @@ def antenna():
     report(g_s >= 6.0 and g_b >= 6.0, f"antenna keep-out (estimated antenna at x {case.ANTENNA[0]}-{case.ANTENNA[1]}, "
                                       f"y {case.ANTENNA[2]}-{case.ANTENNA[3]}): speaker space {g_s:.1f} mm away, "
                                       f"battery bay {g_b:.1f} mm away (want >= 6)")
+    gaps = {}
+    for label, (pts, r) in (("battery wire", case.battery_wire_route()), ("speaker cable", case.speaker_wire_route()),
+                            ("spare-cable loop", case.speaker_cable_coil())):
+        p = np.asarray(pts, float)
+        gaps[label] = min(plan_gap((x - r, x + r, y - r, y + r), case.ANTENNA) for x, y, _ in p)
+    report(min(gaps.values()) >= 5.0, f"cables keep 5 mm (in plan) from the antenna end: "
+                                      + ", ".join(f"{k} {v:.1f} mm" for k, v in gaps.items()))
 
 
 # ------------------------------------------------------------------ 2

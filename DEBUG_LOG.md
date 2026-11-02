@@ -426,7 +426,7 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 **What changed in the design:**
 - **Battery bay:** 66 x 44 mm (sized for the largest cell Waveshare's photo allowed) → **62.5 x 42.5 mm** for your 61.1 x 40.7 x 4.3 mm cell. Your cell could slide 2.5 mm before; now it can slide about 0.9 mm. It has guide bars on all four sides, not one short bar per side. The bars skip the screw blocks and leave every corner open for the wire.
 - **Speaker:** the old 14 x 19 x 4.5 mm space (from an 18 x 13 x 3.5 mm guess) → a **pocket for your 14.2 x 10.2 x 4.5 mm speaker** with four corner brackets. It is 7.9 mm from the antenna (was 6.5).
-- **Grille:** 28 round holes in a 12 x 17 mm oval, larger than your speaker → **three 1.0 x 7.0 mm slots under its membrane**. 7 of the old holes would have been outside your speaker altogether, so the sound from the back of the cone would have leaked out round it and cancelled bass. 11 more would have sat under its frame and gasket instead of the membrane.
+- **Grille:** 28 round holes in a 12 x 17 mm oval, larger than your speaker → **three slots, 7.0 mm long, under its membrane** (1.0 mm wide at first, 0.9 mm since round 33). 7 of the old holes would have been outside your speaker altogether, so the sound from the back of the cone would have leaked out round it and cancelled bass. 11 more would have sat under its frame and gasket instead of the membrane.
 - **Screw pilots 1.7 → 1.8 mm** for PLA: forming the thread strains the block walls about a third less. Pull-out by round 22's model: about 73 N per screw.
 - **Wire routes and a loop for the spare speaker cable** are now in `case.py`, so the checks and the guide's pictures use the same ones.
 
@@ -533,3 +533,26 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **Sound, a textbook estimate:** the grille's open area against the membrane, and the Helmholtz resonance of the air in front of the membrane, with the slots as its neck.
 
 **Check bug found while writing it:** the first windows for the bay's inner faces were shorter than the guide bars. The slicer's lines run the bars' whole length, so no line fitted inside a window and the bay read as "nan". Each window now holds one whole bar.
+
+**Results:**
+- As sliced, the bay is 62.50 x 42.50 mm at all three layer heights. The pocket is 11.10–11.20 x 15.18–15.29 mm, leaving your speaker about 0.45–0.5 mm a side.
+- The steps are in the right order in all three documents.
+- The grille is 35 % open over the membrane, and the air in front of it resonates at about 15 kHz, above what this speaker plays.
+
+**Result of round 32 (all scripts, rounds 1–32):** 346 checks passed, the same 4 SKIPPED. **Clean** for the case and its documentation: no mistake in either was found, by the scripts or by reading. One script problem was a check bug.
+
+**Check bug:** round 31's README inventory had no rule for the "16 mm to spare" added in round 31's fixes. The number is right: round 30's 54 mm battery wire minus round 13's 38 mm route. The inventory now works it out from those two results.
+
+## Round 33: different methods
+**New methods:**
+- **Can the new checks fail?** In a copy of the project, 5 deliberate mistakes are made in `case.py`, one at a time, and the STLs rebuilt there. The session-4 check meant to catch each one must then report a problem. The mistakes are: a bay 1.5 mm too short, a pocket 1 mm too narrow, slots 2 mm off the membrane, bracket legs 3 mm long, and the spare-cable loop moved next to the antenna.
+- **The two guides side by side:** every field of the English and the Bulgarian text must have the same shape (rows, bullets, legends) and the same numbers in the same order.
+- **Margins against small changes:** each new dimension (bay, pocket, bracket legs, slot pitch and length, cable exit) is moved 0.1 mm either way. Every session-4 margin must stay at or above its limit.
+
+**Mistake found and fixed (design):**
+- **The grille sat on the edge of two limits.** Its webs were exactly the 0.8 mm minimum, and with the speaker pushed fully to one side the outer slot came within 0.08 mm of the membrane's measured edge. Moving the slots 0.1 mm took both below zero. The slots are now 0.9 mm wide on the same 1.8 mm pitch: 0.9 mm webs, 0.13 mm more room at the membrane's edge, still 32 % open (Helmholtz resonance still about 15 kHz). The back cover STL changed.
+
+**Check gap found by the deliberate mistakes:**
+- **Nothing checked how close the cables come to the antenna.** Moving the spare-cable loop next to the antenna end, clear of everything else, got past every check. The README tells you to keep it away, but no check held the design to that. Round 14 now requires the cable routes and the loop to stay 5 mm (in plan) from the antenna end. The loop in the design is 5.1 mm away. With that, all 5 mistakes are caught.
+
+**Check bug:** round 28 crashed in the copy because the copy had no `preview/` folder for its review image. The copy now gets one.

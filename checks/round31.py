@@ -124,12 +124,15 @@ def readme_inventory():
     import round13
     import round28
     import round29
+    import round30
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         round13.wires()
         round13.battery_drop()
         got = round28.sizes()
+        round30.cable_lengths()
     out = buf.getvalue()
+    traced_bat = int(re.search(r"battery wire (\d+) mm for a", out).group(1))
     lb, ls = (int(v) for v in re.findall(r"about (\d+) mm long", out)[:2])
     loop = int(re.search(r"holds about (\d+) mm of cable", out).group(1))
     slide = float(re.search(r"slide at most ([\d.]+) mm", out).group(1))
@@ -149,7 +152,8 @@ def readme_inventory():
         f1(case.ANTENNA[0] - (case.SPEAKER["battery"][0] + pw / 2)): "pocket to antenna",
         "1.7": "the old pilot it is compared with", "70": "pull-out per screw (round 22: 73 N)",
         "10": "speaker cable 10-11 cm / membrane 10.1", "11": "speaker cable 10-11 cm",
-        "54": "battery wire length (round 30)", "2.9": "cable exit from the peg end (SPK_CABLE_EXIT)",
+        str(traced_bat): "battery wire length (round 30)", "2.9": "cable exit from the peg end (SPK_CABLE_EXIT)",
+        str(traced_bat - lb): "battery wire to spare (round 30's length minus round 13's route)",
         "1.6": "peg protrusion (round 28)", f1(case.BATTERY_GUIDE[1]): "guide height",
         "10.1": "membrane length (round 28)", "5.8": "membrane width (round 28 / SPEAKER_WINDOW)",
         "0.3": "measuring error / membrane centring", "17": "fewest ticks per photo (round 28)",

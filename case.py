@@ -82,7 +82,7 @@ SPK_ROOM = tuple((b - s) / 2 for b, s in zip(SPEAKER_BOX["battery"][:2], SPEAKER
 SPEAKER = {"battery": (80.0, 15.5)}       # pocket centre
 SPK_BRACKET = (1.2, 2.0, 2.0, 1.2)        # corner brackets: wall, height, leg along the short / long sides
 SPK_CABLE_EXIT = 2.9                      # cable centre from the peg's end, along the long side
-GRILLE_SLOTS = (1.0, 7.0, 1.8)            # three slots along y: width, length, pitch (0.8 mm webs)
+GRILLE_SLOTS = (0.9, 7.0, 1.8)            # three slots along y: width, length, pitch (0.9 mm webs)
 ANTENNA = (93.5, 99.5, 14.0, 40.0)       # x0, x1, y0, y1 of the module's antenna end (estimate)
 # Battery: the owner's Waveshare 3.7 V 1500 mAh LiPo (model 454261), measured against a ruler in their
 # photos (round 28): 61.1 x 40.7 x 4.3 mm including its taped protection-board end (+/-0.3). Its wires
