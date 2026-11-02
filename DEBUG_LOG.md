@@ -525,3 +525,11 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - The README said "Neither can rattle", which is only true once the battery and speaker are taped in. It now says so.
 - The fig3 legend said the tab goes in "first", which no longer matches the straight-down instruction.
 - Two sentences in this log were wrong. It said the old grille would have left "about half" its holes outside your speaker; counted, it is 7 of 28 outside it and 11 more under its frame. It also said round 28 checks "the same openings" as Waveshare's photo checks; it checks the USB-C, the buttons and the dial. A comment in `case.py` named the wrong rounds for the cable routes (13 and 28; it is 13, 29 and 31).
+
+## Round 32: different methods
+**New methods:**
+- **Calipers on the G-code:** the bay and the speaker pocket measured on what PrusaSlicer will print, at 0.1, 0.15 and 0.2 mm layers. Each inner face is where the slicer's lines end, their centre plus half the width it writes for them. These must be within 0.15 mm of the design, and leave your battery and speaker 0.3–1.2 mm on every side.
+- **The order of the work:** the assembly steps of the README and of both guides are read in order. The plugs and the foam must come before the cover goes on, the threads must be pre-cut before it goes on, the cover must be turned over along the bottom edge before it is lowered, and the screws must be driven only after that.
+- **Sound, a textbook estimate:** the grille's open area against the membrane, and the Helmholtz resonance of the air in front of the membrane, with the slots as its neck.
+
+**Check bug found while writing it:** the first windows for the bay's inner faces were shorter than the guide bars. The slicer's lines run the bars' whole length, so no line fitted inside a window and the bay read as "nan". Each window now holds one whole bar.
