@@ -391,7 +391,8 @@ def battery_guides():
 
 # ---------------------------------------------------------------- wires (assembly advice)
 # Where the wires go: centre lines (x, y, z) and wire radius. Not part of the printed geometry: the
-# checks (round 13, 28) prove each route is free in the closed case, and the guide draws them.
+# checks (rounds 13, 29 and 31) prove each route is free in the closed case with bends the cables can
+# take, and the guide draws them.
 def battery_wire_route():
     """Battery wire: leaves the taped end at its bottom corner, drops beside the bay, runs along the
     bottom of the board over the microSD socket and under the battery, and ends in front of BAT."""

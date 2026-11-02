@@ -426,7 +426,7 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 **What changed in the design:**
 - **Battery bay:** 66 x 44 mm (sized for the largest cell Waveshare's photo allowed) → **62.5 x 42.5 mm** for your 61.1 x 40.7 x 4.3 mm cell. Your cell could slide 2.5 mm before; now it can slide about 0.9 mm. It has guide bars on all four sides, not one short bar per side. The bars skip the screw blocks and leave every corner open for the wire.
 - **Speaker:** the old 14 x 19 x 4.5 mm space (from an 18 x 13 x 3.5 mm guess) → a **pocket for your 14.2 x 10.2 x 4.5 mm speaker** with four corner brackets. It is 7.9 mm from the antenna (was 6.5).
-- **Grille:** about 28 round holes in a 12 x 17 mm oval, much larger than your speaker → **three 1.0 x 7.0 mm slots under its membrane**. The old holes would have left about half the grille outside a speaker this size, so the sound from the back of the cone would have leaked out round it and cancelled bass.
+- **Grille:** 28 round holes in a 12 x 17 mm oval, larger than your speaker → **three 1.0 x 7.0 mm slots under its membrane**. 7 of the old holes would have been outside your speaker altogether, so the sound from the back of the cone would have leaked out round it and cancelled bass. 11 more would have sat under its frame and gasket instead of the membrane.
 - **Screw pilots 1.7 → 1.8 mm** for PLA: forming the thread strains the block walls about a third less. Pull-out by round 22's model: about 73 N per screw.
 - **Wire routes and a loop for the spare speaker cable** are now in `case.py`, so the checks and the guide's pictures use the same ones.
 
@@ -437,7 +437,7 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - Round 15: Waveshare's battery photo is only shown for comparison now. Your cell was measured directly, and that is the one going in.
 - Round 16 gives the bay and the pocket to 0.1 mm.
 - Round 17's mutation test covers the two new constants the README names, `BATTERY_BAY` and `SPEAKER_BOX`.
-- **Rounds 2, 3, 5 and 15 need Waveshare's photos and drawing, and `www.waveshare.com` and `docs.waveshare.com` are blocked where these rounds ran.** Those four sub-checks now print SKIP, never OK. They test the board-facing openings, which this session did not change, and they passed in sessions 1–3. Round 28 checks the same openings against photos of your own board instead.
+- **Rounds 2, 3, 5 and 15 need Waveshare's photos and drawing, and `www.waveshare.com` and `docs.waveshare.com` are blocked where these rounds ran.** Those four sub-checks now print SKIP, never OK. They test the board-facing openings, which this session did not change, and they passed in sessions 1–3. Round 28 checks the USB-C, the buttons and the dial against photos of your own board instead.
 
 **Check bugs found while redesigning:**
 - **Round 1, islands:** with 1.8 mm pilots, the top of each pilot lies exactly on one of round 1's slicing planes (z = 6.5). trimesh's section there came out malformed and dropped a polygon, so the next layer looked like it started in mid-air. A second slicer (manifold3d) showed that layer fully supported (30.2 of 30.2 mm² on the layer below). The planes now sit 0.013 mm off the layer middles.
@@ -524,3 +524,4 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **In both guides, pre-cutting the threads was in step 5,** after the case is closed in step 4. It said "before closing the case (step 4)", but a reader following the steps reaches it too late, and with PLA pre-cutting matters more. It is now the first thing in step 4; step 5 only drives the screws. The print section points to step 4.
 - The README said "Neither can rattle", which is only true once the battery and speaker are taped in. It now says so.
 - The fig3 legend said the tab goes in "first", which no longer matches the straight-down instruction.
+- Two sentences in this log were wrong. It said the old grille would have left "about half" its holes outside your speaker; counted, it is 7 of 28 outside it and 11 more under its frame. It also said round 28 checks "the same openings" as Waveshare's photo checks; it checks the USB-C, the buttons and the dial. A comment in `case.py` named the wrong rounds for the cable routes (13 and 28; it is 13, 29 and 31).
