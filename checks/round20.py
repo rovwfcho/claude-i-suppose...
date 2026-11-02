@@ -81,8 +81,11 @@ def holes(tm, step=0.1):
     ys = np.arange(lo[1] + 1.0, hi[1] - 1.0, step)
     X, Y = np.meshgrid(xs, ys)
     o = np.column_stack([X.ravel(), Y.ravel(), np.full(X.size, hi[2] + 1)])
-    # a through-hole: the ray reaches the bed (no hit at all inside the outline)
-    hit = tm.ray.intersects_any(o, np.tile([0, 0, -1.0], (len(o), 1))).reshape(X.shape)
+    # a through-hole: the ray reaches the bed (no hit at all inside the outline). Cast in chunks: a face
+    # with few holes is cut into long triangles whose boxes cover many rays, and casting all 650 000
+    # rays at once needed 14 GB
+    hit = np.concatenate([tm.ray.intersects_any(o[i:i + 20000], np.tile([0, 0, -1.0], (len(o[i:i + 20000]), 1)))
+                          for i in range(0, len(o), 20000)]).reshape(X.shape)
     lab, n = ndimage.label(~hit)
     out = []
     for k in range(1, n + 1):

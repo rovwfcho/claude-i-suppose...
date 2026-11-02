@@ -424,7 +424,7 @@ Every check compares the case with a model of the board. That model is built fro
 You measured your battery, speaker and board against a ruler and sent photos, and you're printing in PLA. The same stopping rule applies: rounds 28 onwards add new methods and re-run every earlier check on the current design, until two rounds in a row find no mistakes.
 
 **What changed in the design:**
-- **Battery bay:** 66 x 44 mm (sized for the largest cell Waveshare's photo allowed) → **62.5 x 42.5 mm** for your 61.1 x 40.8 x 4.3 mm cell. Your cell could slide 2.5 mm before; now it can slide about 0.8 mm. It has guide bars on all four sides, not one short bar per side. The bars skip the screw blocks and leave every corner open for the wire.
+- **Battery bay:** 66 x 44 mm (sized for the largest cell Waveshare's photo allowed) → **62.5 x 42.5 mm** for your 61.1 x 40.7 x 4.3 mm cell. Your cell could slide 2.5 mm before; now it can slide about 0.9 mm. It has guide bars on all four sides, not one short bar per side. The bars skip the screw blocks and leave every corner open for the wire.
 - **Speaker:** the old 14 x 19 x 4.5 mm space (from an 18 x 13 x 3.5 mm guess) → a **pocket for your 14.2 x 10.2 x 4.5 mm speaker** with four corner brackets. It is 7.9 mm from the antenna (was 6.5).
 - **Grille:** about 28 round holes in a 12 x 17 mm oval, much larger than your speaker → **three 1.0 x 7.0 mm slots under its membrane**. The old holes would have left about half the grille outside a speaker this size, so the sound from the back of the cone would have leaked out round it and cancelled bass.
 - **Screw pilots 1.7 → 1.8 mm** for PLA: forming the thread strains the block walls about a third less. Pull-out by round 22's model: about 73 N per screw.
@@ -460,3 +460,38 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **The brackets' legs came within 0.08 mm of the speaker's cable** with the speaker pushed toward its peg end, because the cable leaves only 2.9 mm from that end. The legs along the long sides are now 1.2 mm (were 1.8) and along the short sides 2.0 mm (were 2.5). The cable now clears by 0.68 mm and the peg by 0.79 mm.
 
 **Check bug:** the first edge finder took the strongest colour step. On the speaker, that is the inner side of its bright metal rim, so it read 0.2 mm small. It now takes the outermost strong step, which matches the outline.
+
+## Round J: every check (rounds 1–28) on the session 4 design
+**Result:** 314 checks passed. 4 were SKIPPED because Waveshare's site is blocked here: the photo overlay (round 2), the drawing (round 3), the photo segmentation (round 5) and the battery photo (round 15). **Not clean.**
+
+**Mistake found and fixed (documentation):**
+- The README named `build_all.sh` without its folder (found by round 12's link check). It now says `docs/guide-src/build_all.sh`.
+
+**Check bugs:**
+- **Round 17 still looked for "14.2"** (the old slim version's thickness) as a leftover. 14.2 mm is now your speaker's length. It now looks for the thickness wording instead.
+- **Rounds 20 and 23 were killed for using 14 GB of memory.** Their through-hole finder cast all 650 000 rays in one batch. With 3 slots instead of 28 holes, the back face is cut into fewer, longer triangles whose boxes each cover many rays. It now casts 20 000 rays at a time; the result is the same.
+
+## Round 29: different methods
+**New methods:**
+- **Tolerance stack-up, statistically:** 100 000 random cases combining measuring error, printing error and PLA shrinkage.
+- **ID pictures:** each guide picture is rendered again in flat colours, one per part. Every numbered marker must be within 20 px of the part it names.
+- **The same nine facts in three documents:** the README, the English guide and the Bulgarian guide.
+- **Cable bends:** every corner of every wire route is rounded, and the radius each corner can take is worked out from the straight lengths beside it.
+- **Calipers on the cover STL** for the bay and the pocket.
+- **A heat estimate** for PLA.
+
+**Mistakes found and fixed:**
+- **The speaker cable's route needed a 2.45 mm bend.** It dropped straight down between two right-angle turns, and its sleeved part needs 3 mm or more. The route now slopes down under the battery: its bend under the battery can take 5.7 mm, and the thin leads at its two ends 2.35 and 3.1 mm.
+- **The battery wire's route had two 0.95 mm bends** (it needs 1 mm). The short straight between them is now 2.4 mm.
+- **The documents said the battery is 40.8 mm wide;** round 28 measures 40.73. `BATTERY_SIZE`, the README and both guides now say 40.7, and the play is about 0.9 mm (was 0.8).
+- **One guide marker** (print picture, marker 1) sat in the middle of the display window, over empty space. It is now on the shell's rim.
+- **The spare speaker cable didn't fit its loop.** Traced in your photo, the cable is about 105 mm, so about 75 mm is spare, but the loop held only 64 mm. The loop is now taller (up to 5.5 mm from the top wall, clear of the dial tab and the antenna end) and holds 77 mm.
+
+**Check bug:** the first version compared the battery plus tape plus ageing swelling with the nominal 5 mm room. Over the bay, the first thing the cell could reach is the wires under it, 5.6 mm away. It is now measured against that.
+
+**Results:**
+- The battery goes in, and has less than 1.2 mm of play per side, in 100 % of the random cases; so does the speaker.
+- The speaker's cable clears its bracket legs in 100 % of cases and its peg in 99.9 %.
+- The cell plus tape plus swelling never reaches what lies under it.
+- 31 guide markers point at their parts.
+- The case runs about 7 K above the room with 1 W inside; in full sun it can pass 55 °C, which the README warns about.

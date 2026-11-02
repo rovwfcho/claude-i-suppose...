@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import {STLLoader} from './STLLoader.js';
 window.render = async (spec) => {
   const W = spec.w || 1400, H = spec.h || 900;
-  const r = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+  const r = new THREE.WebGLRenderer({antialias: !spec.flat, preserveDrawingBuffer: true});
   r.setSize(W, H); r.setPixelRatio(1); document.body.innerHTML = ''; document.body.appendChild(r.domElement);
   const s = new THREE.Scene(); s.background = new THREE.Color(0xffffff);
   s.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 1.5));
@@ -15,8 +15,11 @@ window.render = async (spec) => {
   const L = new STLLoader();
   for (const p of spec.parts) {
     const g = await new Promise(res => L.load(p.f + '.stl', res)); g.computeVertexNormals();
-    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({color: p.c, roughness: 0.6, side: THREE.DoubleSide,
-      transparent: !!p.op, opacity: p.op || 1}));
+    // spec.flat: unlit single colours (an ID picture for the checks: every pixel names its part)
+    const mat = spec.flat ? new THREE.MeshBasicMaterial({color: p.c, side: THREE.DoubleSide})
+      : new THREE.MeshStandardMaterial({color: p.c, roughness: 0.6, side: THREE.DoubleSide,
+                                        transparent: !!p.op, opacity: p.op || 1});
+    const m = new THREE.Mesh(g, mat);
     if (p.flip) m.rotation.x = Math.PI;   // turned over (about x)
     m.position.set(p.dx || 0, p.dy || 0, p.dz || 0); G.add(m);
   }

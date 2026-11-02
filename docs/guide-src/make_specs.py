@@ -76,7 +76,7 @@ def specs():
                    "labels": [[p, case.Y1, case.SCREW_Z] for p, side in case.SCREWS if side == "top"]}
     s["print"] = {"noflip": True, "parts": [{"f": "p_front", "c": C["p_front"]}, {"f": "p_cover", "c": C["p_cover"], "dx": 118}],
                   "cam": {"t": [108, 30, 4], "o": [0, -230, 260]},
-                  "labels": [[50, 30, case.Z_SPLIT], [168, 30, 12.0]], "w": 1400, "h": 800}
+                  "labels": [[50, -1.5, case.Z_SPLIT], [168, 30, 12.0]], "w": 1400, "h": 800}
     return s
 
 

@@ -130,7 +130,9 @@ def frame_widths():
 def leftovers():
     hits = []
     text = open(os.path.join(ROOT, "README.md")).read()
-    for word in ("slim", "14.2", "both versions", "same version"):
+    # the slim version was 14.2 mm thick; 14.2 alone is now also the speaker's length, so look for the
+    # thickness wording
+    for word in ("slim", "14.2 mm thick", "14.2mm", "both versions", "same version"):
         if word.lower() in text.lower():
             hits.append(f"README: {word}")
     for d in ("stl", "dist", "preview"):

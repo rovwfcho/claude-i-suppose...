@@ -85,11 +85,11 @@ SPK_CABLE_EXIT = 2.9                      # cable centre from the peg's end, alo
 GRILLE_SLOTS = (1.0, 7.0, 1.8)            # three slots along y: width, length, pitch (0.8 mm webs)
 ANTENNA = (93.5, 99.5, 14.0, 40.0)       # x0, x1, y0, y1 of the module's antenna end (estimate)
 # Battery: the owner's Waveshare 3.7 V 1500 mAh LiPo (model 454261), measured against a ruler in their
-# photos (round 28): 61.1 x 40.8 x 4.3 mm including its taped protection-board end (+/-0.3). Its wires
-# leave that end at one corner. The bay is 62.5 x 42.5 mm (1.4 and 1.7 mm more than the cell, so it
-# can only shift about 0.7-0.85 mm each way) and 5 mm deep, with guide bars on all four sides; the
+# photos (round 28): 61.1 x 40.7 x 4.3 mm including its taped protection-board end (+/-0.3). Its wires
+# leave that end at one corner. The bay is 62.5 x 42.5 mm (1.4 and 1.8 mm more than the cell, so it
+# can only shift about 0.7-0.9 mm each way) and 5 mm deep, with guide bars on all four sides; the
 # corners stay open so the wire can leave from either corner.
-BATTERY_SIZE = (61.1, 40.8, 4.3)
+BATTERY_SIZE = (61.1, 40.7, 4.3)
 BATTERY_MAX = (62.3, 42.2, 4.8)          # largest it could plausibly be (ruler error, tape, swelling)
 BATTERY_BAY = (5.5, 68.0, 6.5, 49.0)     # x0, x1, y0, y1
 BATTERY_GUIDE = (1.2, 2.0)               # guide bar thickness and height
@@ -398,14 +398,15 @@ def battery_wire_route():
     x0, x1, y0, y1 = BATTERY_BAY
     z_in = Z_B + CAVITY["battery"]
     zs = Z_B + 1.9 + 1.25             # resting on top of the microSD socket (1.9 mm tall)
-    return [(x0 - 1.4, y0 + 3.0, z_in - BATTERY_SPACE / 2), (3.5, y0 + 3.0, zs), (3.5, 7.6, zs),
+    return [(x0 - 1.4, y0 + 3.5, z_in - BATTERY_SPACE / 2), (3.5, y0 + 3.5, zs), (3.5, 7.6, zs),
             (34.0, 7.6, zs), (34.0, 6.4, zs)], 1.25
 
 
 def speaker_wire_route():
-    """Speaker cable (2.8 mm thick where it is sleeved): leaves the speaker's long side facing the
-    battery (peg toward the top edge), drops through the gap between the bay and the pocket, and runs
-    under the battery to the front of SPK (x 52.5-61.5)."""
+    """Speaker cable (2.8 mm thick where it is sleeved): its thin leads leave the speaker's long side
+    facing the battery (peg toward the top edge) and turn down the gap between the bay and the pocket;
+    the sleeved part slopes down under the battery (no bend tighter than 3 mm) and runs to the front
+    of SPK (x 52.5-61.5)."""
     sx, sy = SPEAKER["battery"]
     w, h, t = SPEAKER_BOX["battery"]
     z_in = Z_B + CAVITY["battery"]
@@ -413,17 +414,17 @@ def speaker_wire_route():
     zl = Z_B + 1.45 + r               # above the board's low parts (1.4 mm), under the battery
     xg = (BATTERY_BAY[1] + sx - w / 2 - SPK_BRACKET[0]) / 2   # middle of the gap between bay and pocket
     ye = sy + SPEAKER_SIZE[1] / 2 - SPK_CABLE_EXIT             # where the cable leaves the speaker
-    return [(sx - w / 2 - r - 0.05, ye, z_in - t / 2), (xg, ye, z_in - t / 2), (xg, ye, zl),
-            (xg, 7.6, zl), (57.0, 7.6, zl), (57.0, 6.4, zl)], r
+    return [(sx - w / 2 - r - 0.05, ye, z_in - t / 2), (xg, ye, z_in - t / 2), (xg, 9.5, zl),
+            (57.0, 9.5, zl), (57.0, 6.4, zl)], r
 
 
 def speaker_cable_coil():
     """Where the spare speaker cable goes: one loop lying on the back cover above the speaker pocket,
-    kept 5 mm from the antenna end. About 64 mm of cable."""
+    kept 5 mm from the antenna end and clear of the dial tab. About 77 mm of cable."""
     sx, sy = SPEAKER["battery"]
     z_in = Z_B + CAVITY["battery"]
     r = 1.4
-    cx, cy, a, b, rc = sx - 0.5, 37.25, 7.5, 10.25, 4.0   # centre, half sizes, corner radius
+    cx, cy, a, b, rc = sx - 0.5, 40.5, 7.5, 13.5, 4.0   # centre, half sizes, corner radius
     pts = []
     for (qx, qy), a0 in (((cx + a - rc, cy + b - rc), 0), ((cx - a + rc, cy + b - rc), 90),
                          ((cx - a + rc, cy - b + rc), 180), ((cx + a - rc, cy - b + rc), 270)):
