@@ -30,6 +30,14 @@ def report(ok, msg):
     if not ok:
         problems.append(msg)
 
+skipped = []
+
+
+def skip(msg):
+    """A check that could not run here (for example, a reference image could not be downloaded)."""
+    print("  SKIP " + msg)
+    skipped.append(msg)
+
 
 # ------------------------------------------------------------------ 1
 def parse_stl(path):
@@ -112,7 +120,11 @@ def drawing_check():
     """Re-measure from the outline drawing (dim0.png, 960 px wide) rather than the photos."""
     from PIL import Image
     import reference
-    path = reference.path("drawing")
+    try:
+        path = reference.path("drawing")
+    except reference.Unavailable as e:
+        skip(f"drawing re-measurement: Waveshare's drawing could not be downloaded ({e})")
+        return
     a = np.asarray(Image.open(path).convert("RGB")).astype(int)
     blue = (a[..., 2] - a[..., 0] > 40)
     ys, xs = np.nonzero(blue)
@@ -231,6 +243,6 @@ if __name__ == "__main__":
         calipers(v)
         printer_error(v)
         angled_fingers(v)
-    print(f"\nRound 3: {len(problems)} problem(s)")
+    print(f"\nRound 3: {len(problems)} problem(s)" + (f", {len(skipped)} check(s) SKIPPED" if skipped else ""))
     for p in problems:
         print("  -", p)

@@ -418,3 +418,45 @@ The reviewer found nothing significant in the drawbore or the foam stuck on both
 
 ## What the checks cannot prove
 Every check compares the case with a model of the board. That model is built from Waveshare's drawing, which covers only the outline and display area, and from my measurements of their photos (about ±0.5 mm). The board thickness, the panel stack and the component heights are estimates; see README. A test print of the front shell is still the real proof.
+
+## Session 4: your own battery and speaker, printed in PLA
+
+You measured your battery, speaker and board against a ruler and sent photos, and you're printing in PLA. The same stopping rule applies: rounds 28 onwards add new methods and re-run every earlier check on the current design, until two rounds in a row find no mistakes.
+
+**What changed in the design:**
+- **Battery bay:** 66 x 44 mm (sized for the largest cell Waveshare's photo allowed) → **62.5 x 42.5 mm** for your 61.1 x 40.8 x 4.3 mm cell. Your cell could slide 2.5 mm before; now it can slide about 0.8 mm. It has guide bars on all four sides, not one short bar per side. The bars skip the screw blocks and leave every corner open for the wire.
+- **Speaker:** the old 14 x 19 x 4.5 mm space (from an 18 x 13 x 3.5 mm guess) → a **pocket for your 14.2 x 10.2 x 4.5 mm speaker** with four corner brackets. It is 7.9 mm from the antenna (was 6.5).
+- **Grille:** about 28 round holes in a 12 x 17 mm oval, much larger than your speaker → **three 1.0 x 7.0 mm slots under its membrane**. The old holes would have left about half the grille outside a speaker this size, so the sound from the back of the cone would have leaked out round it and cancelled bass.
+- **Screw pilots 1.7 → 1.8 mm** for PLA: forming the thread strains the block walls about a third less. Pull-out by round 22's model: about 73 N per screw.
+- **Wire routes and a loop for the spare speaker cable** are now in `case.py`, so the checks and the guide's pictures use the same ones.
+
+**Checks updated for the change** (they described the old parts, not mistakes in them):
+- Round 6 and round 13 now read the pocket and bay sizes from `case.py`.
+- Round 13: the grille test now asks that every opening sits under the membrane wherever the speaker sits in its pocket, and at least 1.5 mm inside the speaker's sealed face.
+- Round 14's Monte Carlo now draws parts around your measured sizes instead of 60–65.5 mm cells and 15–18.5 mm speakers. Those would no longer fit this bay, by design.
+- Round 15: Waveshare's battery photo is only shown for comparison now. Your cell was measured directly, and that is the one going in.
+- Round 16 gives the bay and the pocket to 0.1 mm.
+- Round 17's mutation test covers the two new constants the README names, `BATTERY_BAY` and `SPEAKER_BOX`.
+- **Rounds 2, 3, 5 and 15 need Waveshare's photos and drawing, and `www.waveshare.com` and `docs.waveshare.com` are blocked where these rounds ran.** Those four sub-checks now print SKIP, never OK. They test the board-facing openings, which this session did not change, and they passed in sessions 1–3. Round 28 checks the same openings against photos of your own board instead.
+
+**Check bugs found while redesigning:**
+- **Round 1, islands:** with 1.8 mm pilots, the top of each pilot lies exactly on one of round 1's slicing planes (z = 6.5). trimesh's section there came out malformed and dropped a polygon, so the next layer looked like it started in mid-air. A second slicer (manifold3d) showed that layer fully supported (30.2 of 30.2 mm² on the layer below). The planes now sit 0.013 mm off the layer middles.
+- **Round 1, screws:** the "tip buried" test had the old pilot's ring area typed in as a number. It now works it out from `SCREW_PILOT_R`.
+
+## Round 28: your photos (new methods)
+**New methods:**
+- **Ruler scale read by the computer:** the dark tick marks along one row of each photo are found, and a straight line is fitted through tick number against position. That gives 17–43 ticks per photo (scatter 0.55–1.5 px), not two numbers read by eye.
+- **Edges refined automatically:** from a position marked by eye, the outermost strong colour step, on 10–20 rows.
+- **Perspective transforms:** the speaker's frame in your top view gives the membrane, peg and cable exit. The four brass standoff tops in your back photo give board coordinates.
+- **A review image**, `preview/owner_measurements.png`, with every tick, edge and landmark drawn on.
+
+**Results:**
+- Battery 61.08 x 40.73 x 4.32 mm.
+- Speaker 14.19 x 10.19 x 4.49 mm, membrane 10.08 x 5.77 mm. The cable leaves the speaker 2.88 mm from the peg's end.
+- Your board: USB-C, buttons, dial and top edge all within 0.48 mm of the board model.
+
+**Mistakes found and fixed:**
+- **The speaker pocket was 11.5 x 15.5 mm**, leaving up to 0.75 mm on a side: looser than you asked for. It is now 11.2 x 15.3 mm, about 0.5 mm on every side.
+- **The brackets' legs came within 0.08 mm of the speaker's cable** with the speaker pushed toward its peg end, because the cable leaves only 2.9 mm from that end. The legs along the long sides are now 1.2 mm (were 1.8) and along the short sides 2.0 mm (were 2.5). The cable now clears by 0.68 mm and the peg by 0.79 mm.
+
+**Check bug:** the first edge finder took the strongest colour step. On the speaker, that is the inner side of its bright metal rim, so it read 0.2 mm small. It now takes the outermost strong step, which matches the outline.

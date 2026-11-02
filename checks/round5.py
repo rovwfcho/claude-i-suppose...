@@ -30,6 +30,14 @@ def report(ok, msg):
     if not ok:
         problems.append(msg)
 
+skipped = []
+
+
+def skip(msg):
+    """A check that could not run here (for example, a reference image could not be downloaded)."""
+    print("  SKIP " + msg)
+    skipped.append(msg)
+
 
 # ------------------------------------------------------------------ 1
 def erosion(variant, layer=0.2, nozzle=0.4):
@@ -101,7 +109,11 @@ def photo_segmentation():
     from PIL import Image
     from scipy import ndimage
     import reference
-    src = reference.path("back")
+    try:
+        src = reference.path("back")
+    except reference.Unavailable as e:
+        skip(f"photo segmentation: Waveshare's back photo could not be downloaded ({e})")
+        return
     a = np.asarray(Image.open(src).convert("RGB")).astype(int)
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     x0, y0, x1, y1 = 298, 304, 1305, 911
@@ -150,6 +162,6 @@ if __name__ == "__main__":
         print(f"\n### {v}")
         erosion(v)
         line_of_sight(v)
-    print(f"\nRound 5: {len(problems)} problem(s)")
+    print(f"\nRound 5: {len(problems)} problem(s)" + (f", {len(skipped)} check(s) SKIPPED" if skipped else ""))
     for p in problems:
         print("  -", p)

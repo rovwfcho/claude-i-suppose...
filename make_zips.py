@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack the STL files, the README and the preview renders into dist/<name>.zip."""
+"""Pack the STL files, the README, the preview renders, the measurements and the guides into dist/<name>.zip."""
 import os
 import zipfile
 
@@ -7,8 +7,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PACKS = {
     "esp32-s3-epaper-3.97-case-battery-16.7mm": ["stl/front_shell_battery.stl", "stl/back_cover_battery.stl"],
 }
-COMMON = ["README.md", "preview/renders.png", "preview/explained.png",
-          "docs/assembly_guide_en.pdf", "docs/assembly_guide_bg.pdf"]
+COMMON = ["README.md", "preview/renders.png", "preview/explained.png", "preview/owner_measurements.png",
+          "preview/screw_locations.png", "docs/assembly_guide_en.pdf", "docs/assembly_guide_bg.pdf"]
 
 if __name__ == "__main__":
     os.makedirs(os.path.join(ROOT, "dist"), exist_ok=True)
@@ -16,7 +16,7 @@ if __name__ == "__main__":
         path = os.path.join(ROOT, "dist", top + ".zip")
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
             for f in files + COMMON:
-                zi = zipfile.ZipInfo(f"{top}/{f}", date_time=(2026, 10, 30, 0, 0, 0))  # fixed date: same bytes every run
+                zi = zipfile.ZipInfo(f"{top}/{f}", date_time=(2026, 11, 2, 0, 0, 0))  # fixed date: same bytes every run
                 zi.compress_type = zipfile.ZIP_DEFLATED
                 zi.external_attr = 0o644 << 16
                 z.writestr(zi, open(os.path.join(ROOT, f), "rb").read())

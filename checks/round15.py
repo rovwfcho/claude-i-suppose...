@@ -2,7 +2,9 @@
 """Debug round 15: methods not used in rounds 1-14.
 
 1. Battery size cross-check: the 454261 label is read as 4.5 x 42 x 61 mm by the usual naming
-   convention; Waveshare's own photo of the battery must show the same length-to-width ratio
+   convention; Waveshare's own photo of the battery must show the same length-to-width ratio.
+   Since session 4 the bay is sized from the owner's own cell, measured with a ruler (61.3 x 41.0 mm,
+   checked in round 28), so Waveshare's photo is only reported for comparison here
 2. (Slim version grille: removed with the slim version)
 3. Release zips (if present in dist/): they open cleanly and their STLs are byte-identical to stl/
 """
@@ -22,6 +24,7 @@ import case  # noqa: E402
 from round1 import load_assembled, to_manifold  # noqa: E402
 
 problems = []
+skipped = []
 BATTERY_PHOTO = "https://www.waveshare.com/img/devkit/general/3.7V-1500mA-battery.jpg"
 
 
@@ -40,7 +43,13 @@ def battery_photo():
     path = os.path.join(cache, "battery.jpg")
     if not os.path.exists(path):
         req = urllib.request.Request(BATTERY_PHOTO, headers={"User-Agent": "Mozilla/5.0"})
-        open(path, "wb").write(urllib.request.urlopen(req, timeout=60).read())
+        try:
+            data = urllib.request.urlopen(req, timeout=60).read()
+        except OSError as e:
+            print(f"  SKIP battery photo comparison: Waveshare's battery photo could not be downloaded ({e})")
+            skipped.append("battery photo")
+            return
+        open(path, "wb").write(data)
     a = np.asarray(Image.open(path).convert("RGB")).astype(int)
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     # the cell: everything that is neither white background nor red/black wire; its length and width
@@ -54,9 +63,11 @@ def battery_photo():
     ratio = w / h
     L = ratio * case.BATTERY_SIZE[1]
     x0, x1, y0, y1 = case.BATTERY_BAY
-    report(L <= (x1 - x0) - 0.5 and case.BATTERY_SIZE[1] <= (y1 - y0) - 0.5,
-           f"battery photo: {w} x {h} px, length/width {ratio:.3f} -> about {L:.1f} x {case.BATTERY_SIZE[1]:.0f} mm "
-           f"if 42 mm wide (label says 61 x 42); bay is {x1 - x0:.0f} x {y1 - y0:.0f} mm")
+    # for comparison only: the owner's cell was measured directly (round 28), and that cell is the one
+    # going in this case
+    print(f"  ..   Waveshare's battery photo: {w} x {h} px, length/width {ratio:.3f} -> about {L:.1f} mm long "
+          f"at the owner's measured width of {case.BATTERY_SIZE[1]:.1f} mm; the owner's cell measures "
+          f"{case.BATTERY_SIZE[0]:.1f} mm and the bay is {x1 - x0:.1f} x {y1 - y0:.1f} mm")
 
 
 # ------------------------------------------------------------------ 3
@@ -81,6 +92,6 @@ def zips():
 if __name__ == "__main__":
     battery_photo()
     zips()
-    print(f"\nRound 15: {len(problems)} problem(s)")
+    print(f"\nRound 15: {len(problems)} problem(s)" + (f", {len(skipped)} check(s) SKIPPED" if skipped else ""))
     for p in problems:
         print("  -", p)

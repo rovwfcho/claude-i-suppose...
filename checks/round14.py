@@ -3,9 +3,9 @@
 
 1. Antenna keep-out: metal parts (battery, speaker) must stay at least 6 mm, in plan, from the
    ESP32 module's antenna end, and away from it in height too
-2. Monte Carlo over real part sizes: batteries 60-63 x 41-43 x 4.2-5.0 mm (anywhere the guides let
-   them sit) and speakers 15-18 x 11-13 x 3-4.5 mm (within 0.5 mm of their spot) must clear the
-   cover, the guides and each other
+2. Monte Carlo over real part sizes: batteries within the measuring error of the owner's cell, up to
+   the largest plausible one (anywhere the guides let them sit), and speakers within 0.5 mm of the
+   owner's (anywhere the brackets let them sit) must clear the cover, the guides and each other
 3. Battery fitted the other way round (wire end toward the speaker): is there still a wire route?
    Reported for the README, which tells you which way round to fit it
 """
@@ -62,13 +62,18 @@ def sizes(n=80, seed=11):
     sx, sy = case.SPEAKER["battery"]
     bad = []
     for i in range(n):
-        L, W, T = rng.uniform(60, 65.5), rng.uniform(41, 43.8), rng.uniform(4.2, 5.0)
+        L = rng.uniform(case.BATTERY_SIZE[0] - 0.5, case.BATTERY_MAX[0])
+        W = rng.uniform(case.BATTERY_SIZE[1] - 0.5, case.BATTERY_MAX[1])
+        T = rng.uniform(case.BATTERY_SIZE[2] - 0.3, case.BATTERY_MAX[2])
         # the guides only let it move as far as the free space around it in the bay
         dx = rng.uniform(-1, 1) * ((x1 - x0) - L) / 2
         dy = rng.uniform(-1, 1) * ((y1 - y0) - W) / 2
         bat = case.box(bcx + dx - L / 2, bcx + dx + L / 2, bcy + dy - W / 2, bcy + dy + W / 2, z_in - T, z_in)
-        a, b, t = rng.uniform(11, 13.5), rng.uniform(15, 18.5), rng.uniform(3.0, 4.5)  # turned: narrow in x
-        ex, ey = rng.uniform(-0.5, 0.5, 2)
+        a0, b0, t0 = case.SPEAKER_SIZE                                     # turned: narrow in x
+        a, b, t = rng.uniform(a0 - 0.5, a0 + 0.5), rng.uniform(b0 - 0.5, b0 + 0.5), rng.uniform(t0 - 0.4, t0 + 0.1)
+        pw, ph, _ = case.SPEAKER_BOX["battery"]
+        ex = rng.uniform(-1, 1) * max(pw - a, 0) / 2       # anywhere the brackets let it sit
+        ey = rng.uniform(-1, 1) * max(ph - b, 0) / 2
         spk = case.box(sx + ex - a / 2, sx + ex + a / 2, sy + ey - b / 2, sy + ey + b / 2, z_in - t, z_in)
         v1, v2, v3 = vol(bat ^ C), vol(spk ^ C), vol(bat ^ spk)
         if max(v1, v2, v3) > 1e-3:
@@ -91,8 +96,7 @@ def flipped():
         every += g
     obst = S + C + every + bat + spk
     zs = case.Z_B + 1.9 + 1.25
-    # wire end at the speaker side: the only gap between the bay (x <= 70) and the speaker (x >= 71.5)
-    # is 1.5 mm, so try going over the top of the bay toward the top edge and round instead
+    # wire end at the speaker side: try going over the top of the bay toward the top edge and round
     path = [(x1 - 3.0, y1 + 1.4, z_in - case.BATTERY_SPACE / 2), (x1 - 3.0, y1 + 1.4, zs + 3.0),
             (40.0, y1 + 1.4, zs + 3.0)]
     hit = vol(tube(path) ^ obst)

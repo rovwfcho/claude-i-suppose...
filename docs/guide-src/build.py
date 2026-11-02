@@ -98,12 +98,12 @@ def page(T):
 <div>{figure('print', T['fig_print'], box=85)}</div></div>
 <div class="note">{T['print_note']}</div>
 
-<h2 class="pb">{T['h_assembly']}</h2>
+<h2>{T['h_assembly']}</h2>
 <div class="step"><div class="num">1</div><div><h3>{T['s1_h']}</h3><p>{T['s1']}</p>{figure('step1', T['fig1'])}</div></div>
 <div class="step"><div class="num">2</div><div><h3>{T['s2_h']}</h3><p>{T['s2']}</p>
-<div class="note warn">{T['s2_warn']}</div>{figure('step2', T['fig2'], marks=['1', '2', '3', '3', '3', '3', '4', '5', '6'])}</div></div>
+<div class="note warn">{T['s2_warn']}</div>{figure('step2', T['fig2'], marks=['1', '2', '3', '3', '3', '3', '4', '5', '6', '7', '8'])}</div></div>
 <div class="step"><div class="num">3</div><div><h3>{T['s3_h']}</h3><p>{T['s3']}</p></div></div>
-<div class="step pb"><div class="num">4</div><div><h3>{T['s4_h']}</h3><p>{T['s4']}</p>{figure('step3', T['fig3'], max_h=80)}</div></div>
+<div class="step"><div class="num">4</div><div><h3>{T['s4_h']}</h3><p>{T['s4']}</p>{figure('step3', T['fig3'], max_h=80)}</div></div>
 <div class="step"><div class="num">5</div><div><h3>{T['s5_h']}</h3><p>{T['s5']}</p>
 <div class="note">{T['s5_note']}</div>{s4}</div></div>
 

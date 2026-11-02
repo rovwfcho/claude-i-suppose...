@@ -61,6 +61,8 @@ def mutation():
         "STANDOFF_H": ("STANDOFF_H = 4.0 ", "STANDOFF_H = 6.0 "),
         "PARTS_SPACE": ("PARTS_SPACE = 5.0 ", "PARTS_SPACE = 6.0 "),
         "BATTERY_SPACE": ("BATTERY_SPACE = 5.0 ", "BATTERY_SPACE = 6.0 "),
+        "BATTERY_BAY": ("BATTERY_BAY = (5.5, 68.0, 6.5, 49.0)", "BATTERY_BAY = (5.5, 68.5, 6.5, 49.0)"),
+        "SPEAKER_BOX": ('SPEAKER_BOX = {"battery": (11.2, 15.3, 4.5)}', 'SPEAKER_BOX = {"battery": (11.5, 15.3, 4.5)}'),
     }
     report(set(named) <= set(edits), f"README names {named}; all have a test edit: {set(named) <= set(edits)}")
     with tempfile.TemporaryDirectory() as base:

@@ -29,6 +29,14 @@ def report(ok, msg):
     if not ok:
         problems.append(msg)
 
+skipped = []
+
+
+def skip(msg):
+    """A check that could not run here (for example, a reference image could not be downloaded)."""
+    print("  SKIP " + msg)
+    skipped.append(msg)
+
 
 # ------------------------------------------------------------------ 1
 def kd_clearance(variant):
@@ -249,8 +257,12 @@ def assembly_motion(variant):
 def photo_overlay(out_path):
     from PIL import Image, ImageDraw
     import reference
-    front = Image.open(reference.path("front")).convert("RGB")
-    back = Image.open(reference.path("back")).convert("RGB")
+    try:
+        front = Image.open(reference.path("front")).convert("RGB")
+        back = Image.open(reference.path("back")).convert("RGB")
+    except reference.Unavailable as e:
+        skip(f"photo overlay not redrawn: Waveshare's photos could not be downloaded ({e})")
+        return
     # board outline pixels measured earlier: front (295..1307, 304..912), back (298..1305, 304..911)
     def to_front(x, y):
         return 295 + x * (1012 / 99.5), 912 - y * (608 / 60.0)
@@ -303,6 +315,6 @@ if __name__ == "__main__":
         overhangs(v)
         assembly_motion(v)
     photo_overlay(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(HERE), "preview", "photo_overlay.png"))
-    print(f"\nRound 2: {len(problems)} problem(s)")
+    print(f"\nRound 2: {len(problems)} problem(s)" + (f", {len(skipped)} check(s) SKIPPED" if skipped else ""))
     for p in problems:
         print("  -", p)

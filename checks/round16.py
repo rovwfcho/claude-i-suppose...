@@ -176,11 +176,11 @@ def readme_numbers():
     vol_front = np.einsum("ij,ij->i", tri[:, 0], np.cross(tri[:, 1], tri[:, 2])).sum() / 6000.0
     want = {
         "size": size,
-        "bay": f"{x1 - x0:.0f} x {y1 - y0:.0f} mm",
+        "bay": f"{x1 - x0:.1f} x {y1 - y0:.1f} mm",
         "antenna": f"kept {ant:.1f} mm from the ESP32's antenna",
         "wires": f"about {lb} mm and {ls} mm long",
         "slide": f"about {slide:.1f} mm",
-        "speaker room": "%.0f x %.0f x %.1f mm" % case.SPEAKER_BOX["battery"],
+        "speaker room": "%.1f x %.1f mm" % case.SPEAKER_BOX["battery"][:2],
         "test print": f"about {vol_front:.0f} cm³",
     }
     for k, s in want.items():

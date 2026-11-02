@@ -1,0 +1,9 @@
+# build products of build_all.sh
+*.stl
+*.png
+labels.json
+text_*.json
+renders_specs.json
+out/
+three.module.js
+STLLoader.js

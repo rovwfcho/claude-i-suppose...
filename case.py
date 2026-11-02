@@ -3,6 +3,8 @@
 
 Generates STL files for a rounded front shell and a back cover with room for Waveshare's
 454261 LiPo and the speaker side by side, plus a simplified board model used to check fit.
+The battery bay and the speaker pocket are sized from the owner's own battery and speaker, measured
+with a ruler in their photos (see README.md, "Where the numbers come from").
 
 Requires: pip install manifold3d trimesh numpy
 
@@ -63,20 +65,35 @@ BUTTONS = {"BOOT": 74.0, "PWR": 84.0}  # side buttons on the bottom edge
 BTN_PROTRUDE = 0.75
 MIC = (2.5, 43.8)                # MEMS mic, back side
 DHT = (97.8, 48.5)               # temperature / humidity sensor, back side
-# The included speaker looks about 18 x 13 x 3.5 mm in Waveshare's photos (not published); a
-# 14 x 19 x 4.5 mm space is kept for it, turned lengthways, with the grille under its centre, and
-# 6.5 mm from the ESP32 module's antenna end (right-hand end of the board, about x 93.5-99.5), so
-# its magnet does not detune the antenna.
-SPEAKER_BOX = {"battery": (14.0, 19.0, 4.5)}
-SPEAKER = {"battery": (80.0, 15.5)}
+# Speaker: the owner's speaker, measured against a ruler in their photos (round 28): a box
+# 14.2 x 10.2-10.3 x 4.5 mm (+/-0.3), with a white peg about 2.6 mm wide sticking out about 1.6 mm from one
+# short side (1 mm off its middle), and its cable leaving a long side about 2.9 mm from the peg's end.
+# Its sound face (a white membrane about 10 x 6 mm inside a black gasket ring) lies face down on the
+# grille, peg toward the top edge, so the cable leaves on the side facing the battery. It sits turned
+# lengthways in a pocket with about 0.45-0.55 mm clearance all round, located by four corner brackets whose
+# short legs leave the middle of every side open for the peg and the cable. The grille is three slots
+# under the membrane, well inside the speaker's sealed face, so no sound leaks round its edge. The
+# pocket is 7.9 mm (the brackets 6.7 mm) from the ESP32 module's antenna end (right-hand end of the
+# board, about x 93.5-99.5), so the magnet won't detune it.
+SPEAKER_SIZE = (10.3, 14.2, 4.5)          # turned lengthways: x, y, z
+SPEAKER_WINDOW = (5.8, 10.0)              # membrane on the sound face, turned (x, y), centred
+SPEAKER_BOX = {"battery": (11.2, 15.3, 4.5)}   # the pocket inside the brackets (x, y, height kept)
+SPK_ROOM = tuple((b - s) / 2 for b, s in zip(SPEAKER_BOX["battery"][:2], SPEAKER_SIZE[:2]))  # play each way
+SPEAKER = {"battery": (80.0, 15.5)}       # pocket centre
+SPK_BRACKET = (1.2, 2.0, 2.0, 1.2)        # corner brackets: wall, height, leg along the short / long sides
+SPK_CABLE_EXIT = 2.9                      # cable centre from the peg's end, along the long side
+GRILLE_SLOTS = (1.0, 7.0, 1.8)            # three slots along y: width, length, pitch (0.8 mm webs)
 ANTENNA = (93.5, 99.5, 14.0, 40.0)       # x0, x1, y0, y1 of the module's antenna end (estimate)
-# Battery: Waveshare 3.7 V 1500 mAh LiPo, model 454261 (4.5 x 42 x 61 mm by the usual naming
-# convention). Waveshare's photo of it suggests it may be up to ~64.6 mm long including its taped
-# protection-board end, so the bay is 66 x 44 mm and 5 mm deep, with a guide bar on each side.
-BATTERY_SIZE = (61.0, 42.0, 4.5)
-BATTERY_MAX = (64.6, 43.0, 4.8)          # largest it could plausibly be
-BATTERY_BAY = (5.5, 71.5, 6.0, 50.0)     # x0, x1, y0, y1
-BATTERY_SPACE = 5.0                      # height kept for it (4.5 mm cell + swelling/tape)
+# Battery: the owner's Waveshare 3.7 V 1500 mAh LiPo (model 454261), measured against a ruler in their
+# photos (round 28): 61.1 x 40.8 x 4.3 mm including its taped protection-board end (+/-0.3). Its wires
+# leave that end at one corner. The bay is 62.5 x 42.5 mm (1.4 and 1.7 mm more than the cell, so it
+# can only shift about 0.7-0.85 mm each way) and 5 mm deep, with guide bars on all four sides; the
+# corners stay open so the wire can leave from either corner.
+BATTERY_SIZE = (61.1, 40.8, 4.3)
+BATTERY_MAX = (62.3, 42.2, 4.8)          # largest it could plausibly be (ruler error, tape, swelling)
+BATTERY_BAY = (5.5, 68.0, 6.5, 49.0)     # x0, x1, y0, y1
+BATTERY_GUIDE = (1.2, 2.0)               # guide bar thickness and height
+BATTERY_SPACE = 5.0                      # height kept for it (4.3 mm cell + swelling/tape)
 PARTS_SPACE = 5.0                        # room above the PCB for its parts and wires
 
 # ---------------------------------------------------------------- case
@@ -106,7 +123,7 @@ BTN_BEVEL = 1.2                          # outer edges of the opening bevelled s
 
 # no-flex closure: M2 screws through the long walls into blocks on the back cover
 # (position along the wall, wall). The top-left one sits near the corner and the fourth goes in the
-# right-hand wall, so the dial's thumb scoop and a 60 x 35 mm LiPo both have room.
+# right-hand wall, so the dial's thumb scoop has room; the bottom ones sit beside the battery bay.
 SCREWS = [(20.0, "bottom"), (64.0, "bottom"), (8.5, "top"), (52.4, "right")]
 SCREW_Z = Z_SPLIT - 3.1            # keeps the counterbore 1.0 mm below the parting line
 BLOCK_Z0 = Z_B + 2.7               # screw blocks sit where only low parts are (see README)
@@ -114,8 +131,9 @@ BLOCK_Z0 = Z_B + 2.7               # screw blocks sit where only low parts are (
 # The wall hole is set SCREW_DRAW toward the front, so with the case shut the screw shank already
 # rests on its back edge: the foam can't push the cover back (a "drawbore"). The pilot has a lead-in
 # so the tip finds it.
-SCREW_WALL_R, SCREW_PILOT_R, SCREW_DRAW = 1.15, 0.85, 0.05  # pilot 1.7 mm: less strain on the thin block walls;
-# draw 0.05: hole top on the 0.1/0.2 mm layer grid
+SCREW_WALL_R, SCREW_PILOT_R, SCREW_DRAW = 1.15, 0.9, 0.05  # pilot 1.8 mm for PLA: forming the thread
+# strains the thin block walls about a third less than a 1.7 mm pilot (PLA cracks sooner than PETG, and
+# small sideways holes print a little undersize); draw 0.05: hole top on the 0.1/0.2 mm layer grid
 SCREW_HEAD_R, SCREW_HEAD_DEPTH = 2.1, 1.4  # counterbore for a pan or button head
 BLOCK_DEPTH = 5.5
 
@@ -327,6 +345,94 @@ def dht_slots_x(x0, x1):
     return out
 
 
+def grille_slots(variant="battery"):
+    """Speaker grille: three stadium slots (x0, x1, y0, y1) along y, centred under the speaker."""
+    sx, sy = SPEAKER[variant]
+    w, length, pitch = GRILLE_SLOTS
+    return [(sx + k * pitch - w / 2, sx + k * pitch + w / 2, sy - length / 2, sy + length / 2)
+            for k in (-1, 0, 1)]
+
+
+def speaker_brackets(variant="battery"):
+    """Four L-shaped brackets at the corners of the speaker pocket, as (x0, x1, y0, y1) boxes (two
+    per corner, overlapping in the corner square). The legs run SPK_BRACKET[2] along the short sides
+    and SPK_BRACKET[3] along the long ones, so the peg and the cable both get out."""
+    sx, sy = SPEAKER[variant]
+    w, h, _ = SPEAKER_BOX[variant]
+    wall, _, leg_x, leg_y = SPK_BRACKET
+    out = []
+    for cx in (-1, 1):
+        for cy in (-1, 1):
+            xi, yi = sx + cx * w / 2, sy + cy * h / 2          # inner corner of the pocket
+            xo, yo = xi + cx * wall, yi + cy * wall            # outer corner of the bracket
+            xl, yl = xi - cx * leg_x, yi - cy * leg_y          # ends of the two legs
+            out.append((min(xo, xl), max(xo, xl), min(yi, yo), max(yi, yo)))   # leg along x
+            out.append((min(xi, xo), max(xi, xo), min(yo, yl), max(yo, yl)))   # leg along y
+    return out
+
+
+def battery_guides():
+    """Guide bars round the battery bay, as (x0, x1, y0, y1) boxes. Each end gets a 14 mm bar in its
+    middle; each long side gets bars from 10 mm in from the corners, broken where a screw block
+    stands. So the four corners stay open for the battery's wire."""
+    x0, x1, y0, y1 = BATTERY_BAY
+    th = BATTERY_GUIDE[0]
+    ym = (y0 + y1) / 2
+    bars = [(x0 - th, x0, ym - 7.0, ym + 7.0), (x1, x1 + th, ym - 7.0, ym + 7.0)]
+    for side, ya, yb in (("bottom", y0 - th, y0), ("top", y1, y1 + th)):
+        spans = [(x0 + 10.0, x1 - 10.0)]
+        for pos, s in SCREWS:
+            if s == side:   # keep 1.5 mm off the 4 mm wide block
+                a, b = pos - 3.5, pos + 3.5
+                spans = [p for lo, hi in spans for p in ((lo, min(hi, a)), (max(lo, b), hi)) if p[1] - p[0] >= 6.0]
+        bars += [(lo, hi, ya, yb) for lo, hi in spans]
+    return bars
+
+
+# ---------------------------------------------------------------- wires (assembly advice)
+# Where the wires go: centre lines (x, y, z) and wire radius. Not part of the printed geometry: the
+# checks (round 13, 28) prove each route is free in the closed case, and the guide draws them.
+def battery_wire_route():
+    """Battery wire: leaves the taped end at its bottom corner, drops beside the bay, runs along the
+    bottom of the board over the microSD socket and under the battery, and ends in front of BAT."""
+    x0, x1, y0, y1 = BATTERY_BAY
+    z_in = Z_B + CAVITY["battery"]
+    zs = Z_B + 1.9 + 1.25             # resting on top of the microSD socket (1.9 mm tall)
+    return [(x0 - 1.4, y0 + 3.0, z_in - BATTERY_SPACE / 2), (3.5, y0 + 3.0, zs), (3.5, 7.6, zs),
+            (34.0, 7.6, zs), (34.0, 6.4, zs)], 1.25
+
+
+def speaker_wire_route():
+    """Speaker cable (2.8 mm thick where it is sleeved): leaves the speaker's long side facing the
+    battery (peg toward the top edge), drops through the gap between the bay and the pocket, and runs
+    under the battery to the front of SPK (x 52.5-61.5)."""
+    sx, sy = SPEAKER["battery"]
+    w, h, t = SPEAKER_BOX["battery"]
+    z_in = Z_B + CAVITY["battery"]
+    r = 1.4
+    zl = Z_B + 1.45 + r               # above the board's low parts (1.4 mm), under the battery
+    xg = (BATTERY_BAY[1] + sx - w / 2 - SPK_BRACKET[0]) / 2   # middle of the gap between bay and pocket
+    ye = sy + SPEAKER_SIZE[1] / 2 - SPK_CABLE_EXIT             # where the cable leaves the speaker
+    return [(sx - w / 2 - r - 0.05, ye, z_in - t / 2), (xg, ye, z_in - t / 2), (xg, ye, zl),
+            (xg, 7.6, zl), (57.0, 7.6, zl), (57.0, 6.4, zl)], r
+
+
+def speaker_cable_coil():
+    """Where the spare speaker cable goes: one loop lying on the back cover above the speaker pocket,
+    kept 5 mm from the antenna end. About 64 mm of cable."""
+    sx, sy = SPEAKER["battery"]
+    z_in = Z_B + CAVITY["battery"]
+    r = 1.4
+    cx, cy, a, b, rc = sx - 0.5, 37.25, 7.5, 10.25, 4.0   # centre, half sizes, corner radius
+    pts = []
+    for (qx, qy), a0 in (((cx + a - rc, cy + b - rc), 0), ((cx - a + rc, cy + b - rc), 90),
+                         ((cx - a + rc, cy - b + rc), 180), ((cx + a - rc, cy - b + rc), 270)):
+        for ang in np.radians(np.linspace(a0, a0 + 90, 7)):
+            pts.append((qx + rc * math.cos(ang), qy + rc * math.sin(ang), z_in - r - 0.05))
+    pts.append(pts[0])
+    return pts, r
+
+
 def back_cover(z_total, variant):
     outer = body(z_total)
     z_in = z_total - T_BACK
@@ -381,26 +487,21 @@ def back_cover(z_total, variant):
 
     t -= pry_notch(z_total)
 
-    # speaker grille (hex pattern)
-    holes = Manifold()
-    sx, sy = SPEAKER[variant]
-    ax, ay = (8.6, 6.0) if SPEAKER_BOX[variant][0] > SPEAKER_BOX[variant][1] else (6.0, 8.6)
-    for j, yy in enumerate(np.arange(-7.9, 8.0, 2.25)):
-        off = 1.3 if j % 2 else 0.0
-        for xx in np.arange(-7.8 + off, 7.9, 2.6):
-            if (xx / ax) ** 2 + (yy / ay) ** 2 <= 1.0:
-                holes += cyl_z(sx + xx, sy + yy, 0.8, z_in - 1, z_total + 1, 24)
-    t -= holes
+    # speaker grille: three slots under the speaker's membrane (none outside it, so the sound from the
+    # back of the cone can't leak out round the speaker and cancel the front)
+    for x0, x1, y0, y1 in grille_slots(variant):
+        t -= slot_z(x0, x1, y0, y1, z_in - 1, z_total + 1)
 
-    # battery: a short guide bar at the middle of each side of its bay, 1.5 mm tall. The corners
-    # stay open so the battery's wire can leave from either end.
+    # speaker pocket: four L-shaped corner brackets; the middle of every side stays open for the
+    # speaker's peg and cable
+    for x0, x1, y0, y1 in speaker_brackets(variant):
+        t += box(x0, x1, y0, y1, z_in - SPK_BRACKET[1], z_in + 0.05)
+
+    # battery: guide bars on all four sides of its bay. The corners stay open so its wire can leave
+    # from either corner of the taped end.
     if variant == "battery":
-        x0, x1, y0, y1 = BATTERY_BAY
-        xm, ym = (x0 + x1) / 2, (y0 + y1) / 2
-        th, h = 1.2, 1.5
-        for gx0, gx1, gy0, gy1 in ((x0 - th, x0, ym - 6, ym + 6), (x1, x1 + th, ym - 6, ym + 6),
-                                   (xm - 10, xm + 10, y0 - th, y0), (xm - 10, xm + 10, y1, y1 + th)):
-            t += box(gx0, gx1, gy0, gy1, z_in - h, z_in + 0.05)
+        for gx0, gx1, gy0, gy1 in battery_guides():
+            t += box(gx0, gx1, gy0, gy1, z_in - BATTERY_GUIDE[1], z_in + 0.05)
 
     # mic holes, DHT vents, drill marks for optional screws into the standoffs
     for dy in (-2.0, 0.0, 2.0):  # >= 0.8 mm between holes so the webs print

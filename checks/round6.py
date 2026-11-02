@@ -3,7 +3,7 @@
 
 1. Continuous sweeps: the convex hull of each part at the start and end of its motion is its exact
    swept volume (parts are convex boxes and cylinders), so nothing can slip between sample steps
-2. Packing: the included speaker (assumed 20 x 15 x 4.5 mm) and a 60 x 35 mm LiPo placed in the cover
+2. Packing: the speaker's pocket and the battery bay placed in the cover (sizes in case.py)
 3. Plastic around each screw thread, measured by radial rays from the pilot-hole axis
 4. microSD push-push: a 1 mm tool must reach 2 mm past the latched card face; dial pressed 0.5 mm in
 """
@@ -83,17 +83,17 @@ def packing(variant):
     sx, sy = case.SPEAKER[variant]
     w, h, t = case.SPEAKER_BOX[variant]
     spk = case.box(sx - w / 2, sx + w / 2, sy - h / 2, sy + h / 2, z_in - t, z_in)
-    report(vol(spk ^ C) < 1e-3, f"{variant} packing: {w:.0f} x {h:.0f} x {t} mm speaker space on the grille touches the cover "
+    report(vol(spk ^ C) < 1e-3, f"{variant} packing: {w:.1f} x {h:.1f} x {t} mm speaker pocket on the grille touches the cover "
                                 f"{vol(spk ^ C):.3f} mm3; its underside is {z_in - t - case.Z_B:.1f} mm above the PCB back "
                                 f"(parts under it must be lower)")
     if variant != "battery":
         return
-    # the real battery (454261) with its 1 mm margins, in its bay, next to the speaker
+    # the whole battery bay (the owner's 454261 plus its clearance), next to the speaker
     x0, x1, y0, y1 = case.BATTERY_BAY
     bat = case.box(x0, x1, y0, y1, z_in - case.BATTERY_SPACE, z_in)
     hit = vol(bat ^ (C + spk))
-    report(hit < 1e-3, f"{variant} packing: battery bay {x1 - x0:.0f} x {y1 - y0:.0f} x {case.BATTERY_SPACE} mm "
-                       f"(for the {case.BATTERY_SIZE[1]:.0f} x {case.BATTERY_SIZE[0]:.0f} x {case.BATTERY_SIZE[2]} mm 454261) "
+    report(hit < 1e-3, f"{variant} packing: battery bay {x1 - x0:.1f} x {y1 - y0:.1f} x {case.BATTERY_SPACE} mm "
+                       f"(for the {case.BATTERY_SIZE[0]:.1f} x {case.BATTERY_SIZE[1]:.1f} x {case.BATTERY_SIZE[2]} mm 454261) "
                        f"is clear of the cover and the speaker ({hit:.3f} mm3); "
                        f"{z_in - case.BATTERY_SPACE - case.Z_B:.1f} mm above the PCB back")
 

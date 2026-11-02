@@ -180,7 +180,9 @@ def check_islands(variant, layer=0.2):
     shell, cover, _, _ = load_assembled(variant)
     for name, tm in (("front shell", shell), ("back cover", cover)):
         top = tm.bounds[1][2]
-        zs = np.arange(layer / 2, top, layer)
+        # 0.013 mm off the layer middles: a section plane lying exactly on a feature's edge (the 1.8 mm
+        # pilots' tangents sit on the 0.1 mm grid) comes out malformed and drops polygons
+        zs = np.arange(layer / 2, top, layer) + 0.013
         sections = tm.section_multiplane(plane_origin=[0, 0, 0], plane_normal=[0, 0, 1], heights=zs)
         prev = None
         floating = []
@@ -217,7 +219,7 @@ def check_screws(variant):
         # the drawn wall hole only touches the shank along its back edge (tangent): almost no overlap
         ok = (vol(head ^ S) < 1e-3 and vol(shank ^ S) < 0.01 and vol(core ^ (S + C)) < 1e-3
               and vol(head ^ C) < 1e-3 and bite >= 3.5 and vol((shank + head) ^ every) < 1e-3
-              and tip_inside > 0.3 * np.pi * 0.2 * 0.9)
+              and tip_inside > 0.9 * ring * 0.2)   # the last 0.2 mm of the tip is (90 %) in the thread
         report(ok, f"{variant} screw {side} x={x:.0f}: head/shell {vol(head ^ S):.3f}, shank/wall {vol(shank ^ S):.4f} "
                    f"(rests on the drawn hole's edge), thread in the block {bite:.1f} mm, "
                    f"tip buried={tip_inside > 0.1}, hits board {vol((shank + head) ^ every):.3f}")

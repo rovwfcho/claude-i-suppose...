@@ -1,0 +1,90 @@
+{
+ "battery_length": {
+  "photo": "6",
+  "offset": [
+   100,
+   840
+  ],
+  "size": [
+   1360,
+   240
+  ]
+ },
+ "battery_width": {
+  "photo": "4",
+  "offset": [
+   230,
+   940
+  ],
+  "size": [
+   1130,
+   170
+  ]
+ },
+ "battery_thickness": {
+  "photo": "7",
+  "offset": [
+   450,
+   840
+  ],
+  "size": [
+   1050,
+   220
+  ]
+ },
+ "speaker_length": {
+  "photo": "1",
+  "offset": [
+   280,
+   1080
+  ],
+  "size": [
+   1220,
+   320
+  ]
+ },
+ "speaker_width": {
+  "photo": "2",
+  "offset": [
+   350,
+   1000
+  ],
+  "size": [
+   970,
+   320
+  ]
+ },
+ "speaker_thickness": {
+  "photo": "3",
+  "offset": [
+   450,
+   1080
+  ],
+  "size": [
+   870,
+   320
+  ]
+ },
+ "speaker_face": {
+  "photo": "8",
+  "offset": [
+   1450,
+   60
+  ],
+  "size": [
+   550,
+   360
+  ]
+ },
+ "board_back": {
+  "photo": "9",
+  "offset": [
+   150,
+   80
+  ],
+  "size": [
+   1570,
+   980
+  ]
+ }
+}
