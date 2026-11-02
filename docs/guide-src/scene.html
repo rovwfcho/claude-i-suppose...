@@ -1,0 +1,36 @@
+<!doctype html><html><head><style>body{margin:0;background:#fff}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./three.module.js"}}</script></head><body>
+<script type="module">
+import * as THREE from 'three';
+import {STLLoader} from './STLLoader.js';
+window.render = async (spec) => {
+  const W = spec.w || 1400, H = spec.h || 900;
+  const r = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+  r.setSize(W, H); r.setPixelRatio(1); document.body.innerHTML = ''; document.body.appendChild(r.domElement);
+  const s = new THREE.Scene(); s.background = new THREE.Color(0xffffff);
+  s.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 1.5));
+  const d1 = new THREE.DirectionalLight(0xffffff, 2.0); d1.position.set(-60, 90, 150); s.add(d1);
+  const d2 = new THREE.DirectionalLight(0xffffff, 0.9); d2.position.set(120, -60, -120); s.add(d2);
+  const G = new THREE.Group(); G.scale.set(1, 1, spec.noflip ? 1 : -1); s.add(G);   // design frame -> real space
+  const L = new STLLoader();
+  for (const p of spec.parts) {
+    const g = await new Promise(res => L.load(p.f + '.stl', res)); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({color: p.c, roughness: 0.6, side: THREE.DoubleSide,
+      transparent: !!p.op, opacity: p.op || 1}));
+    if (p.flip) m.rotation.x = Math.PI;   // turned over (about x)
+    m.position.set(p.dx || 0, p.dy || 0, p.dz || 0); G.add(m);
+  }
+  const zs = spec.noflip ? 1 : -1;
+  const cam = new THREE.PerspectiveCamera(spec.fov || 30, W / H, 1, 3000);
+  const t = new THREE.Vector3(spec.cam.t[0], spec.cam.t[1], zs * spec.cam.t[2]);
+  cam.position.set(t.x + spec.cam.o[0], t.y + spec.cam.o[1], t.z + spec.cam.o[2]);
+  cam.up.set(...(spec.cam.up || [0, 1, 0])); cam.lookAt(t); cam.updateMatrixWorld();
+  r.render(s, cam);
+  const out = (spec.labels || []).map(q => {
+    const v = new THREE.Vector3(q[0], q[1], zs * q[2]).project(cam);
+    return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H];
+  });
+  return {img: r.domElement.toDataURL('image/png'), labels: out};
+};
+window.READY = true;
+</script></body></html>
