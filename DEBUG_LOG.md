@@ -495,3 +495,12 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - The cell plus tape plus swelling never reaches what lies under it.
 - 31 guide markers point at their parts.
 - The case runs about 7 K above the room with 1 W inside; in full sun it can pass 55 °C, which the README warns about.
+
+## Round 30: different methods
+**New methods:**
+- **Handedness of the speaker instruction:** the sign of (peg × cable) · (sound-face normal), from your top view of the speaker, carried into the case's real-space frame. With the sound face to the back and the peg up, the cable must point at the battery. That is what the README, the guides and the cable route say.
+- **Cable lengths traced in your photo** and measured through a perspective transform from the four standoff tops, against the routes and the loop.
+- **The slicer's lines over the thin new features:** at 0.1, 0.15 and 0.2 mm layers, PrusaSlicer's extrusion lines, at the widths it writes in the G-code, must cover at least 85 % of every guide bar and L bracket on each layer, up to within one layer of the top.
+- **The documentation rebuilt from a clean clone** of the last commit: `preview/renders.png` must be pixel-identical, and both guides must have the same pages and text.
+
+**Check bug found while writing it:** the first coverage test drew every extrusion line 0.45 mm wide with square ends, and measured each bracket as two separate boxes. It said the fine-layer bars were only 65–75 % covered. PrusaSlicer's own widths at 0.1 mm layers are 0.61–0.71 mm. With those, round ends and whole L shapes, the cover is 98–100 %.
