@@ -485,7 +485,7 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **The battery wire's route had two 0.95 mm bends** (it needs 1 mm). The short straight between them is now 2.4 mm.
 - **The documents said the battery is 40.8 mm wide;** round 28 measures 40.73. `BATTERY_SIZE`, the README and both guides now say 40.7, and the play is about 0.9 mm (was 0.8).
 - **One guide marker** (print picture, marker 1) sat in the middle of the display window, over empty space. It is now on the shell's rim.
-- **The spare speaker cable didn't fit its loop.** Traced in your photo, the cable is about 105 mm, so about 75 mm is spare, but the loop held only 64 mm. The loop is now taller (up to 5.5 mm from the top wall, clear of the dial tab and the antenna end) and holds 77 mm.
+- **The spare speaker cable didn't fit its loop.** Traced roughly in your photo, the cable is 100–105 mm (round 30's careful trace: 101 mm), so 70–75 mm is spare, but the loop held only 64 mm. The loop is now taller (up to 5.5 mm from the top wall, clear of the dial tab and the antenna end) and holds 77 mm.
 
 **Check bug:** the first version compared the battery plus tape plus ageing swelling with the nominal 5 mm room. Over the bay, the first thing the cell could reach is the wires under it, 5.6 mm away. It is now measured against that.
 
@@ -504,3 +504,15 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **The documentation rebuilt from a clean clone** of the last commit: `preview/renders.png` must be pixel-identical, and both guides must have the same pages and text.
 
 **Check bug found while writing it:** the first coverage test drew every extrusion line 0.45 mm wide with square ends, and measured each bracket as two separate boxes. It said the fine-layer bars were only 65–75 % covered. PrusaSlicer's own widths at 0.1 mm layers are 0.61–0.71 mm. With those, round ends and whole L shapes, the cover is 98–100 %.
+
+**Result of round 30 (all scripts, rounds 1–30):** 340 checks passed, the same 4 SKIPPED (Waveshare's site), 0 problems in any script. **Not clean:** reading the README against round 30's results turned up two mistakes.
+
+**Mistakes found and fixed (documentation):**
+- The README said round 28 refines each edge to "the strongest colour step". Since round 28's own fix it takes the outermost strong step (the part's outline). The README now says that.
+- The README gave about 57 mm of battery wire, and round 13's message about 106 mm of speaker cable. Both came from my first rough reading of the photo. Round 30 traces them through a perspective transform at 54 and 101 mm. The README, round 13 and round 29's entry now use those figures. Both cables still have plenty of length: 16 mm spare on the battery wire, and 71 mm on the speaker cable for a 77 mm loop.
+
+## Round 31: different methods
+**New methods:**
+- **Cable routes found by a search instead of drawn:** the closed case becomes a 0.5 mm voxel map: sections of the shell, cover, board parts, the largest plausible battery and the speaker, filled layer by layer. A distance transform gives every voxel's room. Dijkstra's shortest path then runs through the voxels with room for each cable (2.8 mm speaker cable, 2.5 mm battery pair), from where each cable leaves its part to its plug.
+- **Every number new in the README since session 3** is listed automatically, and each must be traced to `case.py`, a check's result or a measurement by a written rule.
+- **The cover closing with its load:** the largest battery in each corner of its bay, the speaker in each corner of its pocket, and the spare-cable loop are swept straight down the last 20 mm with the cover (exact convex sweeps). They must miss the board and the shell.

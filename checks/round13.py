@@ -136,14 +136,14 @@ def wires():
     hit_b = vol(tube(bat_path, rb) ^ obst)
     Lb = sum(np.linalg.norm(np.subtract(a, b)) for a, b in zip(bat_path[:-1], bat_path[1:]))
     report(hit_b < 1e-3, f"battery wire route to the BAT header, clear of case, board parts, battery and speaker: "
-                         f"{hit_b:.4f} mm3 (about {Lb:.0f} mm long; the wire is about 57 mm)")
+                         f"{hit_b:.4f} mm3 (about {Lb:.0f} mm long; the wire is about 54 mm, round 30)")
     # speaker cable: leaves the speaker's long side facing the battery, drops through the gap between
     # the bay and the pocket and runs under the battery to the front of the SPK header (x 52.5-61.5)
     spk_path, rs = case.speaker_wire_route()
     hit_s = vol(tube(spk_path, rs) ^ obst)
     Ls = sum(np.linalg.norm(np.subtract(a, b)) for a, b in zip(spk_path[:-1], spk_path[1:]))
     report(hit_s < 1e-3, f"speaker wire route to the SPK header, clear of case, board parts, battery and speaker: "
-                         f"{hit_s:.4f} mm3 (about {Ls:.0f} mm long; the cable is about 106 mm)")
+                         f"{hit_s:.4f} mm3 (about {Ls:.0f} mm long; the cable is about 101 mm, round 30)")
     # the spare speaker cable: one loop lying on the back cover above the speaker
     coil, rc = case.speaker_cable_coil()
     hit_c = vol(tube(coil, rc) ^ obst)

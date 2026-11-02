@@ -72,8 +72,8 @@ A two-piece case with rounded edges for the Waveshare ESP32-S3 3.97" e-Paper boa
 
 **Display window position:** from the dimension lines on the same drawing. Waveshare's photos agree within about 0.5 mm.
 
-**Measured from your photos** (`checks/round28.py`, drawn in `preview/owner_measurements.png`). The scale comes from the ruler's tick marks, found automatically: 17–43 ticks per photo, with a straight line fitted through them. The edges were picked by eye and then refined to the strongest colour step. Expect about ±0.3 mm:
-- **Battery:** 61.1 x 40.7 x 4.3 mm, including the taped end. Its wires leave that end at one corner (about 57 mm of wire). The bay leaves 0.7–0.9 mm on each side of it.
+**Measured from your photos** (`checks/round28.py`, drawn in `preview/owner_measurements.png`). The scale comes from the ruler's tick marks, found automatically: 17–43 ticks per photo, with a straight line fitted through them. The edges were picked by eye and then refined to the part's outline (the outermost strong colour step). Expect about ±0.3 mm:
+- **Battery:** 61.1 x 40.7 x 4.3 mm, including the taped end. Its wires leave that end at one corner (about 54 mm of free wire). The bay leaves 0.7–0.9 mm on each side of it.
 - **Speaker:** 14.2 x 10.2 x 4.5 mm. Its membrane is about 10.1 x 5.8 mm and centred to within 0.3 mm (found by a perspective transform of its frame in your top view). The white peg sticks out about 1.6 mm from one short side, 1 mm off its middle. The cable leaves a long side about 2.9 mm from the peg's end and is about 10–11 cm long. The pocket leaves about 0.5 mm on each side.
 - **Your board:** the four standoff tops in your back photo were used as reference points. The USB-C, both buttons, the dial and the top edge land within 0.5 mm of the board model, so your board is the same revision the case was built for.
 

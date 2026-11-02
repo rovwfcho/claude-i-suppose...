@@ -9,7 +9,7 @@ for s in verify.py checks/round1.py checks/round2.py checks/round3.py checks/rou
          checks/round19.py checks/round20.py \
          checks/round21.py checks/round22.py \
          checks/round23.py checks/round28.py checks/round29.py \
-         checks/round30.py; do
+         checks/round30.py checks/round31.py; do
   echo "=== $s"
   python3 "$s" || status=1
 done
