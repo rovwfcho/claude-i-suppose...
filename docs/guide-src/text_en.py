@@ -64,7 +64,7 @@ h_tips="Tips",
 tips=["The PWR and BOOT buttons stay fully uncovered in the bottom edge; press them straight on or slightly tilted.",
       "To eject the microSD card, press it in with a fingernail or a pen tip: it sits about 4 mm inside the edge.",
       "Your standoffs are 3–4 mm tall. With 3 mm ones the board sits 1 mm further back and the display 1 mm deeper behind the window; that's expected, and everything still fits.",
-      "The standoff positions were read from your back photo and Waveshare's photos (within about 0.3 mm); the corner holes allow 0.4 mm. The battery and speaker sizes were read off the ruler in your photos (about ±0.3 mm). A test fit of the back cover is the real check."],
+      "The standoff positions were read from your back photo and Waveshare's photos, which differ by up to 0.7 mm; the corner holes allow 0.4 mm, so the board can always sit with no screw more than 0.3 mm off centre. The battery and speaker sizes were read off the ruler in your photos (about ±0.3 mm). A test fit of the back cover is the real check."],
 foot="Files: <code>stl/front_shell_battery.stl</code> (the front lid) and <code>stl/back_cover_battery.stl</code>. Details and every assumption are in README.md; all checks are in DEBUG_LOG.md.",
 )
 json.dump(T, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "text_en.json"), "w"), ensure_ascii=False, indent=1)

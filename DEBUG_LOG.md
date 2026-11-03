@@ -678,6 +678,8 @@ You sent four photos of the board's front against the ruler. **New methods** (`c
 
 - **The display lip over the PWR/BOOT opening became too weak** when the window's lower edge moved 0.5 mm toward it (round 5: 30.5 MPa at 10 N, allow 30). Its section measured on the STL is weaker still, 31 MPa, because the front edge's rounding thins it. The lid's ledge pad at the bottom right (x 86–94) now runs along the whole opening (x 66–94), still 0.5 mm in front of the PCB: the lip's weakest section now takes 19.9 MPa.
 
+- **Both guides overstated how well the standoff positions are known.** Their tip said "within about 0.3 mm", the same overstatement round 35 corrected in the README: the estimates differ by up to 0.7 mm, and 0.3 mm is how far off centre a screw can end up. They now say so (found by reading the rebuilt PDFs).
+
 **Check bugs:**
 - Round 5 took the lip as a 3.7 x 1.3 mm rectangle. It now measures the lip's real section on the STL every 0.5 mm along the opening. Its screw-head estimate now uses the 5.0 mm head the README asks for, instead of a 4.7 mm one.
 - Round 2 measured the window's margins round an active area it assumed was centred in the window. The window has not been centred on the picture since round 44, so it now uses the drawing's active area (x 9.3–95.7, y 4.1–55.9).
