@@ -16,7 +16,7 @@
    (along the board, round 44; across it, above) must lie inside the window's rounded corners too,
    not just between its straight edges, which is all rounds 2, 44 and the check above look at.
 3. How hard the screws may be tightened: the plastic each screw clamps, read from the back cover's
-   STL. Under the head: the recess floor's first layer is two bridged segments with a 3.4 mm slot
+   STL for every head the documents offered (round 5 estimated one head size by hand). Under the head: the recess floor's first layer is two bridged segments with a 3.4 mm slot
    between them (round 35's bridging trick), so a head presses only on the parts of it outside the
    slot. At the post's end: the ring of the brass standoff's top outside the 3.4 mm hole (4.5 mm
    round as measured, or a 4 mm hex), with the screw up to 0.29 mm off centre (round 35's worst).
