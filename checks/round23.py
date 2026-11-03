@@ -11,15 +11,12 @@ For a viewer facing the display (display normal n toward the viewer), left L and
 gives > 0. Every earlier check compared the parts with a board model in the same frame as the
 design, so they could not see a mirror image; this one can.
 
-Also the foam that presses the board against the front pads, as printed: both parts are sliced by
-PrusaSlicer at several layer heights, and the heights the slicer really gives the pad tops, the seam
-and the ring faces are read from the G-code (the slicer rounds every face to a layer). From those,
-the gap the foam tape fills is worked out. The screw's position is read the same way: the top of
-the wall hole and the axis of the block's pilot as printed give how far the foam can push the cover
-back before the M2 shank meets the hole's edge (and whether the shank would have to cut into it).
-Foam of 1.0 and 1.2 mm (the README's range) must stay squeezed (at least 10 %, at most 75 %) with
-the PCB 0.16 mm thinner or thicker than assumed and that back-off, and the shank must not cut more
-than 0.05 mm into the wall hole.
+Also the stack-up as printed: both parts are sliced by PrusaSlicer at several layer heights, and the
+heights the slicer really gives the lid's rim, its pad tops and the plate over the glass, and the
+cover's rim and corner-post ends, are read from the G-code (the slicer rounds every face to a layer).
+From those, with the board screwed to the posts on 4 mm standoffs and a PCB 0.16 mm thicker than
+assumed and standoffs 0.1 mm taller, the pads must still not press the PCB and the glass must stay
+at least 0.4 mm clear of the lid (more with 3 mm standoffs).
 """
 import math
 import os
@@ -134,21 +131,14 @@ def top_at(ex, pt, r=0.3):
     return best
 
 
-def foam_as_printed():
+def stack_as_printed():
     exe = shutil.which("prusa-slicer")
     if not exe:
-        print("  ..   PrusaSlicer not installed; as-printed foam gap skipped")
+        print("  ..   PrusaSlicer not installed; as-printed stack-up skipped")
         return
     import trimesh
-    z_total = case.Z_B + case.CAVITY["battery"] + case.T_BACK
-
-    def open_layers(ex, pt, z0, z1):
-        """Layers between z0 and z1 with no extrusion within 0.25 mm of the point (a hole there)."""
-        return sorted(z for z, segs in ex.items() if z0 <= z <= z1 and len(segs)
-                      and seg_dist(np.array([pt]), segs)[0] > 0.25)
     meshes = {n: trimesh.load(os.path.join(ROOT, "stl", n + ".stl")) for n in ("front_shell_battery", "back_cover_battery")}
     px, py = case.POSTS[1]
-    ring_pt = (px + 4.1 * math.cos(math.radians(135)), py + 4.1 * math.sin(math.radians(135)))
     for lh in (0.1, 0.15, 0.2, 0.3):
         tops = {}
         for name, tm in meshes.items():
@@ -165,26 +155,19 @@ def foam_as_printed():
                 mirror = lambda x, y: (case.BW - x, y)          # front_for_print mirrors x about the board centre
                 tops["pad"] = top_at(ex, np.array(mirror(49.0, 0.05)) + shift)
                 tops["seam"] = top_at(ex, np.array(mirror(30.0, -2.0)) + shift)
-                hole = open_layers(ex, np.array(mirror(20.0, -0.8)) + shift, case.SCREW_Z - 1.6, case.SCREW_Z + 1.6)
-                tops["hole_top"] = max(hole)              # bottom screw at x = 20, inside the wall
+                tops["lip"] = top_at(ex, np.array(mirror(52.0, 2.2)) + shift)     # plate over the glass
             else:
                 tops["rim"] = top_at(ex, np.array([30.0, -2.0]) + shift)
-                tops["ring"] = top_at(ex, np.array(ring_pt) + shift)
-                zp = z_total - case.SCREW_Z                # the pilot axis in print height
-                pil = open_layers(ex, np.array([20.0, 3.0]) + shift, zp - 1.2, zp + 1.2)  # stay inside the block
-                tops["pilot"] = (min(pil) - lh + max(pil)) / 2
-        ring_z = tops["seam"] - (tops["ring"] - tops["rim"])
-        pilot_z = tops["seam"] - (tops["pilot"] - tops["rim"])     # assembled height of the screw axis
-        slack = tops["hole_top"] - (pilot_z + 0.97)              # room before an M2 shank (r 0.97-1.0) meets it
-        cut = (pilot_z + 1.0) - tops["hole_top"]                 # how far the shank would cut into the hole
-        gap = ring_z - (tops["pad"] + case.PCB_T)
-        g_max, g_min = gap + 0.16 + max(slack, 0.0), gap - 0.16
-        c_min, c_max = 1 - g_max / 1.0, 1 - g_min / 1.2          # thinnest foam at the widest gap, and v.v.
-        ok = c_min >= 0.10 and c_max <= 0.75 and cut <= 0.05
-        msg = (f"{lh} mm layers: pad top {tops['pad']}, seam {tops['seam']}, cover rim {tops['rim']}, ring face "
-               f"{tops['ring']} -> foam gap {gap:.2f} mm (designed {case.FOAM_GAP}); 1.0-1.2 mm foam squeezed "
-               f"{100 * c_min:.0f}-{100 * c_max:.0f} % over PCB +/-0.16; screw: hole top {tops['hole_top']}, axis "
-               f"{pilot_z:.2f}, back-off {max(slack, 0):.2f} mm, shank cuts {max(cut, 0):.2f} mm into the hole")
+                tops["post"] = top_at(ex, np.array([px - 2.6, py + 0.5]) + shift)
+        post_z = tops["seam"] - (tops["post"] - tops["rim"])        # post end, in the lid's print heights
+        pcb_front = post_z - case.STANDOFF_H - case.PCB_T
+        pad_gap = pcb_front - tops["pad"]
+        glass_gap = pcb_front - case.PANEL_T - tops["lip"]
+        worst_pad, worst_glass = pad_gap - 0.26, glass_gap - 0.26
+        ok = worst_pad >= 0.0 and worst_glass >= 0.4
+        msg = (f"{lh} mm layers: lid rim {tops['seam']}, pad top {tops['pad']}, plate over the glass {tops['lip']}; cover "
+               f"rim {tops['rim']}, post end {tops['post']} -> pads {pad_gap:.2f} mm in front of the PCB (worst "
+               f"{worst_pad:.2f}), glass {glass_gap:.2f} mm clear of the lid (worst {worst_glass:.2f})")
         if lh <= 0.2:
             report(ok, msg)
         else:
@@ -194,7 +177,7 @@ def foam_as_printed():
 if __name__ == "__main__":
     front_shell()
     back_cover()
-    foam_as_printed()
+    stack_as_printed()
     print(f"\nRound 23: {len(problems)} problem(s)")
     for p in problems:
         print("  -", p)

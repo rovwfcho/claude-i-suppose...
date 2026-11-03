@@ -15,10 +15,10 @@ Z_IN = Z_TOTAL - case.T_BACK
 FLIP_DY = 137.7                            # parts picture: the cover, turned over, sits below the shell
 C = {"shell": "#e9e6df", "cover": "#d9d4ca", "board": "#1d4f91", "panel": "#d8d8d8", "wheel": "#222222",
      "standoffs": "#c9a227", "battery": "#c9ccd1", "battery_end": "#e0b23c", "speaker": "#8f949a",
-     "speaker_peg": "#f4f4f4", "foam": "#ff6a00", "wire_bat": "#d62828", "wire_spk": "#2a6fdb",
+     "speaker_peg": "#f4f4f4", "wire_bat": "#d62828", "wire_spk": "#2a6fdb",
      "coil_spk": "#2a6fdb", "screws": "#3a3a3a", "p_front": "#e9e6df", "p_cover": "#d9d4ca"}
 BOARD = ["board", "panel", "wheel", "standoffs"]
-INSIDE = ["battery", "battery_end", "speaker", "speaker_peg", "foam"]
+INSIDE = ["battery", "battery_end", "speaker", "speaker_peg"]
 WIRES = ["wire_bat", "wire_spk", "coil_spk"]
 
 
@@ -32,13 +32,21 @@ def flipped(p):
     return [x, -y + FLIP_DY, -z + Z_TOTAL]
 
 
-def foam_points():
+def post_points():
+    """A point on the side of each corner post, facing the board's middle (for markers)."""
     out = []
-    for (px, py), (a0, a1) in zip(case.POSTS, case.POST_SECTORS):
-        am = math.radians((a0 + a1) / 2)
-        rm = (case.POST_RIN + case.POST_ROUT) / 2
-        out.append([px + rm * math.cos(am), py + rm * math.sin(am), case.Z_B + case.FOAM_GAP / 2])
+    for px, py in case.POSTS:
+        ux, uy = case.BW / 2 - px, case.BH / 2 - py
+        n = math.hypot(ux, uy)
+        out.append([px + case.POST_R * ux / n, py + case.POST_R * uy / n, Z_IN - 3.0])
     return out
+
+
+def clip_points():
+    """The middle of each clip hook's crest."""
+    p, za, zb, zc, zd = case.clip_levels()
+    yb = -case.CLR + case.SKIRT_CLR - p
+    return [[x, yb if side == "bottom" else case.BH - yb, (zb + zc) / 2] for x, side in case.CLIPS]
 
 
 def specs():
@@ -50,7 +58,7 @@ def specs():
     spk_wire, _ = case.speaker_wire_route()
     coil, _ = case.speaker_cable_coil()
     coil_top = max(coil, key=lambda p: p[1])
-    foam = foam_points()
+    posts = post_points()
     s = {}
     s["hero"] = {"parts": parts(["shell", "cover"] + BOARD), "cam": {"t": [49.75, 30, 8], "o": [-70, -110, 190]},
                  "labels": []}
@@ -59,21 +67,21 @@ def specs():
                   + parts(["cover"] + INSIDE, flip=True, dy=FLIP_DY, dz=Z_TOTAL),
                   "cam": {"t": [108, 68, 8], "o": [0, -70, -440]},
                   "labels": [[49.75, -2.7, 6], [167.75, -0.5, 5], flipped((49.75, -2.7, 14.0)), flipped(bat),
-                             flipped(spk), flipped(foam[0])]}
+                             flipped(spk), flipped(posts[2])]}
     s["step1"] = {"parts": parts(["shell"]) + parts(BOARD, dz=55), "cam": {"t": [49.75, 30, 26], "o": [90, -230, -190]},
                   "labels": [[79, 62.7, 4], [79, -2.7, 4], [-2.7, 30, 6], [49.75, 30, 59.9], [-2.7, 14, 6]], "h": 1000}
     s["step2"] = {"parts": parts(["cover"] + INSIDE + WIRES), "cam": {"t": [49.75, 30, 12], "o": [-40, -120, 210]},
-                  "labels": [bat, spk] + foam + [list(bat_wire[-1]), list(spk_wire[-1]), list(bat_wire[0]),
+                  "labels": [bat, spk] + posts + [list(bat_wire[-1]), list(spk_wire[-1]), list(bat_wire[0]),
                                                  list(coil_top), [sx, sy + case.SPEAKER_SIZE[1] / 2 + 1.0, Z_IN - 1.5]]}
     s["step3"] = {"parts": parts(["shell"] + BOARD) + parts(["cover"] + INSIDE + WIRES, dz=22),
                   "cam": {"t": [49.75, 30, 16], "o": [110, 200, -170]},
-                  "labels": [[79, 62.7, 36], [49.75, 30, 38.7], [79, 63.5, 7]]}
+                  "labels": [[79, 62.7, 36], [49.75, 30, 38.7], [79, 63.5, 7]]
+                  + [[x, y, z + 22] for x, y, z in clip_points()]}
     shut = parts(["shell", "cover", "screws"] + BOARD)
-    s["step4a"] = {"parts": shut, "cam": {"t": [55, 15, 9], "o": [95, -150, -95]},
-                   "labels": [[p, case.Y0, case.SCREW_Z] if side == "bottom" else [case.X1, p, case.SCREW_Z]
-                              for p, side in case.SCREWS if side in ("bottom", "right")]}
-    s["step4b"] = {"parts": shut, "cam": {"t": [15, 50, 9], "o": [-110, 150, -95]},
-                   "labels": [[p, case.Y1, case.SCREW_Z] for p, side in case.SCREWS if side == "top"]}
+    s["step4a"] = {"parts": shut, "cam": {"t": [49.75, 30, 9], "o": [40, -120, -210]},
+                   "labels": [[px, py, Z_TOTAL] for px, py in case.POSTS]}
+    s["step4b"] = {"parts": shut, "cam": {"t": [case.X1, 30, case.Z_SPLIT], "o": [130, -45, -55]}, "fov": 26,
+                   "labels": [[case.X1, 30, case.Z_SPLIT]], "w": 1200, "h": 700}
     s["print"] = {"noflip": True, "parts": [{"f": "p_front", "c": C["p_front"]}, {"f": "p_cover", "c": C["p_cover"], "dx": 118}],
                   "cam": {"t": [108, 30, 4], "o": [0, -230, 260]},
                   "labels": [[50, -1.5, case.Z_SPLIT], [168, 30, 12.0]], "w": 1400, "h": 800}

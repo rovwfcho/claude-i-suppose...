@@ -53,6 +53,15 @@ def load_assembled(variant):
     return shell, cover, cover_asm, z_total
 
 
+def hooks():
+    """The snap-clip hooks (design frame): springy, so they may press into the lid (their preload)
+    and pass through its wall while it closes; checks of rigid fits leave them out."""
+    out = Manifold()
+    for x, side in case.CLIPS:
+        out += case.clip_hook(x, side)
+    return out
+
+
 # ------------------------------------------------------------------ 1
 def check_integrity(variant):
     shell, cover, cover_asm, z_total = load_assembled(variant)
@@ -201,28 +210,24 @@ def check_islands(variant, layer=0.2):
 
 # ------------------------------------------------------------------ 6
 def check_screws(variant):
-    shell, _, cover_asm, _ = load_assembled(variant)
+    """Corner screws, read back from the STLs: an 8 mm screw seated in each recess clears the cover
+    (hole and recess), goes 2 mm into its standoff, and its head is not above the back face."""
+    shell, _, cover_asm, z_total = load_assembled(variant)
     S, C = to_manifold(shell), to_manifold(cover_asm)
-    board = case.board_model()
-    every = Manifold()
-    for g in board.values():
-        every += g
-    for x, side in case.SCREWS:
-        p, d, _ = case.screw_frame(x, side)
-        s0 = case.SCREW_HEAD_DEPTH                     # counterbore floor, measured from the outer wall
-        head = case.cyl_along(p, d, s0 - 1.3, s0, 1.9)    # M2 pan head, 3.8 x 1.3
-        shank = case.cyl_along(p, d, s0, s0 + 6.0, 1.0)   # M2 x 6
-        ring = np.pi * (1.0 ** 2 - case.SCREW_PILOT_R ** 2)
-        bite = vol(shank ^ C) / ring                          # thread engagement in the cover's block
-        core = case.cyl_along(p, d, s0, s0 + 6.0, case.SCREW_PILOT_R - 0.01)  # inside the thread root: must be clear
-        tip_inside = vol(case.cyl_along(p, d, s0 + 5.8, s0 + 6.0, 1.0) ^ C)
-        # the drawn wall hole only touches the shank along its back edge (tangent): almost no overlap
-        ok = (vol(head ^ S) < 1e-3 and vol(shank ^ S) < 0.01 and vol(core ^ (S + C)) < 1e-3
-              and vol(head ^ C) < 1e-3 and bite >= 3.5 and vol((shank + head) ^ every) < 1e-3
-              and tip_inside > 0.9 * ring * 0.2)   # the last 0.2 mm of the tip is (90 %) in the thread
-        report(ok, f"{variant} screw {side} x={x:.0f}: head/shell {vol(head ^ S):.3f}, shank/wall {vol(shank ^ S):.4f} "
-                   f"(rests on the drawn hole's edge), thread in the block {bite:.1f} mm, "
-                   f"tip buried={tip_inside > 0.1}, hits board {vol((shank + head) ^ every):.3f}")
+    so = case.board_model()["standoffs"]
+    for px, py in case.POSTS:
+        seat = z_total - case.SCREW_HEAD_DEPTH
+        head = case.cyl_z(px, py, 2.5, seat, seat + 1.8)               # pan head 5 x 1.8 (the largest allowed)
+        shank = case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)  # M2.5 x 8
+        bite = vol(shank ^ so) / (np.pi * 1.25 ** 2)
+        # the screw may sit 0.4 mm off centre (standoff position uncertainty) and still clear the cover
+        off = [vol(case.cyl_z(px + dx, py + dy, 1.25, seat - case.SCREW_LEN, seat) ^ C)
+               + vol(case.cyl_z(px + dx, py + dy, 2.5, seat, seat + 1.8) ^ C)
+               for dx, dy in ((0.4, 0), (-0.4, 0), (0, 0.4), (0, -0.4), (0.28, 0.28), (-0.28, -0.28), (0.28, -0.28), (-0.28, 0.28))]
+        ok = (vol(head ^ C) < 1e-3 and vol(shank ^ C) < 1e-3 and vol((head + shank) ^ S) < 1e-3
+              and 1.9 <= bite <= 2.1 and max(off) < 1e-3)
+        report(ok, f"{variant} corner screw ({px:.1f}, {py:.1f}): clear of the cover {vol((head + shank) ^ C):.4f}, "
+                   f"0.4 mm off centre {max(off):.4f} mm3, {bite:.2f} mm into the standoff")
 
 
 if __name__ == "__main__":

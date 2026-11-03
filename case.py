@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Parametric two-piece case for the Waveshare ESP32-S3-ePaper-3.97 board.
 
-Generates STL files for a rounded front shell and a back cover with room for Waveshare's
-454261 LiPo and the speaker side by side, plus a simplified board model used to check fit.
+Generates STL files for a front lid and a back cover with room for Waveshare's 454261 LiPo and the
+speaker side by side, plus a simplified board model used to check fit. The board is screwed to the
+back cover through its four brass corner standoffs (screws from the back); the lid snaps onto the
+back cover with four clips and leaves the display uncovered.
 The battery bay and the speaker pocket are sized from the owner's own battery and speaker, measured
 with a ruler in their photos (see README.md, "Where the numbers come from").
 
@@ -42,21 +44,15 @@ WIN_CX, WIN_CY = 52.4, 30.2
 WIN_W, WIN_H, WIN_R = 88.0, 53.6, 1.0
 TAIL_X1 = 7.0                    # panel tail / driver-IC strip on the left
 
-# brass standoffs on the back (front-view coordinates)
-POSTS = [(2.2, 2.85), (96.7, 2.85), (2.2, 57.4), (96.7, 57.4)]
+# brass standoffs on the back (front-view coordinates). Waveshare's photos put them at x 2.2 / 96.7,
+# y 2.85 / 57.4; the owner's back photo (round 35, corrected for the standoff tops being nearer the
+# camera than the board) at x 2.2-2.7 / 97.1-97.2, y 2.3-2.9 / 57.1-57.4. The best estimate is the
+# symmetric layout below, 94.6 x 54.55 mm apart; every estimate is within 0.45 mm of it and most
+# within 0.3, and the screw holes take 0.4 mm either way.
+POSTS = [(2.45, 2.725), (97.05, 2.725), (2.45, 57.275), (97.05, 57.275)]
 STANDOFF_D = 4.5                 # measured outer diameter incl. photo blur
-STANDOFF_H = 4.0                 # estimate (photos suggest 3-4 mm)
-POST_RIN = STANDOFF_D / 2 + 1.3  # pads keep 1.3 mm off the measured standoff edge (position is +/-0.5)
-POST_ROUT = POST_RIN + 1.1
-# ring sector (degrees from +x) facing the board centre; the bottom-left one is narrowed to stay off
-# the microSD socket and the 5V header pad, the top two to clear the top-left and right-hand screw
-# blocks. Edges are kept off the circle vertices (every 360/SEG = 3.75 deg) so no zero-area
-# triangles appear.
-POST_SECTORS = [(1, 40), (91, 179), (271, 329.5), (181, 224.5)]
-# The board is pressed against the front pads by a piece of 1 mm double-sided foam tape on each ring:
-# the ring faces stay FOAM_GAP behind the PCB, so the foam is squeezed to about 60 % and keeps
-# pushing (it takes up print, layer-height and PCB-thickness tolerance; no plastic has to bend)
-FOAM_T, FOAM_GAP = 1.0, 0.6
+STANDOFF_H = 4.0                 # the owner's are 3-4 mm; the case is built for 4 (see POST_Z)
+STANDOFF_H_MIN = 3.0             # with 3 mm ones the board sits 1 mm further back; the checks try both
 
 USB_Y = 30.0                     # USB-C on the left edge, back side
 SD_Y = 13.95                     # microSD slot on the left edge, back side
@@ -101,15 +97,18 @@ CLR = 0.3                        # board edge to inner wall
 FLEX_RELIEF = 0.3                # extra wall clearance beside the display flex (left edge)
 WALL = 2.4
 T_FRONT = 1.6
-PANEL_SPACE = PANEL_T + 0.5      # room for the panel; lip floats above the glass
+PANEL_SPACE = PANEL_T + 0.5      # PCB front face to the lid's plate
+GLASS_RELIEF = 0.2               # the plate is this much thinner over the glass: it floats 0.7 mm above it
+PAD_GAP = 0.3                    # ledge pads stop this far in front of the PCB (they never press it)
 T_BACK = 1.8
 RP = 7.0                         # plan-view corner radius
-RE = 4.5                         # edge rounding radius (front and back)
+RE = 4.5                         # edge rounding radius at the front
+RE_BACK = 1.0                    # ... and at the back, small so the screw recesses keep a wall at the corners
 CAVITY = {"battery": PARTS_SPACE + BATTERY_SPACE}  # clear depth behind the PCB
 
 Z_PF = T_FRONT + PANEL_SPACE     # PCB front face
 Z_B = Z_PF + PCB_T               # PCB back face
-Z_SPLIT = Z_B + 7.5              # shell / back-cover parting plane
+Z_SPLIT = Z_B + 7.5              # lid / back-cover parting plane
 SKIRT_H, SKIRT_T, SKIRT_CLR = 2.5, 1.2, 0.35  # rigid parts: room for +/-0.15 mm print error on each
 Z_COMP = Z_B + 4.0               # assumed top of the tallest parts on the PCB back
 
@@ -121,21 +120,31 @@ BTN_NOTCH_TOP = Z_SPLIT + 2.5
 TAB_CLR = 0.35                           # side gap of the back-cover tab in the dial notch
 BTN_BEVEL = 1.2                          # outer edges of the opening bevelled so a tilted finger fits
 
-# no-flex closure: M2 screws through the long walls into blocks on the back cover
-# (position along the wall, wall). The top-left one sits near the corner and the fourth goes in the
-# right-hand wall, so the dial's thumb scoop has room; the bottom ones sit beside the battery bay.
-SCREWS = [(20.0, "bottom"), (64.0, "bottom"), (8.5, "top"), (52.4, "right")]
-SCREW_Z = Z_SPLIT - 3.1            # keeps the counterbore 1.0 mm below the parting line
-BLOCK_Z0 = Z_B + 2.7               # screw blocks sit where only low parts are (see README)
-# The M2 screws pass a clearance hole in the shell wall and cut their own thread in the cover's block.
-# The wall hole is set SCREW_DRAW toward the front, so with the case shut the screw shank already
-# rests on its back edge: the foam can't push the cover back (a "drawbore"). The pilot has a lead-in
-# so the tip finds it.
-SCREW_WALL_R, SCREW_PILOT_R, SCREW_DRAW = 1.15, 0.9, 0.05  # pilot 1.8 mm for PLA: forming the thread
-# strains the thin block walls about a third less than a 1.7 mm pilot (PLA cracks sooner than PETG, and
-# small sideways holes print a little undersize); draw 0.05: hole top on the 0.1/0.2 mm layer grid
-SCREW_HEAD_R, SCREW_HEAD_DEPTH = 2.1, 1.4  # counterbore for a pan or button head
-BLOCK_DEPTH = 5.5
+# corner screws: the board is screwed to the back cover through its brass standoffs, one M2.5 x 8
+# (or M2 x 8 with a washer, if the standoffs turn out to be M2) per corner, from the back. Each post
+# stands on a standoff's top, where a 4 mm standoff ends, so an 8 mm screw seated in the recess goes
+# 2 mm into the standoff (safe for 3 and 4 mm standoffs). The recess sinks heads up to 1.8 mm tall
+# and 5 mm across, with room for the screw to sit 0.4 mm off centre.
+POST_STANDOFF = 4.0              # the standoff height the posts are built for (3-4 mm standoffs fit)
+POST_Z = Z_B + POST_STANDOFF     # post end (the standoff top)
+POST_R = 3.6
+SCREW_HOLE_R = 1.7               # 3.4 mm: an M2.5 (or M2) passes with 0.4 mm to spare
+SCREW_HEAD_R = 3.0               # 6.0 mm recess for a 5 mm head (or a 5 mm M2 washer) 0.4 mm off centre
+SCREW_HEAD_DEPTH = T_BACK        # recess floor = the inside face of the back: heads up to 1.8 mm are flush
+SCREW_LEN = 8.0                  # under the head
+# snap clips: four springy beams in the back cover's skirt along the long walls, each a bridge fixed
+# at both ends that bends in the plane of the print layers (the strong direction in PLA). A hook on
+# its middle catches a groove inside the lid's wall. (beam centre x, wall)
+CLIPS = [(20.0, "bottom"), (52.0, "bottom"), (20.0, "top"), (56.0, "top")]
+CLIP_L = 22.0                    # beam length
+CLIP_SLOT = 0.6                  # gap that frees the beam from the cover (bridged in print)
+CLIP_HOOK_L = 6.0                # hook length along the beam
+CLIP_UNDERCUT = 0.45             # how far the hook reaches past the lid's inner wall
+CLIP_LEAD, CLIP_CATCH = 42.0, 45.0   # lead-in and catch faces, degrees from the wall
+CLIP_PRELOAD = 0.1               # closed, the beam stays this much bent, so the lid can't rattle
+GROOVE_CLR = 0.15                # groove bottom past the hook's tip
+RIM_CHAMFER = (0.45, 30.0)       # lid's inner rim edge: chamfer as deep as the undercut, 30 deg from
+                                 # the wall, so closing takes about half the force that opening does
 
 X0, Y0 = -CLR - WALL, -CLR - WALL
 X1, Y1 = BW + CLR + WALL, BH + CLR + WALL
@@ -201,18 +210,6 @@ def dial_scoop():
     return ellipsoid([WHEEL[0], Y1 + 0.9, Z_B + 1.5], [14.0, 2.8, 4.5])
 
 
-def screw_frame(pos, side):
-    """(point where the screw axis meets the outer wall plane, unit vector pointing into the case,
-    coordinate of the cavity wall along that axis)."""
-    if side == "bottom":
-        return np.array([pos, Y0, SCREW_Z]), np.array([0.0, 1.0, 0.0]), -CLR
-    if side == "top":
-        return np.array([pos, Y1, SCREW_Z]), np.array([0.0, -1.0, 0.0]), BH + CLR
-    if side == "right":
-        return np.array([X1, pos, SCREW_Z]), np.array([-1.0, 0.0, 0.0]), BW + CLR
-    raise ValueError(side)
-
-
 def cyl_along(p, d, t0, t1, r):
     """Cylinder of radius r on the axis p + t*d (d along x or y), from t0 to t1."""
     a, b = p + d * t0, p + d * t1
@@ -236,25 +233,26 @@ def edge_profile(r, n=12):
 
 
 def body(z_total):
+    """Outer shape: rounded rectangle in plan, edges rounded RE at the front and RE_BACK at the back."""
     pts = []
-    prof = edge_profile(RE)
+    pf, pb = edge_profile(RE), edge_profile(RE_BACK)
     corners = [(X1 - RP, Y1 - RP, 0), (X0 + RP, Y1 - RP, 90),
                (X0 + RP, Y0 + RP, 180), (X1 - RP, Y0 + RP, 270)]
     for cx, cy, a0 in corners:
         for t in np.linspace(math.radians(a0), math.radians(a0 + 90), 49):
             ct, st = math.cos(t), math.sin(t)
-            for d, h in prof:
-                rr = RP - d
-                pts.append((cx + rr * ct, cy + rr * st, h))
-                pts.append((cx + rr * ct, cy + rr * st, z_total - h))
+            for d, h in pf:
+                pts.append((cx + (RP - d) * ct, cy + (RP - d) * st, h))
+            for d, h in pb:
+                pts.append((cx + (RP - d) * ct, cy + (RP - d) * st, z_total - h))
     return Manifold.hull_points(pts)
 
 
 def surface_inset(z, z_total):
     """How far the rounded outer surface sits inside the straight wall at height z."""
-    h = min(z, z_total - z)
-    prof = edge_profile(RE, 200)
-    if h >= RE:
+    r, h = (RE, z) if z < z_total - z else (RE_BACK, z_total - z)
+    prof = edge_profile(r, 200)
+    if h >= r:
         return 0.0
     return float(np.interp(h, [p[1] for p in prof][::-1], [p[0] for p in prof][::-1]))
 
@@ -290,8 +288,13 @@ def front_shell(z_total):
     # (starts 0.7 mm in from the board edge: the tail does too, and the rounded corners stay solid)
     s -= box(0.7, TAIL_X1, 1.0, BH - 1.0, T_FRONT - 0.5, T_FRONT + 0.1)
 
-    # ledge pads: clamp the PCB front face at its rim, panel never loaded. None on the left end: the
-    # glass edge is only about 0.75 mm in from the PCB edge there
+    # the plate is GLASS_RELIEF thinner over the glass (and 0.4 mm round it, for the board's play on
+    # the screws), so the glass floats 0.7 mm behind it; the board is held by the screws, not the lid
+    s -= box(0.35, 98.9, 1.1, 58.9, T_FRONT - GLASS_RELIEF, T_FRONT + 0.1)
+
+    # ledge pads at the PCB's rim, PAD_GAP in front of it: they never press the board, they hold it off
+    # the glass while the case is being closed and would catch it if it were ever pushed forward.
+    # None on the left end: the glass edge is only about 0.75 mm in from the PCB edge there
     pads = [
         (6, 18, -CLR - 0.1, 0.5), (40, 58, -CLR - 0.1, 0.5), (86, 94, -CLR - 0.1, 0.5),
         (6, 18, BH - 0.5, BH + CLR + 0.1), (35, 60, BH - 0.5, BH + CLR + 0.1),
@@ -299,23 +302,27 @@ def front_shell(z_total):
         (BW - 0.5, BW + CLR + 0.1, 5, 12), (BW - 0.5, BW + CLR + 0.1, 45, 55),
     ]
     for x0, x1, y0, y1 in pads:
-        s += box(x0, x1, y0, y1, T_FRONT - 0.1, Z_PF)
+        s += box(x0, x1, y0, y1, T_FRONT - 0.1, Z_PF - PAD_GAP)
 
-    # side screws: clearance hole (drawn SCREW_DRAW toward the front) + counterbore for the head
-    for pos, side in SCREWS:
-        p, d, _ = screw_frame(pos, side)
-        s -= cyl_along(p - np.array([0, 0, SCREW_DRAW]), d, -1.0, WALL + 0.01, SCREW_WALL_R)
-        s -= cyl_along(p, d, -3.0, SCREW_HEAD_DEPTH, SCREW_HEAD_R)
+    # snap clips: a groove inside each long wall for the back cover's hooks, and a chamfer on the inner
+    # rim edge that the hooks ride up when the lid goes on
+    for x, side in CLIPS:
+        s -= clip_groove(x, side)
+    cd, ca = RIM_CHAMFER
+    ch = cd / math.tan(math.radians(ca))
+    s -= Manifold.hull(prism(cavity_cs(0.0), Z_SPLIT - ch, Z_SPLIT - ch + 0.001)
+                       + prism(cavity_cs(cd + 0.01), Z_SPLIT + 0.01, Z_SPLIT + 0.02))
 
-    # USB-C: rounded-rectangle opening sized for common cable overmolds (13 x 7)
-    usb_zc = Z_B + 1.6
-    usb = rrect(13.0, 7.0, 1.2, USB_Y, usb_zc)
+    # USB-C: rounded-rectangle opening sized for common cable overmolds (13 x 7), 1 mm taller toward the
+    # back so it also fits when 3 mm standoffs put the board 1 mm further back
+    usb_zc = Z_B + 2.1
+    usb = rrect(13.0, 8.0, 1.2, USB_Y, usb_zc)
     s -= prism(usb, X0 - 1, 0.5).transform([[0, 0, 1, 0], [1, 0, 0, 0], [0, 1, 0, 0]])  # (y, z, x) -> (x, y, z)
     s -= box(-CLR - 0.3, 0.5, USB_Y - 5.0, USB_Y + 5.0, Z_B - 0.3, Z_SPLIT + 0.1)  # insertion channel
 
-    # microSD: opening + fingernail scoop
-    sd_zc = Z_B + 1.1
-    s -= slot_x(SD_Y - 6.5, SD_Y + 6.5, sd_zc, 3.2, X0 - 1, 0.5)
+    # microSD: opening + fingernail scoop (1 mm taller toward the back, for 3 mm standoffs)
+    sd_zc = Z_B + 1.6
+    s -= slot_x(SD_Y - 6.5, SD_Y + 6.5, sd_zc, 4.2, X0 - 1, 0.5)
     s -= ellipsoid([X0 - 1.0, SD_Y, sd_zc], [2.4, 8.0, 3.6])
 
     # microphone and sensor vents
@@ -343,6 +350,65 @@ def dht_slots_x(x0, x1):
         b = cyl_x(y, zc + 0.9, 0.6, x0, x1)
         out += Manifold.hull(a + b)
     return out
+
+
+def poly(pts):
+    """CrossSection from a polygon given in either winding."""
+    a = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]))
+    return CrossSection([pts if a > 0 else pts[::-1]])
+
+
+def along_x(cs, x0, x1):
+    """Extrude a cross-section drawn in (y, z) along x from x0 to x1."""
+    return prism(cs, x0, x1).transform([[0, 0, 1, 0], [1, 0, 0, 0], [0, 1, 0, 0]])
+
+
+def on_wall(m, side):
+    """A clip feature drawn for the bottom wall, moved to its wall (the top one is the mirror image)."""
+    return m if side == "bottom" else m.mirror([0, 1, 0]).translate([0, BH, 0])
+
+
+def clip_levels():
+    """Hook height above the skirt face and its z levels: lead-in from za to zb, crest to zc, catch to
+    zd, all on the beam (between the skirt's tip and the slot, 0.08 mm in from each)."""
+    p = SKIRT_CLR + CLIP_UNDERCUT
+    za = Z_SPLIT - SKIRT_H + 0.08
+    zb = za + p / math.tan(math.radians(CLIP_LEAD))
+    zc = zb + 0.05
+    zd = zc + p / math.tan(math.radians(CLIP_CATCH))
+    assert zd <= Z_SPLIT - CLIP_SLOT - 0.08, "hook taller than the beam"
+    return p, za, zb, zc, zd
+
+
+def clip_catch_z(y):
+    """z of the lid's catch face at y (bottom wall): parallel to the hook's catch face, CLIP_PRELOAD
+    lower, so the closed lid keeps the beam slightly bent."""
+    p, za, zb, zc, zd = clip_levels()
+    yf = -CLR + SKIRT_CLR
+    return zc - CLIP_PRELOAD + (y - (yf - p)) * (zd - zc) / p
+
+
+def clip_hook(x, side):
+    p, za, zb, zc, zd = clip_levels()
+    yf = -CLR + SKIRT_CLR                       # outer face of the skirt (bottom wall)
+    k = 0.04                                    # faces run 0.04 mm into the beam (no shared planes)
+    za2, zd2 = za - (zb - za) * k / p, zd + (zd - zc) * k / p
+    cs = poly([(yf + 0.3, za2), (yf + k, za2), (yf - p, zb), (yf - p, zc), (yf + k, zd2), (yf + 0.3, zd2)])
+    return on_wall(along_x(cs, x - CLIP_HOOK_L / 2, x + CLIP_HOOK_L / 2), side)
+
+
+def clip_slot(x, side):
+    """The gap between the beam and the cover: the beam is then held only at its two ends."""
+    yf = -CLR + SKIRT_CLR
+    return on_wall(box(x - CLIP_L / 2, x + CLIP_L / 2, yf - 0.3, yf + SKIRT_T + 0.3, Z_SPLIT - CLIP_SLOT, Z_SPLIT), side)
+
+
+def clip_groove(x, side):
+    p, za, zb, zc, zd = clip_levels()
+    yl = -CLR                                   # the lid's inner wall (bottom wall)
+    yg = yl - CLIP_UNDERCUT - GROOVE_CLR
+    cs = poly([(yl + 0.05, za - 0.3), (yg, za - 0.3), (yg, clip_catch_z(yg)), (yl + 0.05, clip_catch_z(yl + 0.05))])
+    return on_wall(along_x(cs, x - CLIP_HOOK_L / 2 - 0.5, x + CLIP_HOOK_L / 2 + 0.5), side)
 
 
 def grille_slots(variant="battery"):
@@ -373,20 +439,13 @@ def speaker_brackets(variant="battery"):
 
 def battery_guides():
     """Guide bars round the battery bay, as (x0, x1, y0, y1) boxes. Each end gets a 14 mm bar in its
-    middle; each long side gets bars from 10 mm in from the corners, broken where a screw block
-    stands. So the four corners stay open for the battery's wire."""
+    middle; each long side gets one bar from 10 mm in from the corners. So the four corners stay open
+    for the battery's wire."""
     x0, x1, y0, y1 = BATTERY_BAY
     th = BATTERY_GUIDE[0]
     ym = (y0 + y1) / 2
-    bars = [(x0 - th, x0, ym - 7.0, ym + 7.0), (x1, x1 + th, ym - 7.0, ym + 7.0)]
-    for side, ya, yb in (("bottom", y0 - th, y0), ("top", y1, y1 + th)):
-        spans = [(x0 + 10.0, x1 - 10.0)]
-        for pos, s in SCREWS:
-            if s == side:   # keep 1.5 mm off the 4 mm wide block
-                a, b = pos - 3.5, pos + 3.5
-                spans = [p for lo, hi in spans for p in ((lo, min(hi, a)), (max(lo, b), hi)) if p[1] - p[0] >= 6.0]
-        bars += [(lo, hi, ya, yb) for lo, hi in spans]
-    return bars
+    return [(x0 - th, x0, ym - 7.0, ym + 7.0), (x1, x1 + th, ym - 7.0, ym + 7.0),
+            (x0 + 10.0, x1 - 10.0, y0 - th, y0), (x0 + 10.0, x1 - 10.0, y1, y1 + th)]
 
 
 # ---------------------------------------------------------------- wires (assembly advice)
@@ -395,12 +454,13 @@ def battery_guides():
 # take, and the guide draws them.
 def battery_wire_route():
     """Battery wire: leaves the taped end at its bottom corner, drops beside the bay, runs along the
-    bottom of the board over the microSD socket and under the battery, and ends in front of BAT."""
+    bottom of the board over the microSD socket and under the battery (clear of the corner screw
+    post), and ends in front of BAT."""
     x0, x1, y0, y1 = BATTERY_BAY
     z_in = Z_B + CAVITY["battery"]
     zs = Z_B + 1.9 + 1.25             # resting on top of the microSD socket (1.9 mm tall)
-    return [(x0 - 1.4, y0 + 3.5, z_in - BATTERY_SPACE / 2), (3.5, y0 + 3.5, zs), (3.5, 7.6, zs),
-            (34.0, 7.6, zs), (34.0, 6.4, zs)], 1.25
+    return [(x0 - 1.4, y0 + 3.5, z_in - BATTERY_SPACE / 2), (3.9, y0 + 3.5, zs), (3.9, 7.9, zs),
+            (34.0, 7.9, zs), (34.0, 6.4, zs)], 1.25
 
 
 def speaker_wire_route():
@@ -440,8 +500,8 @@ def back_cover(z_total, variant):
     z_in = z_total - T_BACK
     t = (outer ^ box(-50, 150, -50, 150, Z_SPLIT, z_total + 1)) - prism(cavity_cs(), Z_SPLIT - 1, z_in)
 
-    # skirt that slides inside the shell rim (locating only, nothing has to flex).
-    # It stops short of the corners so it never meets the standoff posts.
+    # skirt that slides inside the lid's rim and locates it. It runs into the corner posts; four
+    # stretches of it along the long walls are the snap-clip beams (below)
     sk = prism(cavity_cs(-SKIRT_CLR), Z_SPLIT - SKIRT_H, Z_SPLIT + 0.01) - \
         prism(cavity_cs(-SKIRT_CLR - SKIRT_T), Z_SPLIT - SKIRT_H - 1, Z_SPLIT + 1)
     # join it to the cover wall with a 45 deg slope (a flat ledge would print in mid-air)
@@ -449,18 +509,23 @@ def back_cover(z_total, variant):
     cone = Manifold.hull(prism(cavity_cs(-w), Z_SPLIT - 0.01, Z_SPLIT)
                          + prism(cavity_cs(0.01), Z_SPLIT + w + 0.01, Z_SPLIT + w + 0.02))
     sk += prism(cavity_cs(), Z_SPLIT, Z_SPLIT + w) - cone
-    sk ^= box(8.0, 91.0, -5, BH + 5, 0, 50) + box(-5, BW + 5, 8.5, 51.5, 0, 50)
+    sk ^= box(4.5, BW - 4.5, -5, BH + 5, 0, 50) + box(-5, BW + 5, 4.5, BH - 4.5, 0, 50)
     sk -= box(-5, 6, USB_Y - 7.5, USB_Y + 7.5, 0, 50)             # USB-C
     sk -= box(WHEEL[0] - 8.5, WHEEL[0] + 8.5, BH - 6, BH + 5, 0, 50)  # wheel
     sk -= box(BTN_NOTCH[0] - BTN_BEVEL - 0.5, BTN_NOTCH[1] + BTN_BEVEL + 0.5, -5, 3, 0, 50)  # button opening
     t += sk
 
-    # posts: a sector of a ring beside each standoff; foam tape on it presses the PCB; the standoff stays clear
-    for (px, py), (a0, a1) in zip(POSTS, POST_SECTORS):
-        ring = cyl_z(px, py, POST_ROUT, Z_B + FOAM_GAP, z_in + 0.05) - cyl_z(px, py, POST_RIN, Z_B - 1, z_in + 1)
-        pts = [(px, py)] + [(px + 6 * math.cos(math.radians(a)), py + 6 * math.sin(math.radians(a)))
-                            for a in np.linspace(a0, a1, 12)]
-        t += ring ^ prism(CrossSection([pts]), Z_B - 1, z_in + 1)
+    # corner posts: each stands on a brass standoff's top (where a 4 mm standoff ends); the screw goes
+    # through it from the back. Inside the lid's rim they keep SKIRT_CLR off its walls.
+    for px, py in POSTS:
+        post = cyl_z(px, py, POST_R, POST_Z, z_in + 0.05)
+        t += (post ^ prism(cavity_cs(-SKIRT_CLR), POST_Z - 1, Z_SPLIT + 0.01)) + (post ^ box(-50, 150, -50, 150, Z_SPLIT, z_in + 1))
+
+    # snap clips: a slot frees each beam from the cover (it is held only at its two ends, so it bends
+    # in the plane of the layers), and a hook on its middle reaches into the lid's groove
+    for x, side in CLIPS:
+        t -= clip_slot(x, side)
+        t += clip_hook(x, side)
 
     # tab that closes the top of the wheel notch
     wx = WHEEL[0]
@@ -470,22 +535,6 @@ def back_cover(z_total, variant):
 
     # the button opening continues 2.5 mm into the cover so a finger can come in tilted
     t -= button_notch()
-
-    # screw blocks with pilot holes
-    for pos, side in SCREWS:
-        p, d, wall = screw_frame(pos, side)
-        a = wall + (SKIRT_CLR if side == "bottom" else -SKIRT_CLR)   # block face against the wall
-        b = wall + (BLOCK_DEPTH if side == "bottom" else -BLOCK_DEPTH)
-        lo, hi = sorted((a, b))
-        if side == "right":
-            t += box(lo, hi, pos - 2.0, pos + 2.0, BLOCK_Z0, z_in + 0.05)
-        else:
-            t += box(pos - 2.0, pos + 2.0, lo, hi, BLOCK_Z0, z_in + 0.05)
-        depth = abs(b - (p @ np.abs(d)))  # outer wall plane to the far face of the block
-        t -= cyl_along(p, d, 0.0, depth + 0.5, SCREW_PILOT_R)  # through the block: no bottoming out
-        face = abs(a - (p @ np.abs(d)))   # outer wall plane to the block face
-        t -= Manifold.hull(cyl_along(p, d, face - 0.05, face, SCREW_PILOT_R + 0.35)
-                           + cyl_along(p, d, face + 0.35, face + 0.36, SCREW_PILOT_R))  # 45 deg lead-in
 
     t -= pry_notch(z_total)
 
@@ -505,18 +554,23 @@ def back_cover(z_total, variant):
         for gx0, gx1, gy0, gy1 in battery_guides():
             t += box(gx0, gx1, gy0, gy1, z_in - BATTERY_GUIDE[1], z_in + 0.05)
 
-    # mic holes, DHT vents, drill marks for optional screws into the standoffs
+    # mic holes, DHT vents
     for dy in (-2.0, 0.0, 2.0):  # >= 0.8 mm between holes so the webs print
         t -= cyl_z(4.6, MIC[1] + dy, 0.6, z_in - 1, z_total + 1, 24)
     for x in (93.0, 95.2):
         t -= slot_z(x - 0.6, x + 0.6, 40.5, 47.5, z_in - 1, z_total + 1)
+
+    # corner screws: clearance hole through each post, recess for the head in the back face
     for px, py in POSTS:
-        t -= Manifold.cylinder(0.45, 0.05, 0.75, 24).translate([px, py, z_total - 0.449])
+        t -= cyl_z(px, py, SCREW_HOLE_R, POST_Z - 1, z_total + 1)
+        t -= cyl_z(px, py, SCREW_HEAD_R, z_total - SCREW_HEAD_DEPTH, z_total + 1)
     return t
 
 
-def board_model():
-    """Simplified board with the parts that matter for fit."""
+def board_model(standoff_h=STANDOFF_H):
+    """Simplified board with the parts that matter for fit, screwed to the posts: with standoffs
+    shorter than 4 mm the whole board sits that much further back (+z)."""
+    dz = (POST_Z - Z_B) - standoff_h
     zb = Z_B
     parts = {
         "pcb": prism(rrect(BW, BH, BR, BW / 2, BH / 2), Z_PF, zb),
@@ -532,14 +586,14 @@ def board_model():
     }
     so = Manifold()
     for px, py in POSTS:
-        so += cyl_z(px, py, STANDOFF_D / 2, zb, zb + STANDOFF_H)
+        so += cyl_z(px, py, STANDOFF_D / 2, zb, zb + standoff_h)
     parts["standoffs"] = so
     btn = Manifold()
     for bx in BUTTONS.values():
         btn += box(bx - 2.0, bx + 2.0, 0.0, 3.5, zb, zb + 1.8)
         btn += box(bx - 0.8, bx + 0.8, -BTN_PROTRUDE, 0.01, zb + 0.4, zb + 1.4)
     parts["buttons"] = btn
-    return parts
+    return {k: v.translate([0, 0, dz]) for k, v in parts.items()} if dz else parts
 
 
 # ---------------------------------------------------------------- output

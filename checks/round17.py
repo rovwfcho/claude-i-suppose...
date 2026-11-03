@@ -58,7 +58,9 @@ def mutation():
         "SD_Y": ("SD_Y = 13.95 ", "SD_Y = 14.45 "),
         "WHEEL": ("WHEEL = (79.0,", "WHEEL = (79.5,"),
         "BUTTONS": ('BUTTONS = {"BOOT": 74.0,', 'BUTTONS = {"BOOT": 74.5,'),
-        "STANDOFF_H": ("STANDOFF_H = 4.0 ", "STANDOFF_H = 6.0 "),
+        "STANDOFF_H": ("STANDOFF_H = 4.0 ", "STANDOFF_H = 3.5 "),
+        "POSTS": ("POSTS = [(2.45, 2.725),", "POSTS = [(2.55, 2.725),"),
+        "POST_STANDOFF": ("POST_STANDOFF = 4.0 ", "POST_STANDOFF = 4.5 "),
         "PARTS_SPACE": ("PARTS_SPACE = 5.0 ", "PARTS_SPACE = 6.0 "),
         "BATTERY_SPACE": ("BATTERY_SPACE = 5.0 ", "BATTERY_SPACE = 6.0 "),
         "BATTERY_BAY": ("BATTERY_BAY = (5.5, 68.0, 6.5, 49.0)", "BATTERY_BAY = (5.5, 68.5, 6.5, 49.0)"),
@@ -135,6 +137,18 @@ def leftovers():
     for word in ("slim", "14.2 mm thick", "14.2mm", "both versions", "same version"):
         if word.lower() in text.lower():
             hits.append(f"README: {word}")
+    # nor from the side-screw closure the corner screws replaced (session 5): foam, pilots, blocks
+    import json
+    g = os.path.join(ROOT, "docs", "guide-src")
+    docs = {"README": text}
+    for lang in ("en", "bg"):
+        docs[f"{lang} guide"] = json.dumps(json.load(open(os.path.join(g, f"text_{lang}.json"), encoding="utf-8")),
+                                           ensure_ascii=False)
+    for doc, t in docs.items():
+        for word in ("foam", "pre-cut", "pilot", "side screw", "screw block", "drawbore", "never longer than 7",
+                     "пяна", "нарежете резбите", "предварително"):
+            if word.lower() in t.lower():
+                hits.append(f"{doc}: {word}")
     for d in ("stl", "dist", "preview"):
         for f in os.listdir(os.path.join(ROOT, d)):
             if "slim" in f or "compare_speaker" in f:

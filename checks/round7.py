@@ -39,8 +39,8 @@ def vertex_distances(variant):
         for m in (shell, cover_asm):
             sd = trimesh.proximity.signed_distance(m, v)  # positive = inside the case material
             worst = min(worst, -sd.max())
-        if name == "pcb":
-            report(worst > -1e-3, f"{variant} exact: pcb corners at least {worst:.3f} mm from the case (touching allowed)")
+        if name in ("pcb", "standoffs"):   # the PCB may touch the lid's wall, the standoffs touch the posts
+            report(worst > -1e-3, f"{variant} exact: {name} at least {worst:.3f} mm from the case (touching allowed)")
         else:
             report(worst > 1e-3, f"{variant} exact: {name:13s} closest vertex {worst:.3f} mm from the case")
 

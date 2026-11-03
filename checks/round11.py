@@ -50,14 +50,14 @@ def point_grid(variant, step=0.2):
 
 # ------------------------------------------------------------------ 2
 def screwdriver(variant):
-    shell, _, cover_asm, _ = load_assembled(variant)
+    """A 3 mm screwdriver shaft straight down onto each corner screw, from 60 mm behind the back."""
+    shell, _, cover_asm, z_total = load_assembled(variant)
     obst = to_manifold(shell) + to_manifold(cover_asm)
-    for pos, side in case.SCREWS:
-        p, d, _ = case.screw_frame(pos, side)
-        head_top = case.SCREW_HEAD_DEPTH - 1.3  # pan head is 1.3 mm tall
-        shaft = case.cyl_along(p, d, head_top - 60.0, head_top - 0.05, 1.5)
+    for px, py in case.POSTS:
+        head_top = z_total - case.SCREW_HEAD_DEPTH + 1.3          # the lowest allowed head (M2 pan, 1.3 mm)
+        shaft = case.cyl_z(px, py, 1.5, head_top + 0.05, head_top + 60.0)
         hit = vol(shaft ^ obst)
-        report(hit < 1e-3, f"{variant} screwdriver to the {side} screw at {pos}: overlap {hit:.4f} mm3")
+        report(hit < 1e-3, f"{variant} screwdriver onto the corner screw at ({px:.1f}, {py:.1f}): overlap {hit:.4f} mm3")
 
 
 # ------------------------------------------------------------------ 3

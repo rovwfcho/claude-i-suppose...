@@ -83,25 +83,25 @@ def strength():
     s_allow = 30.0  # MPa, PLA printed, conservative
     # display lip bridging the button opening: 3.7 x 1.6 mm bar (lip from the wall to the window),
     # clamped at both ends, 10 N pressed onto its middle
-    b, t = case.WIN_CY - case.WIN_H / 2 + case.CLR, case.T_FRONT
+    b, t = case.WIN_CY - case.WIN_H / 2 + case.CLR, case.T_FRONT - case.GLASS_RELIEF   # thinner over the glass
     L, F = case.BTN_NOTCH[1] - case.BTN_NOTCH[0], 10.0
     sigma = 6 * (F * L / 8) / (b * t ** 2)
     report(sigma < s_allow, f"display lip over the button opening ({b:.1f} x {t} mm, {L:.0f} mm span): "
                             f"{sigma:.1f} MPa at 10 N (allow {s_allow})")
-    # screw block: M2 thread in plastic, 4 mm engagement, shear area pi*d*L*0.6
-    eng = 4.8
-    area = math.pi * 2.0 * eng * 0.6
-    pull = area * 15.0  # 15 MPa shear in printed plastic
-    report(pull > 100, f"M2 thread, {eng} mm engaged: strips at roughly {pull:.0f} N each (4 screws hold a 60 g device)")
+    # corner screws: M2.5 (or M2) in a brass standoff, 2 mm engaged, shear area pi*d1*L*0.6, brass ~200 MPa
+    eng = case.SCREW_LEN - ((case.Z_B + case.CAVITY["battery"] + case.T_BACK - case.SCREW_HEAD_DEPTH) - case.POST_Z)
+    pull = min(math.pi * 1.6 * (eng - 0.3) * 0.6 * 200.0, math.pi * 2.0 * eng * 0.6 * 200.0)  # M2 minor 1.6
+    report(pull > 300, f"corner screw, {eng:.1f} mm in a brass standoff: thread strips at roughly {pull:.0f} N each "
+                       f"(an M2 with a 0.3 mm washer: {eng - 0.3:.1f} mm engaged); the board weighs about 40 g")
+    # plastic under a snug screw (about 100 N): under the head, and where the post meets the standoff
+    F = 100.0
+    head = math.pi * (2.35 ** 2 - case.SCREW_HOLE_R ** 2)       # smallest allowed pan head, 4.7 mm
+    foot = math.pi * (2.1 ** 2 - case.SCREW_HOLE_R ** 2)        # standoff top ring inside the hole's edge
+    report(F / head < 20 and F / foot < 30, f"PLA under a snug screw (100 N): {F / head:.0f} MPa under the head, "
+                                            f"{F / foot:.0f} MPa on the standoff top (PLA yields at about 60)")
     # thin wall left by the dial scoop
     wall = (case.Y1 + 0.9 - 2.8) - (case.BH + case.CLR)
     report(wall >= 0.45, f"dial scoop leaves {wall:.2f} mm of wall at its deepest point beside the slot")
-    # standoff pads: bearing pressure when the cover is pushed hard (50 N) onto 4 pads
-    a0, a1 = case.POST_SECTORS[1]
-    pad = math.radians(a1 - a0) / 2 * (case.POST_ROUT ** 2 - case.POST_RIN ** 2)
-    pad_small = math.radians(case.POST_SECTORS[0][1] - case.POST_SECTORS[0][0]) / 2 * (case.POST_ROUT ** 2 - case.POST_RIN ** 2)
-    p = 50.0 / (3 * pad + pad_small)
-    report(p < 5.0, f"back pads: {3 * pad + pad_small:.1f} mm2 in total, {p:.2f} MPa on the PCB at 50 N")
 
 
 # ------------------------------------------------------------------ 4

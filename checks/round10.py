@@ -59,38 +59,31 @@ def layer_support(variant, layer=0.2, reach=1.5):
 
 # ------------------------------------------------------------------ 2
 def screw_alignment(variant):
-    shell, _, cover_asm, _ = load_assembled(variant)
-    for pos, side in case.SCREWS:
-        p, d, wall = case.screw_frame(pos, side)
-        across = np.array([abs(d[1]), abs(d[0]), 0.0])
-        up = np.array([0, 0, 1.0])
+    """Corner holes found in the STL: centre and radius of the hole (in the post) and of the recess,
+    by a circle fit to where rays from near the axis meet the walls."""
+    _, _, cover_asm, z_total = load_assembled(variant)
+    angles = np.radians(np.arange(0, 360, 10))
+    dirs = np.column_stack([np.cos(angles), np.sin(angles), np.zeros(len(angles))])
 
-        def hole_centre(mesh, depth, r_guess):
-            # cast rays outward from a point near the axis in 16 directions and fit a circle to the
-            # points where they meet the hole wall (a plain centroid is only right if the rays start
-            # at the hole's own centre, which the drawn wall hole doesn't)
-            c = p + d * depth
-            angles = np.radians(np.arange(0, 360, 22.5))
-            dirs = np.outer(np.cos(angles), across) + np.outer(np.sin(angles), up)
-            locs, ir, _ = mesh.ray.intersects_location(np.tile(c, (len(dirs), 1)), dirs, multiple_hits=False)
-            if len(locs) < 12:
-                return None, None
-            u, w = (locs - c) @ across, (locs - c) @ up
-            A = np.column_stack([2 * u, 2 * w, np.ones(len(u))])
-            (cu, cw, k), *_ = np.linalg.lstsq(A, u ** 2 + w ** 2, rcond=None)
-            return c + cu * across + cw * up, float(np.sqrt(k + cu ** 2 + cw ** 2))
+    def circle(c):
+        locs, _, _ = cover_asm.ray.intersects_location(np.tile(c, (len(dirs), 1)), dirs, multiple_hits=False)
+        if len(locs) < 30:
+            return None, None
+        u, w = locs[:, 0], locs[:, 1]
+        A = np.column_stack([2 * u, 2 * w, np.ones(len(u))])
+        (cu, cw, k), *_ = np.linalg.lstsq(A, u ** 2 + w ** 2, rcond=None)
+        return np.array([cu, cw]), float(np.sqrt(k + cu ** 2 + cw ** 2))
 
-        cs, rs = hole_centre(shell, 1.5, case.SCREW_WALL_R)          # inside the shell wall
-        cc, rc = hole_centre(cover_asm, case.WALL + 2.0, case.SCREW_PILOT_R)  # inside the cover block
-        if cs is None or cc is None:
-            report(False, f"{variant} screw {side} {pos}: hole not found (shell {cs is not None}, cover {cc is not None})")
+    for px, py in case.POSTS:
+        ch, rh = circle(np.array([px + 0.2, py - 0.1, case.Z_SPLIT + 1.0]))       # hole, inside the post
+        cr, rr = circle(np.array([px - 0.3, py + 0.2, z_total - 0.9]))            # head recess
+        if ch is None or cr is None:
+            report(False, f"{variant} corner hole at ({px}, {py}): not found")
             continue
-        v = (cs - cc) - ((cs - cc) @ d) * d   # offset of the wall hole from the pilot, across the axis
-        want = np.array([0, 0, -case.SCREW_DRAW])  # drawn toward the front by design
-        off = np.linalg.norm(v - want)
-        report(off < 0.05 and abs(rs - case.SCREW_WALL_R) < 0.05 and abs(rc - case.SCREW_PILOT_R) < 0.05,
-               f"{variant} screw {side} {pos}: clearance hole r={rs:.2f}, pilot r={rc:.2f}, hole offset "
-               f"{np.round(v, 3).tolist()} (designed {want.tolist()}), error {off:.3f} mm")
+        off = max(np.hypot(*(ch - (px, py))), np.hypot(*(cr - (px, py))))
+        report(off < 0.03 and abs(rh - case.SCREW_HOLE_R) < 0.03 and abs(rr - case.SCREW_HEAD_R) < 0.03,
+               f"{variant} corner hole ({px}, {py}): hole r={rh:.3f}, recess r={rr:.3f}, both centred within "
+               f"{off:.3f} mm of the standoff estimate")
 
 
 # ------------------------------------------------------------------ 3

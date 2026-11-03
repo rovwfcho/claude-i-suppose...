@@ -13,6 +13,7 @@ import os
 import sys
 
 import numpy as np
+from manifold3d import Manifold
 import trimesh
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -112,17 +113,20 @@ def opening_sizes(variant):
     h = find_hole_robust(asm, [-2.0, 0, 0], [1, 0, 0], [-2.0, case.USB_Y, zb + 1.63])
     if h:
         w, t = h[1][1] - h[0][1], h[1][2] - h[0][2]
-        rc = (h[0][2] + h[1][2]) / 2
-        report(w >= 12.4 and t >= 6.6 and abs(rc - (zb + 1.63)) < 0.3,
-               f"{variant} USB-C opening measured {w:.2f} x {t:.2f} mm, centre z {rc:.2f} "
-               f"(receptacle centre {zb + 1.63:.2f}; plug overmolds are up to ~12.4 x 6.6)")
+        # a 12.4 x 6.6 plug overmold centred on the receptacle, with 4 mm and with 3 mm standoffs
+        room = [min(zc - 3.3 - h[0][2], h[1][2] - (zc + 3.3)) for zc in (zb + 1.63, zb + 2.63)]
+        report(w >= 12.4 and min(room) >= 0.1,
+               f"{variant} USB-C opening measured {w:.2f} x {t:.2f} mm (z {h[0][2]:.2f}-{h[1][2]:.2f}); a 12.4 x 6.6 "
+               f"plug overmold has {room[0]:.2f} mm to spare with 4 mm standoffs, {room[1]:.2f} with 3 mm")
     else:
         report(False, f"{variant} USB-C opening not found in section")
     # microSD
     h = find_hole_robust(asm, [-1.0, 0, 0], [1, 0, 0], [-1.0, case.SD_Y, zb + 0.9])
     if h:
         w, t = h[1][1] - h[0][1], h[1][2] - h[0][2]
-        report(w >= 11.6 and t >= 1.6, f"{variant} microSD opening {w:.2f} x {t:.2f} mm (card 11 x 0.8)")
+        room = [min(zc - 0.4 - h[0][2], h[1][2] - (zc + 0.4)) for zc in (zb + 0.9, zb + 1.9)]
+        report(w >= 11.6 and min(room) >= 0.5, f"{variant} microSD opening {w:.2f} x {t:.2f} mm (card 11 x 0.8): "
+                                               f"{room[0]:.2f} mm round the card with 4 mm standoffs, {room[1]:.2f} with 3 mm")
     else:
         report(False, f"{variant} microSD opening not found")
     # display window at the front face plane and at the lip's inner face
@@ -151,50 +155,67 @@ def opening_sizes(variant):
 
 
 # ------------------------------------------------------------------ 3
+def best_shift(err, limit=0.65, step=0.01):
+    """The board translation (within limit) that brings its standoffs nearest the hole centres:
+    returns (translation, the largest remaining offset of any screw from its hole's centre)."""
+    g = np.arange(-limit, limit + 1e-9, step)
+    tx, ty = np.meshgrid(g, g)
+    worst = np.zeros_like(tx)
+    for ex, ey in err:
+        worst = np.maximum(worst, np.hypot(ex + tx, ey + ty))
+    i = np.unravel_index(np.argmin(worst), worst.shape)
+    return (float(tx[i]), float(ty[i])), float(worst[i])
+
+
 def monte_carlo(variant, n=60, seed=7):
-    """Perturb the board within the stated uncertainties and re-run the collision test."""
+    """Perturb the board within the stated uncertainties and re-run the collision test. The standoffs
+    are off their estimated positions by a common shift (up to 0.35 mm) plus up to 0.25 mm each way
+    for each one; the board then sits where all four screws fit best (it can move 0.3 mm in the lid,
+    and the lid 0.35 mm on the skirt), and every screw must still pass its hole and seat in its recess."""
     shell, _, cover_asm, _ = load_assembled(variant)
     S, C = to_manifold(shell), to_manifold(cover_asm)
     both = S + C
     rng = np.random.default_rng(seed)
     saved = {k: getattr(case, k) for k in ("POSTS", "USB_Y", "SD_Y", "WHEEL", "BUTTONS", "STANDOFF_D",
                                            "STANDOFF_H", "BTN_PROTRUDE", "PANEL_T")}
+    play = case.SCREW_HOLE_R - 1.25 - 0.075              # M2.5 in a hole printed 0.15 mm small
     fails = {}
-    clamp_gaps = []
+    worst_off, worst_shift, screw_bad = 0.0, 0.0, 0
     try:
         for i in range(n):
             j = lambda s=0.5: rng.uniform(-s, s)
-            case.STANDOFF_D = rng.uniform(3.5, 4.6)
-            rs = case.STANDOFF_D / 2  # a standoff cannot hang over the PCB edge
-            case.POSTS = [(float(np.clip(x + j(), rs, case.BW - rs)), float(np.clip(y + j(), rs, case.BH - rs)))
-                          for x, y in saved["POSTS"]]
+            case.STANDOFF_D = rng.uniform(3.8, 4.6)
+            r, a_ = 0.35 * math.sqrt(rng.uniform()), rng.uniform(0, 2 * math.pi)
+            cx, cy = r * math.cos(a_), r * math.sin(a_)
+            err = [(cx + j(0.25), cy + j(0.25)) for _ in saved["POSTS"]]
+            case.POSTS = [(x + ex, y + ey) for (x, y), (ex, ey) in zip(saved["POSTS"], err)]
             case.USB_Y = saved["USB_Y"] + j()
             case.SD_Y = saved["SD_Y"] + j()
             wx, wy, wr = saved["WHEEL"]
             case.WHEEL = (wx + j(), wy + j(0.3), wr + j(0.3))
             case.BUTTONS = {k: v + j() for k, v in saved["BUTTONS"].items()}
-            case.STANDOFF_H = rng.uniform(2.5, 10.0)
+            h = rng.uniform(case.STANDOFF_H_MIN, case.STANDOFF_H)
             case.BTN_PROTRUDE = rng.uniform(0.5, 1.0)
             case.PANEL_T = rng.uniform(1.0, 1.6)
-            # board shifted anywhere inside its 0.3 mm clearance (the display flex has its own extra
-            # room in the left wall, FLEX_RELIEF, so the PCB edge reaches the wall first)
-            dx, dy = j(0.3), j(0.3)
-            for name, g in case.board_model().items():
+            (dx, dy), off = best_shift(err)
+            worst_off, worst_shift = max(worst_off, off), max(worst_shift, math.hypot(dx, dy))
+            if off > play:
+                screw_bad += 1
+            # the board is held on the cover at (dx, dy); the lid floats on the skirt (0.35 mm) and
+            # follows it as far as it can
+            lx, ly = (float(np.clip(v, -case.SKIRT_CLR, case.SKIRT_CLR)) for v in (dx, dy))
+            for name, g in case.board_model(h).items():
                 if name == "pcb":
                     continue
-                g = g.translate([dx, dy, 0])
-                if not (g ^ both).is_empty() and vol(g ^ both) > 1e-3:
+                if vol(g.translate([dx, dy, 0]) ^ C) > 1e-3 or vol(g.translate([dx - lx, dy - ly, 0]) ^ S) > 1e-3:
                     fails[name] = fails.get(name, 0) + 1
-            # does the cover still clamp: the ring sectors (with the foam on them, FOAM_GAP thick) must
-            # still land on the PCB
-            pcb = case.prism(case.rrect(case.BW, case.BH, case.BR, case.BW / 2 + dx, case.BH / 2 + dy),
-                             case.Z_PF, case.Z_B + case.FOAM_GAP + 0.05)
-            clamp_gaps.append(vol(pcb ^ C) > 0.1)
     finally:
         for k, v in saved.items():
             setattr(case, k, v)
-    report(not fails, f"{variant} Monte Carlo ({n} random boards): collisions {fails or 'none'}")
-    report(all(clamp_gaps), f"{variant} Monte Carlo: back rings (with foam) press the PCB in {sum(clamp_gaps)}/{n} cases")
+    report(not fails, f"{variant} Monte Carlo ({n} random boards, standoffs 3-4 mm): collisions {fails or 'none'}")
+    report(screw_bad == 0, f"{variant} Monte Carlo: all 4 screws reach their standoffs in {n - screw_bad}/{n} boards "
+                           f"(worst screw {worst_off:.2f} mm off its hole's centre, play {play:.2f}; board moved at "
+                           f"most {worst_shift:.2f} mm)")
 
 
 # ------------------------------------------------------------------ 4
@@ -231,11 +252,15 @@ def overhangs(variant, limit_deg=50):
 def assembly_motion(variant):
     shell, _, cover_asm, _ = load_assembled(variant)
     S, C = to_manifold(shell), to_manifold(cover_asm)
+    hooks = Manifold()
+    for x, side in case.CLIPS:
+        hooks += case.clip_hook(x, side)
+    R = C - hooks                                     # everything but the springy hooks
     worst = 0.0
     for dz in np.arange(0.0, 15.0, 0.1):
-        worst = max(worst, vol(C.translate([0, 0, dz]) ^ S))
-    report(worst < 1e-3, f"{variant} back cover lowered straight onto the shell: worst overlap {worst:.4f} mm3")
-    # cover with the board already in: the board must not stop the cover early
+        worst = max(worst, vol(R.translate([0, 0, dz]) ^ S))
+    report(worst < 1e-3, f"{variant} back cover lowered straight onto the lid (hooks left out): worst overlap {worst:.4f} mm3")
+    # cover with the board already in the lid: the board must not stop the cover early
     board = case.board_model()
     every = board["pcb"]
     for k, g in board.items():
@@ -243,14 +268,14 @@ def assembly_motion(variant):
             every += g
     w2 = max(vol(C.translate([0, 0, dz]) ^ every) for dz in np.arange(0.1, 15.0, 0.1))
     report(w2 < 1e-3, f"{variant} back cover passes over the installed board until the last 0.1 mm: worst {w2:.4f} mm3")
-    for x, side in case.SCREWS:
-        p, d, _ = case.screw_frame(x, side)
-        s0 = case.SCREW_HEAD_DEPTH
+    z_total = case.Z_B + case.CAVITY[variant] + case.T_BACK
+    for px, py in case.POSTS:
+        seat = z_total - case.SCREW_HEAD_DEPTH
         hit = 0.0
-        for t in np.arange(-8.0, 0.01, 0.25):  # head travels in until it seats
-            head = case.cyl_along(p, d, s0 + t - 1.3, s0 + t, 1.9)
-            hit = max(hit, vol(head ^ (S + C)))
-        report(hit < 1e-3, f"{variant} screw {side} x={x:.0f}: head slides into its counterbore freely ({hit:.4f} mm3)")
+        for t in np.arange(0.0, 8.01, 0.25):  # screw travels in from outside until the head seats
+            screw = case.cyl_z(px, py, 2.5, seat + t, seat + t + 1.8) + case.cyl_z(px, py, 1.25, seat + t - 8.0, seat + t)
+            hit = max(hit, vol(screw ^ (S + C)))
+        report(hit < 1e-3, f"{variant} corner screw ({px:.1f}, {py:.1f}): goes in and seats freely ({hit:.4f} mm3)")
 
 
 # ------------------------------------------------------------------ 6

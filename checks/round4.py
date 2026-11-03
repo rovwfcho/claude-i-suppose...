@@ -65,30 +65,33 @@ def dial_small(variant):
 def worst_corners(variant):
     shell, _, cover_asm, _ = load_assembled(variant)
     S, C = to_manifold(shell), to_manifold(cover_asm)
-    # clamp: pads at the PCB front face (z = Z_PF), cover pads at Z_B. A real PCB of thickness t
-    # sitting on the front pads has its back face at Z_PF + t.
+    # stack-up with the board screwed to the posts: PCB 1.5-1.7 mm, standoffs 3-4 mm, panel stack
+    # 1.0-1.6 mm. The pads must never press the PCB, the glass never touch the lid.
+    lip = case.T_FRONT - case.GLASS_RELIEF
+    pad_top = case.Z_PF - case.PAD_GAP
+    worst_pad, worst_glass = np.inf, np.inf
     for t in (1.5, 1.6, 1.7):
-        gap = case.Z_B - (case.Z_PF + t)
-        if gap > 0:
-            msg = f"PCB {t} mm: {gap:.2f} mm of float between pads (board can rattle that much)"
-            ok = gap <= 0.1 + 1e-6
-        else:
-            msg = f"PCB {t} mm: {-gap:.2f} mm too thick; the cover sits that much proud at the seam (side screws allow it)"
-            ok = -gap <= 0.1 + 1e-6
-        report(ok, f"{variant} worst case {msg}")
-    for p in (1.0, 1.6):
-        clear = case.PANEL_SPACE - p
-        report(clear >= 0.0, f"{variant} worst case panel stack {p} mm: lip clearance {clear:.2f} mm")
-    # standoffs pushed 0.5 mm toward the board centre, at the largest measured size
+        for h in (case.STANDOFF_H_MIN, case.STANDOFF_H):
+            front = case.POST_Z - h - t
+            worst_pad = min(worst_pad, front - pad_top)
+            for p in (1.0, 1.2, 1.6):
+                worst_glass = min(worst_glass, front - p - lip)
+    report(worst_pad > 0, f"{variant} worst case PCB 1.7 mm on 4 mm standoffs: pads {worst_pad:.2f} mm in front of it")
+    report(worst_glass >= 0.15, f"{variant} worst case PCB 1.7 mm, 4 mm standoffs, 1.6 mm panel stack: glass "
+                                f"{worst_glass:.2f} mm from the lid (1.2 mm stack: {worst_glass + 0.4:.2f})")
+    # standoffs 0.5 mm toward the board centre, at the largest measured size, 3 and 4 mm tall: they may
+    # only touch the posts' end faces
     r = 4.6 / 2
     worst = 0.0
-    for px, py in case.POSTS:
-        sx = 1 if px < case.BW / 2 else -1
-        sy = 1 if py < case.BH / 2 else -1
-        for dx, dy in ((0.5 * sx, 0), (0, 0.5 * sy), (0.5 * sx, 0.5 * sy)):
-            cyl = case.cyl_z(px + dx, py + dy, r, case.Z_B, case.Z_B + 6.0)
-            worst = max(worst, vol(cyl ^ (S + C)))
-    report(worst < 1e-3, f"{variant} worst case standoffs 4.6 mm wide, 6 mm tall, 0.5 mm inward: overlap {worst:.3f} mm3")
+    for h in (case.STANDOFF_H_MIN, case.STANDOFF_H):
+        z0 = case.POST_Z - h
+        for px, py in case.POSTS:
+            sx = 1 if px < case.BW / 2 else -1
+            sy = 1 if py < case.BH / 2 else -1
+            for dx, dy in ((0.5 * sx, 0), (0, 0.5 * sy), (0.5 * sx, 0.5 * sy)):
+                cyl = case.cyl_z(px + dx, py + dy, r, z0, case.POST_Z - 0.001)
+                worst = max(worst, vol(cyl ^ (S + C)))
+    report(worst < 1e-3, f"{variant} worst case standoffs 4.6 mm wide, 3 or 4 mm tall, 0.5 mm inward: overlap {worst:.3f} mm3")
 
 
 # ------------------------------------------------------------------ 3
@@ -111,24 +114,27 @@ def seam(variant):
 
 # ------------------------------------------------------------------ 4
 def screw_length(variant):
-    shell, _, cover_asm, _ = load_assembled(variant)
+    """Down each corner hole from the head's seat: clear plastic to the post end, then the standoff;
+    the PCB itself must stay beyond the tip of an 8 mm screw even with 3 mm standoffs."""
+    shell, _, cover_asm, z_total = load_assembled(variant)
     asm = trimesh.util.concatenate([shell, cover_asm])
-    board = case.to_trimesh(Manifold.batch_boolean(list(case.board_model().values()), __import__("manifold3d").OpType.Add))
-    for x, side in case.SCREWS:
-        p, d, _ = case.screw_frame(x, side)
-        seat = p + d * case.SCREW_HEAD_DEPTH
-        o = seat + d * 0.01
+    for px, py in case.POSTS:
+        seat = z_total - case.SCREW_HEAD_DEPTH
+        o = np.array([px, py, seat - 0.01])
+        d = np.array([0, 0, -1.0])
         locs, _, _ = asm.ray.intersects_location([o], [d], multiple_hits=True)
-        dists = np.sort(np.abs((locs - seat) @ d)) if len(locs) else np.array([])
-        # material runs: entering/leaving pairs. Length of the first run beyond the shell wall gap
-        # gives where the block ends; anything past that must stay clear of the board.
-        blocks_end = dists[dists > 2.0].min() if (dists > 2.0).any() else np.inf
-        bl, _, _ = board.ray.intersects_location([o], [d], multiple_hits=False)
-        to_board = float(np.abs((bl[0] - seat) @ d)) if len(bl) else np.inf
-        usable = min(blocks_end, to_board)
-        report(usable >= 6.0, f"{variant} screw {side} x={x:.0f}: thread hole ends {blocks_end:.2f} mm under the head, "
-                              f"nearest board part on that line {to_board:.2f} mm -> M2 x 6 fits, "
-                              f"longest safe {math.floor(usable)} mm")
+        clear = seat - locs[:, 2].max() if len(locs) else np.inf         # plastic on the axis below the seat
+        res = []
+        for h in (case.STANDOFF_H, case.STANDOFF_H_MIN):
+            b = case.board_model(h)
+            pcb = case.to_trimesh(b["pcb"])
+            bl, _, _ = pcb.ray.intersects_location([o], [d], multiple_hits=False)
+            res.append(seat - bl[0][2] if len(bl) else np.inf)            # seat to the PCB along the axis
+        longest = math.floor(min(res) - 0.5)
+        report(clear >= seat - case.POST_Z and longest >= case.SCREW_LEN and seat - case.POST_Z + 1.5 <= case.SCREW_LEN,
+               f"{variant} corner screw ({px:.1f}, {py:.1f}): hole clear down to the standoff; seat to PCB "
+               f"{res[0]:.2f} mm (4 mm standoffs) / {res[1]:.2f} mm (3 mm) -> M2.5 x {case.SCREW_LEN:.0f} goes "
+               f"{case.SCREW_LEN - (seat - case.POST_Z):.1f} mm into the standoff, longest safe {longest} mm")
 
 
 # ------------------------------------------------------------------ 5
@@ -169,7 +175,7 @@ def readme_numbers():
     m = re.search(r"opening ([\d.]+) mm wide", text)
     w = case.BTN_NOTCH[1] - case.BTN_NOTCH[0]
     report(m and abs(float(m.group(1)) - w) < 0.05, f"README button opening {m.group(1) if m else None} vs model {w:.1f}")
-    want = f"{len(case.SCREWS)} × M2 screws, 5–6 mm long under the head, never longer than 7 mm"
+    want = f"{len(case.POSTS)} × M2.5 × {case.SCREW_LEN:.0f} mm screws"
     report(want in text, f"README screws: '{want}' present: {want in text}")
 
 

@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """Fit checks and section plots for case.py.
 
-Checks, for each variant:
+Checks, for each variant, with 4 mm and with 3 mm standoffs:
   * every part is a single watertight solid
   * the simplified board model does not intersect either part when assembled
-  * the board can be dropped into the front shell from the back without hitting anything
-  * the back cover and the shell do not overlap (nothing has to flex to close the case)
-  * the PCB is clamped: ledge pads touch its front face, posts its back face
-  * the lip clears the glass
+  * the board can be dropped into the lid from the back, and the back cover (with the board screwed
+    on) can be lowered onto the lid, without hitting anything but the springy clip hooks
+  * the back cover and the lid touch only where the hooks are meant to press (their preload)
+  * the corner posts land on the standoff tops, an 8 mm screw goes 2 mm into each standoff and its
+    head sits in the recess, not above the back
+  * the lid's pads stay PAD_GAP in front of the PCB, and the lip clears the glass
 """
 import math
 import os
 import sys
 
 import numpy as np
+
+from manifold3d import Manifold
 
 import case
 
@@ -34,50 +38,84 @@ def check_variant(name, shell, bc, z_total):
         print(f"  {label}: watertight={tm.is_watertight} bodies={bodies} volume={m.volume() / 1000:.1f} cm3")
         ok &= tm.is_watertight and bodies == 1
 
-    board = case.board_model()
+    hooks = Manifold()
+    for x, side in case.CLIPS:
+        hooks += case.clip_hook(x, side)
+    for h in (case.STANDOFF_H, case.STANDOFF_H_MIN):
+        print(f"  -- {h:.0f} mm standoffs")
+        ok &= check_board(shell, bc, z_total, hooks, h)
+
+    # the lid and the cover touch only at the hooks (CLIP_PRELOAD); elsewhere not at all
+    ov = vol(shell ^ (bc - hooks))
+    pre = vol(shell ^ hooks)
+    good = ov < TOL and 0.0 < pre < 4 * 1.0
+    ok &= good
+    print(f"  {'OK ' if good else 'BAD'} cover/lid overlap away from the hooks {ov:.4f} mm3; hooks press the lid "
+          f"{pre:.3f} mm3 (the designed {case.CLIP_PRELOAD} mm preload)")
+    return ok
+
+
+def check_board(shell, bc, z_total, hooks, standoff_h):
+    ok = True
+    board = case.board_model(standoff_h)
     for part, geom in board.items():
         a = vol(geom ^ shell)
         b = vol(geom ^ bc)
         good = a < TOL and b < TOL
         ok &= good
-        print(f"  {'OK ' if good else 'BAD'} {part:13s} overlap shell={a:.3f} cover={b:.3f} mm3")
+        print(f"  {'OK ' if good else 'BAD'} {part:13s} overlap lid={a:.3f} cover={b:.3f} mm3")
 
-    # insertion: board moves from far behind straight down into place
+    # insertion: the board drops into the lid from far behind; and the cover with the board screwed
+    # on comes down onto the lid (only the hooks may touch: their beams bend)
     every = board["pcb"]
     for k, g in board.items():
         if k != "pcb":
             every += g
-    worst = 0.0
+    worst = worst2 = 0.0
+    rigid = bc - hooks
     for dz in np.arange(0.0, 16.01, 0.25):
         worst = max(worst, vol(every.translate([0, 0, dz]) ^ shell))
-    good = worst < TOL
+        worst2 = max(worst2, vol((every + rigid).translate([0, 0, dz]) ^ shell))
+    good = worst < TOL and worst2 < TOL
     ok &= good
-    print(f"  {'OK ' if good else 'BAD'} board insertion path, worst overlap {worst:.3f} mm3")
+    print(f"  {'OK ' if good else 'BAD'} insertion paths: board into the lid {worst:.3f} mm3, cover with board onto "
+          f"the lid {worst2:.3f} mm3 (hooks left out)")
 
-    # cover vs shell: rigid parts, so no overlap at all
-    ov = vol(shell ^ bc)
-    good = ov < TOL
+    # posts land on the standoff tops: touching, not overlapping
+    so = board["standoffs"]
+    touch = vol(so.translate([0, 0, 0.05]) ^ bc)
+    good = vol(so ^ bc) < TOL and touch > 4 * 0.05 * 3.0
     ok &= good
-    print(f"  {'OK ' if good else 'BAD'} cover/shell overlap {ov:.4f} mm3")
+    print(f"  {'OK ' if good else 'BAD'} posts on the standoff tops (0.05 mm probe {touch:.2f} mm3)")
 
-    # clamping contacts
+    # screws: head in the recess, not above the back face; 8 mm shank goes 2 mm into the standoff
+    for px, py in case.POSTS:
+        seat = z_total - case.SCREW_HEAD_DEPTH
+        head = case.cyl_z(px, py, 2.5, seat, seat + 1.8)
+        shank = case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)
+        bite = vol(shank ^ so) / (math.pi * 1.25 ** 2)
+        good = vol(head ^ bc) < TOL and vol(shank ^ bc) < TOL and seat + 1.8 <= z_total + 1e-9 and 1.9 <= bite <= 2.1
+        ok &= good
+        below = (seat - case.SCREW_LEN) - (case.POST_Z - standoff_h)
+        good &= below >= 0.9
+        ok &= good
+        print(f"  {'OK ' if good else 'BAD'} screw at ({px:.1f}, {py:.1f}): head in its recess, {bite:.2f} mm into the "
+              f"standoff, tip {below:.2f} mm short of the PCB")
+
+    # pads: PAD_GAP in front of the PCB; glass well clear of the lid
     pcb = board["pcb"]
-    front_touch = vol(pcb.translate([0, 0, -0.05]) ^ shell)
-    # behind: the ring faces stay exactly FOAM_GAP behind the PCB, where the foam tape presses it
-    back_near = vol(pcb.translate([0, 0, case.FOAM_GAP - 0.02]) ^ bc)
-    back_at = vol(pcb.translate([0, 0, case.FOAM_GAP + 0.05]) ^ bc)
-    good = front_touch > 0.1 and back_near < TOL and back_at > 0.1
+    near = vol(pcb.translate([0, 0, -(case.PAD_GAP - 0.03)]) ^ shell)
+    far = vol(pcb.translate([0, 0, -(case.PAD_GAP + 0.05)]) ^ shell)
+    want = case.PAD_GAP + (case.POST_Z - case.Z_B - standoff_h)
+    good = near < TOL and (far > 0.1 or standoff_h < case.STANDOFF_H)
     ok &= good
-    print(f"  {'OK ' if good else 'BAD'} PCB clamped: front pads {front_touch:.2f} mm3 (0.05 mm probe); ring faces "
-          f"{case.FOAM_GAP} mm behind it for {case.FOAM_T} mm foam tape ({100 * (1 - case.FOAM_GAP / case.FOAM_T):.0f} % squeeze)")
-
-    # glass must not be loaded
+    print(f"  {'OK ' if good else 'BAD'} pads {want:.2f} mm in front of the PCB (never pressing it)")
     gap = None
-    for d in np.arange(0.0, 1.0, 0.05):
+    for d in np.arange(0.0, 2.5, 0.05):
         if vol(board["panel"].translate([0, 0, -d]) ^ shell) > TOL:
             gap = d
             break
-    good = gap is not None and gap >= 0.25
+    good = gap is not None and gap >= 0.6
     ok &= bool(good)
     print(f"  {'OK ' if good else 'BAD'} lip-to-glass clearance ~{gap:.2f} mm")
     return ok

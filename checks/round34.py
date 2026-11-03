@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Debug round 34 (session 4): methods not used in rounds 1-33.
 
-1. Volume accounting against session 3: the back cover's volume change since session 3's cover (read
-   from git) must equal, to 0.5 mm3, what the session-4 features add and remove, worked out by hand
-   from their sizes: the new guide bars and speaker brackets added, the three slots cut out, session
-   3's guide bars removed and its 28 round grille holes filled in. The screw blocks are left out of
-   both (their pilots grew from 1.7 to 1.8 mm). Any change nobody intended would show up as a
-   difference.
+1. Volume accounting against the session-4 cover (commit 13d2cbf, read from git): inside the back
+   cover's middle (away from the walls, the corners and the old screw blocks, all of which the
+   session-5 closure changed on purpose), the volume change must equal, to 0.5 mm3, what was changed
+   there on purpose: the bottom guide bar, no longer broken by a screw block. Any change nobody
+   intended would show up as a difference.
 2. Pictures and the text that points at them: in both guides every picture's markers must all be
    explained in its legend, and every legend entry must have a marker; where the text sends you to a
    marker ("marked 3 in the picture above"), that marker's legend must be about the same thing.
@@ -58,9 +57,9 @@ def stadium_area(w, length, n=case.SEG):
 def volume_accounting():
     import trimesh
     from round1 import to_manifold
-    old = subprocess.run(["git", "-C", ROOT, "show", "01545f9:stl/back_cover_battery.stl"], capture_output=True)
+    old = subprocess.run(["git", "-C", ROOT, "show", "13d2cbf:stl/back_cover_battery.stl"], capture_output=True)
     if old.returncode != 0 or not old.stdout:
-        report(False, "volume accounting: session 3's back cover could not be read from git")
+        report(False, "volume accounting: the session-4 back cover could not be read from git")
         return
     with tempfile.NamedTemporaryFile(suffix=".stl") as f:
         f.write(old.stdout)
@@ -68,44 +67,28 @@ def volume_accounting():
         tm_old = trimesh.load(f.name)
     tm_new = trimesh.load(os.path.join(ROOT, "stl", "back_cover_battery.stl"))
     z_total = case.Z_B + case.CAVITY["battery"] + case.T_BACK
-    # both are printable STLs (outside face down); put them back in the design frame
+
     def asm(tm):
         t = tm.copy()
         t.apply_transform(np.diag([1, 1, -1, 1]))
         t.apply_translation([0, 0, z_total])
         return to_manifold(t)
     A, B = asm(tm_old), asm(tm_new)
-    blocks = None
-    for pos, side in case.SCREWS:                      # leave the screw blocks (and their pilots) out
-        p, d, wall = case.screw_frame(pos, side)
-        if side == "right":
-            b = case.box(case.BW - 8, case.X1 + 1, pos - 3, pos + 3, -1, z_total + 1)
-        elif side == "bottom":
-            b = case.box(pos - 3, pos + 3, case.Y0 - 1, 8, -1, z_total + 1)
-        else:
-            b = case.box(pos - 3, pos + 3, case.BH - 8, case.Y1 + 1, -1, z_total + 1)
-        blocks = b if blocks is None else blocks + b
-    dv = (B - blocks).volume() - (A - blocks).volume()
+    # the middle: clear of the walls, skirt and clips (y 3-57), the corner posts and the right-hand
+    # screw block (x 8.5-91), and the session-4 screw blocks at x 20 and 64 (bottom) and 8.5 (top)
+    region = case.box(8.5, 91.0, 3.0, 57.0, -1, z_total + 1)
+    for x, y0, y1 in ((20.0, -5, 8.5), (64.0, -5, 8.5), (8.5, 51.5, 65)):
+        region -= case.box(x - 3.5, x + 3.5, y0, y1, -1, z_total + 1)
+    dv = (B ^ region).volume() - (A ^ region).volume()
     z_in = z_total - case.T_BACK
-    # what session 4 added and removed (all prisms; heights above the inside face of the back)
-    new_guides = sum((x1 - x0) * (y1 - y0) for x0, x1, y0, y1 in case.battery_guides()) * case.BATTERY_GUIDE[1]
-    from shapely.geometry import box as sbox
-    from shapely.ops import unary_union
-    brackets = unary_union([sbox(x0, y0, x1, y1) for x0, x1, y0, y1 in case.speaker_brackets()]).area * case.SPK_BRACKET[1]
-    gw, gl, _ = case.GRILLE_SLOTS
-    slots = 3 * stadium_area(gw, gl) * case.T_BACK
-    # session 3: guide bars 1.2 x 12 (ends) and 20 x 1.2 (sides), 1.5 mm tall, round the 5.5-71.5 x 6-50 bay
-    old_guides = (2 * 1.2 * 12.0 + 2 * 20.0 * 1.2) * 1.5
-    # session 3: round holes r 0.8 (24-gons) on a hex grid inside a 6.0 x 8.6 ellipse round (80, 15.5)
-    n_holes = sum(1 for j, yy in enumerate(np.arange(-7.9, 8.0, 2.25))
-                  for xx in np.arange(-7.8 + (1.3 if j % 2 else 0.0), 7.9, 2.6)
-                  if (xx / 6.0) ** 2 + (yy / 8.6) ** 2 <= 1.0)
-    old_holes = n_holes * ngon_area(0.8, 24) * case.T_BACK
-    expect = new_guides + brackets - slots - old_guides + old_holes
+    # on purpose: the bottom guide bar runs from x0 + 10 now (session 4: from 23.5, after the block)
+    x0, x1, y0, y1 = case.BATTERY_BAY
+    th, gh = case.BATTERY_GUIDE
+    bar = case.box(x0 + 10.0, 23.5, y0 - th, y0, z_in - gh, z_in)
+    expect = (bar ^ region).volume()
     report(abs(dv - expect) < 0.5,
-           f"back cover volume since session 3 (screw blocks left out): {dv:+.2f} mm3; worked out by hand "
-           f"{expect:+.2f} mm3 (guides +{new_guides:.1f}, brackets +{brackets:.1f}, slots -{slots:.1f}, "
-           f"old guides -{old_guides:.1f}, {n_holes} old holes filled +{old_holes:.1f})")
+           f"back cover middle, volume change since session 4: {dv:+.2f} mm3; on purpose {expect:+.2f} mm3 "
+           f"(the bottom guide bar's new stretch inside the compared region)")
 
 
 # ------------------------------------------------------------------ 2

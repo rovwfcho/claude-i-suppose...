@@ -76,8 +76,7 @@ ul { margin: 1mm 0; padding-left: 5mm; } li { margin: 0.6mm 0; }
 
 
 def page(T):
-    s4 = ('<div class="two">' + figure("step4a", T["fig4a"], marks=["1", "2", "3"], max_h=95, box=80)
-          + figure("step4b", T["fig4b"], marks=["4"], max_h=95, box=80) + "</div>")
+
     body = f"""
 <h1>{T['title']}</h1>
 <div class="sub">{T['subtitle']}</div>
@@ -102,12 +101,11 @@ def page(T):
 <div class="step"><div class="num">1</div><div><h3>{T['s1_h']}</h3><p>{T['s1']}</p>{figure('step1', T['fig1'])}</div></div>
 <div class="step"><div class="num">2</div><div><h3>{T['s2_h']}</h3><p>{T['s2']}</p>
 <div class="note warn">{T['s2_warn']}</div>{figure('step2', T['fig2'], marks=['1', '2', '3', '3', '3', '3', '4', '5', '6', '7', '8'])}</div></div>
-<div class="step"><div class="num">3</div><div><h3>{T['s3_h']}</h3><p>{T['s3']}</p></div></div>
-<div class="step"><div class="num">4</div><div><h3>{T['s4_h']}</h3><p>{T['s4']}</p>{figure('step3', T['fig3'], max_h=80)}</div></div>
-<div class="step"><div class="num">5</div><div><h3>{T['s5_h']}</h3><p>{T['s5']}</p>
-<div class="note">{T['s5_note']}</div>{s4}</div></div>
+<div class="step"><div class="num">3</div><div><h3>{T['s3_h']}</h3><p>{T['s3']}</p>{figure('step3', T['fig3'], marks=['1', '2', '3', '4', '4', '4', '4'], max_h=80)}</div></div>
+<div class="step"><div class="num">4</div><div><h3>{T['s4_h']}</h3><p>{T['s4']}</p>
+<div class="note">{T['s4_note']}</div>{figure('step4a', T['fig4a'], max_h=80)}</div></div>
 
-<h2 class="pb">{T['h_open']}</h2><ul>{''.join(f'<li>{t}</li>' for t in T['open'])}</ul>
+<h2 class="pb">{T['h_open']}</h2>{figure('step4b', T['fig4b'], max_h=55)}<ul>{''.join(f'<li>{t}</li>' for t in T['open'])}</ul>
 <h2>{T['h_tips']}</h2><ul>{''.join(f'<li>{t}</li>' for t in T['tips'])}</ul>
 <p class="foot">{T['foot']}</p>
 """

@@ -50,15 +50,6 @@ def parts():
     w, h, t = case.SPEAKER_SIZE
     out["speaker"] = case.box(sx - w / 2, sx + w / 2, sy - h / 2, sy + h / 2, z_in - t, z_in)
     out["speaker_peg"] = case.cyl_y(sx, z_in - 1.5, 1.3, sy + h / 2 - 0.1, sy + h / 2 + 1.8)
-    # foam pieces (1.5 x 3 mm, 1 mm thick) on the four ring faces, squeezed to the 0.6 mm gap
-    foam = Manifold()
-    for (px, py), (a0, a1) in zip(case.POSTS, case.POST_SECTORS):
-        am = math.radians((a0 + a1) / 2)
-        rm = (case.POST_RIN + case.POST_ROUT) / 2
-        fx, fy = px + rm * math.cos(am), py + rm * math.sin(am)
-        piece = case.box(-0.75, 0.75, -1.5, 1.5, case.Z_B, case.Z_B + case.FOAM_GAP)
-        foam += piece.rotate([0, 0, math.degrees(am) + 90]).translate([fx, fy, 0])
-    out["foam"] = foam
     pts, r = case.battery_wire_route()
     out["wire_bat"] = tube(pts, r)
     pts, r = case.speaker_wire_route()
@@ -66,10 +57,9 @@ def parts():
     pts, r = case.speaker_cable_coil()
     out["coil_spk"] = tube(pts, r)
     screws = Manifold()
-    for pos, side in case.SCREWS:
-        p, d, _ = case.screw_frame(pos, side)
-        s0 = case.SCREW_HEAD_DEPTH
-        screws += case.cyl_along(p, d, s0 - 1.3, s0, 1.9) + case.cyl_along(p, d, s0, s0 + 6.0, 1.0)
+    for px, py in case.POSTS:              # M2.5 x 8 pan heads, seated in their recesses
+        seat = z_total - case.SCREW_HEAD_DEPTH
+        screws += case.cyl_z(px, py, 2.5, seat, seat + 1.75) + case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)
     out["screws"] = screws
     out["p_front"] = case.front_for_print(out["shell"])
     out["p_cover"] = case.flip_for_print(out["cover"], z_total)

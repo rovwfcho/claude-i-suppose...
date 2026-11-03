@@ -66,16 +66,14 @@ def faces(variant):
 def expected_openings():
     """(wall, along-wall centre, z centre, half-width, half-height) of every intended opening."""
     zb = case.Z_B
-    ops = [("left", case.USB_Y, zb + 1.6, 6.5, 3.5, "USB-C"),
-           ("left", case.SD_Y, zb + 1.1, 6.5, 1.6, "microSD"),
+    ops = [("left", case.USB_Y, zb + 2.1, 6.5, 4.0, "USB-C"),
+           ("left", case.SD_Y, zb + 1.6, 6.5, 2.1, "microSD"),
            ("bottom", sum(case.BTN_NOTCH) / 2, 6.0, 12.5, 12.0, "button opening"),
            ("top", case.WHEEL[0], 8.0, 7.6, 4.0, "dial slot")]
     for dy in (-2.0, 0.0, 2.0):
         ops.append(("left", case.MIC[1] + dy, zb + 1.0, 0.6, 0.6, "mic hole"))
     for y in (40.0, 42.5, 45.0, 47.5):
         ops.append(("right", y, zb + 1.8, 0.6, 1.5, "sensor vent"))
-    for pos, side in case.SCREWS:
-        ops.append((side, pos, case.SCREW_Z - case.SCREW_DRAW, case.SCREW_WALL_R, case.SCREW_WALL_R, "screw hole"))
     # the pry notch is a shallow dish, not a hole; listed so the thickness scan does not flag its rim
     ops.append(("right", 30.0, case.Z_SPLIT, 5.0, 1.8, "pry notch (dish)"))
     return ops

@@ -37,25 +37,32 @@ def wall_webs(variant, min_web=1.0):
     from shapely.geometry import Polygon
     from shapely.ops import unary_union
     shell, _, cover_asm, _ = load_assembled(variant)
-    asm = trimesh.util.concatenate([shell, cover_asm])
     planes = []
     for t in (0.3, case.WALL / 2, case.WALL - 0.3):  # near the outside, middle, near the inside
         planes += [(f"bottom wall {t:.1f} in", [0, case.Y0 + t, 0], [0, 1, 0], (0, 2)),
                    (f"top wall {t:.1f} in", [0, case.Y1 - t, 0], [0, 1, 0], (0, 2)),
                    (f"left wall {t:.1f} in", [case.X0 + t, 0, 0], [1, 0, 0], (1, 2)),
                    (f"right wall {t:.1f} in", [case.X1 - t, 0, 0], [1, 0, 0], (1, 2))]
+    # the clips' grooves are blind, on the inside of the long walls (1.8 mm of wall stays behind them)
+    grooves = [(x - case.CLIP_HOOK_L / 2 - 1.5, x + case.CLIP_HOOK_L / 2 + 1.5) for x, _ in case.CLIPS]
     for name, o, n, axes in planes:
-        sec = asm.section(plane_origin=o, plane_normal=n)
-        polys = []
-        for ent in sec.discrete:
-            if len(ent) >= 4:
-                p = Polygon(ent[:, list(axes)])
-                if p.is_valid and p.area > 0.01:
-                    polys.append(p)
-        # nested loops: build the region with even-odd filling
         region = None
-        for p in sorted(polys, key=lambda q: -q.area):
-            region = p if region is None else region.symmetric_difference(p)
+        for part in (shell, cover_asm):          # each part on its own: they share points at the seam
+            sec = part.section(plane_origin=o, plane_normal=n)
+            if sec is None:
+                continue
+            polys = []
+            for ent in sec.discrete:
+                if len(ent) >= 4:
+                    p = Polygon(ent[:, list(axes)])
+                    if p.is_valid and p.area > 0.01:
+                        polys.append(p)
+            # nested loops: build the region with even-odd filling
+            part_region = None
+            for p in sorted(polys, key=lambda q: -q.area):
+                part_region = p if part_region is None else part_region.symmetric_difference(p)
+            if part_region is not None:
+                region = part_region if region is None else region.union(part_region)
         if region is None:
             report(False, f"{variant} {name}: no section")
             continue
@@ -67,6 +74,8 @@ def wall_webs(variant, min_web=1.0):
         # touch the top or bottom of the section (the faces), keep webs between openings
         zmin, zmax = region.bounds[1], region.bounds[3]
         webs = [g for g in pieces if g.bounds[1] > zmin + 0.3 and g.bounds[3] < zmax - 0.3]
+        if name.startswith(("bottom", "top")) and "2.1" in name:
+            webs = [g for g in webs if not (any(a <= g.centroid.x <= b for a, b in grooves) and g.centroid.y > 9.0)]
         desc = [(round(g.area, 2), tuple(np.round(g.centroid.coords[0], 1))) for g in webs]
         report(not webs, f"{variant} {name}: webs narrower than {min_web} mm between openings: {desc or 'none'}")
 
@@ -97,9 +106,11 @@ def tessellation():
                 v = vol(g ^ (S + C))
                 if v > 1e-3:
                     bad[name] = round(v, 4)
-            report(not bad and vol(S ^ C) < 1e-3,
+            from round1 import hooks
+            rigid = vol(S ^ (C - hooks()))
+            report(not bad and rigid < 1e-3,
                    f"{variant} at {case.SEG} segments per circle: board overlaps {bad or 'none'}, "
-                   f"shell/cover overlap {vol(S ^ C):.4f} mm3")
+                   f"lid/cover overlap away from the clip hooks {rigid:.4f} mm3")
     finally:
         case.SEG = saved
 

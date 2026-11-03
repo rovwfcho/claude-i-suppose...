@@ -148,7 +148,7 @@ def readme_inventory():
         f1(pw): "pocket width", f1(ph): "pocket length", f1(slide): "battery play (round 13)",
         str(lb): "battery wire route (round 13)", str(ls): "speaker cable route (round 13)",
         str(round(loop / 10)): "loop room in cm (round 13)", f1(gw): "slot width", f1(gl): "slot length",
-        f1(gp - gw): "web between slots", f1(2 * case.SCREW_PILOT_R): "pilot diameter",
+        f1(gp - gw): "web between slots", f1(2 * case.SCREW_HOLE_R): "screw hole diameter",
         f1(case.ANTENNA[0] - (case.SPEAKER["battery"][0] + pw / 2)): "pocket to antenna",
         "1.7": "the old pilot it is compared with", "70": "pull-out per screw (round 22: 73 N)",
         "10": "speaker cable 10-11 cm / membrane 10.1", "11": "speaker cable 10-11 cm",

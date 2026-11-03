@@ -446,7 +446,7 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 ## Round 28: your photos (new methods)
 **New methods:**
 - **Ruler scale read by the computer:** the dark tick marks along one row of each photo are found, and a straight line is fitted through tick number against position. That gives 17–43 ticks per photo (scatter 0.55–1.5 px), not two numbers read by eye.
-- **Edges refined automatically:** from a position marked by eye, the outermost strong colour step, on 10–20 rows.
+- **Edges refined automatically:** from a position marked by eye, the outermost strong colour step, on 11–25 rows.
 - **Perspective transforms:** the speaker's frame in your top view gives the membrane, peg and cable exit. The four brass standoff tops in your back photo give board coordinates.
 - **A review image**, `preview/owner_measurements.png`, with every tick, edge and landmark drawn on.
 
@@ -485,7 +485,7 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **The battery wire's route had two 0.95 mm bends** (it needs 1 mm). The short straight between them is now 2.4 mm.
 - **The documents said the battery is 40.8 mm wide;** round 28 measures 40.73. `BATTERY_SIZE`, the README and both guides now say 40.7, and the play is about 0.9 mm (was 0.8).
 - **One guide marker** (print picture, marker 1) sat in the middle of the display window, over empty space. It is now on the shell's rim.
-- **The spare speaker cable didn't fit its loop.** Traced roughly in your photo, the cable is 100–105 mm (round 30's careful trace: 101 mm), so 70–75 mm is spare, but the loop held only 64 mm. The loop is now taller (up to 5.5 mm from the top wall, clear of the dial tab and the antenna end) and holds 77 mm.
+- **The spare speaker cable didn't fit its loop.** Traced roughly in your photo, the cable is 100–105 mm (round 30's careful trace: 101 mm), so 70–75 mm is spare, but the loop held only 64 mm. The loop is now taller (reaching to within 4.9 mm of the top wall, clear of the dial tab and the antenna end) and holds 77 mm.
 
 **Check bug:** the first version compared the battery plus tape plus ageing swelling with the nominal 5 mm room. Over the bay, the first thing the cell could reach is the wires under it, 5.6 mm away. It is now measured against that.
 
@@ -550,7 +550,7 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **Margins against small changes:** each new dimension (bay, pocket, bracket legs, slot pitch and length, cable exit) is moved 0.1 mm either way. Every session-4 margin must stay at or above its limit.
 
 **Mistake found and fixed (design):**
-- **The grille sat on the edge of two limits.** Its webs were exactly the 0.8 mm minimum, and with the speaker pushed fully to one side the outer slot came within 0.08 mm of the membrane's measured edge. Moving the slots 0.1 mm took both below zero. The slots are now 0.9 mm wide on the same 1.8 mm pitch: 0.9 mm webs, 0.13 mm more room at the membrane's edge, still 32 % open (Helmholtz resonance still about 15 kHz). The back cover STL changed.
+- **The grille sat on the edge of two limits.** Its webs were exactly the 0.8 mm minimum, and with the speaker pushed fully to one side the outer slot came within 0.08 mm of the membrane's measured edge. Moving the slots 0.1 mm took both below zero. The slots are now 0.9 mm wide on the same 1.8 mm pitch: 0.9 mm webs, 0.13 mm of room at the membrane's edge (was 0.08), still 32 % open (Helmholtz resonance still about 15 kHz). The back cover STL changed.
 
 **Check gap found by the deliberate mistakes:**
 - **Nothing checked how close the cables come to the antenna.** Moving the spare-cable loop next to the antenna end, clear of everything else, got past every check. The README tells you to keep it away, but no check held the design to that. Round 14 now requires the cable routes and the loop to stay 5 mm (in plan) from the antenna end. The loop in the design is 5.1 mm away. With that, all 5 mistakes are caught.

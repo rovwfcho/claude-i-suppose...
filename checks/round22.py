@@ -80,45 +80,51 @@ def back_plate():
 
 
 # ------------------------------------------------------------------ 2
-def screws():
-    tau = 10.0
-    fill = 0.5 * (1.0 - case.SCREW_PILOT_R) / 0.2   # 50 % thread fill for a 1.6 mm pilot, less for a bigger one
-    for pos, side in case.SCREWS:
-        p, d, wall = case.screw_frame(pos, side)
-        along = abs(wall - p @ np.abs(d))            # outer wall plane to the cavity wall
-        block0 = along + case.SKIRT_CLR               # block face
-        block1 = along + case.BLOCK_DEPTH             # far face of the block
-        tip = case.SCREW_HEAD_DEPTH + 6.0             # under-head length of an M2 x 6
-        L = min(tip, block1) - block0
-        F = tau * np.pi * 2.0 * L * fill
-        report(L >= 3.0 and F >= 50.0, f"{side} screw at {pos}: {L:.2f} mm of thread in the block, pull-out about "
-                                        f"{F:.0f} N (the whole device weighs about 1-1.5 N)")
+def clips():
+    """Snap clips, textbook beam formulas: each beam is fixed at both ends (anchored in the skirt) with
+    the hook's load at its middle. Strain while the hook passes the lid's wall, the force to close and
+    to pull the lid off (friction 0.3), against PLA's limits (printed PLA yields at about 2 % strain
+    along the lines; keep under 1.5 % so it can be opened many times)."""
+    E = 3000.0                                    # MPa, printed PLA along the lines
+    L, t = case.CLIP_L, case.SKIRT_T
+    h = case.SKIRT_H - case.CLIP_SLOT             # beam height (z)
+    d = case.CLIP_UNDERCUT                        # bend while the hook passes the wall
+    I = h * t ** 3 / 12
+    P = 192 * E * I * d / L ** 3                  # fixed-fixed beam, load in the middle
+    eps = 12 * d * t / L ** 2
+    mu = 0.3
+    lead = math.radians(90 - (90 - case.RIM_CHAMFER[1]))    # the lid's 30 deg rim chamfer does the pushing
+    catch = math.radians(case.CLIP_CATCH)
+    close = P * (math.tan(lead) + mu) / (1 - mu * math.tan(lead))
+    pull = P * (math.tan(catch) + mu) / (1 - mu * math.tan(catch))
+    pre = 12 * case.CLIP_PRELOAD * t / L ** 2
+    n = len(case.CLIPS)
+    report(eps <= 0.015 and pre <= 0.005 and n * pull >= 2 * n * close * 0.5 and n * pull >= 30,
+           f"clip beams {L:.0f} x {t} x {h:.1f} mm: {100 * eps:.2f} % strain at full bend ({d} mm), "
+           f"{100 * pre:.2f} % while closed; about {n * close:.0f} N to close, {n * pull:.0f} N to pull the lid "
+           f"straight off ({n} clips)")
 
 
 def screw_length():
-    """Found screws come in any length: which ones reach the battery? Worst case: the largest cell the
-    README allows (4.8 mm) pushed against the bay's edge."""
-    from manifold3d import Manifold
+    """Found screws come in any length: which ones reach the PCB through the standoff? Worst case: 3 mm
+    standoffs (the board 1 mm further back)."""
     z_total = case.Z_B + case.CAVITY["battery"] + case.T_BACK
-    z_in = z_total - case.T_BACK
-    x0, x1, y0, y1 = case.BATTERY_BAY
-    cell = case.box(x0, x1, y0, y1, z_in - 4.8, z_in)
-    first_hit = {}
-    for pos, side in case.SCREWS:
-        p, d, _ = case.screw_frame(pos, side)
-        for L in (5, 6, 7, 8, 10, 12):
-            shank = case.cyl_along(p, d, case.SCREW_HEAD_DEPTH, case.SCREW_HEAD_DEPTH + L, 1.0)
-            if not (shank ^ cell).is_empty() and (shank ^ cell).volume() > 1e-4:
-                first_hit[f"{side} {pos}"] = L
-                break
-    shortest = min(first_hit.values()) if first_hit else None
-    report(shortest is None or shortest > 7, f"screw lengths that reach the battery: {first_hit or 'none up to 12 mm'} "
-                                             f"(the README allows 5-6 mm, never more than 7)")
+    seat = z_total - case.SCREW_HEAD_DEPTH
+    pcb_back = case.POST_Z - case.STANDOFF_H_MIN
+    first = None
+    for L in (6, 7, 8, 9, 10, 12):
+        if seat - L <= pcb_back + 0.3:
+            first = L
+            break
+    short = [L for L in (6, 7, 8) if L - (seat - case.POST_Z) < 1.5]
+    report(first is not None and first > case.SCREW_LEN and case.SCREW_LEN not in short,
+           f"corner screws: {short} mm are too short (under 1.5 mm in the standoff); {first} mm and longer can reach "
+           f"the PCB with 3 mm standoffs; {case.SCREW_LEN:.0f} mm is right for both")
 
 
 if __name__ == "__main__":
     back_plate()
-    screws()
+    clips()
     screw_length()
     print(f"\nRound 22: {len(problems)} problem(s)")
     for p in problems:

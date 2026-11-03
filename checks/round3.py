@@ -88,23 +88,24 @@ def calipers(variant):
     # hand calculation of the stack, written out from the design intent:
     # front wall 1.6 | panel room 1.2 + 0.5 | PCB 1.6 | clear depth behind PCB | back wall 1.8
     clear = {"battery": 5.0 + 5.0}[variant]  # battery: parts room + 454261 room
-    hand = {"lip": 1.6, "pcb_front": 1.6 + 1.7, "pcb_back": 1.6 + 1.7 + 1.6,
+    hand = {"lip": 1.6 - 0.2, "pcb_front": 1.6 + 1.7, "pcb_back": 1.6 + 1.7 + 1.6,
             "total": 1.6 + 1.7 + 1.6 + clear + 1.8}
     # lip thickness: ray through the bezel just below the window
     z = ray_z(shell, 52.0, 2.0)
     report(len(z) >= 2 and abs((z[1] - z[0]) - hand["lip"]) < 0.01,
-           f"{variant} caliper: bezel below window {z[1] - z[0]:.3f} mm thick (hand calc {hand['lip']})")
-    # ledge pad: top face must be at the PCB front face
+           f"{variant} caliper: bezel below window over the glass {z[1] - z[0]:.3f} mm thick (hand calc 1.6 - 0.2 "
+           f"relief = {hand['lip']})")
+    # ledge pad: top face 0.3 mm in front of the PCB front face
     z = ray_z(shell, 50.0, -0.1)
-    report(len(z) >= 2 and abs(z[1] - hand["pcb_front"]) < 0.01,
-           f"{variant} caliper: front pad ends at z={z[1]:.3f} (PCB front face, hand calc {hand['pcb_front']:.2f})")
-    # back ring (post sector) face: FOAM_GAP behind the PCB back face (the foam tape fills the gap)
+    report(len(z) >= 2 and abs(z[1] - (hand["pcb_front"] - 0.3)) < 0.01,
+           f"{variant} caliper: front pad ends at z={z[1]:.3f} (PCB front face less 0.3, hand calc "
+           f"{hand['pcb_front'] - 0.3:.2f})")
+    # corner post end: where a 4 mm standoff ends, 4.0 behind the PCB back face
     px, py = case.POSTS[1]
-    a = math.radians(135)
-    z = ray_z(cover_asm, px + 3.6 * math.cos(a), py + 3.6 * math.sin(a))
-    report(len(z) >= 1 and abs(z[0] - (hand["pcb_back"] + 0.6)) < 0.01,
-           f"{variant} caliper: back ring face at z={z[0]:.3f} (PCB back face + 0.6 for the foam, hand calc "
-           f"{hand['pcb_back'] + 0.6:.2f})")
+    z = ray_z(cover_asm, px - 2.6, py + 0.5)
+    report(len(z) >= 1 and abs(z[0] - (hand["pcb_back"] + 4.0)) < 0.01,
+           f"{variant} caliper: corner post ends at z={z[0]:.3f} (PCB back face + a 4 mm standoff, hand calc "
+           f"{hand['pcb_back'] + 4.0:.2f})")
     # total depth through the middle of the back
     zs = ray_z(shell, 30.0, 1.0)  # through the bezel below the window
     zc = ray_z(cover_asm, 30.0, 30.0)
@@ -186,10 +187,12 @@ def printer_error(variant, err=0.15):
         hit = vol(every ^ (S + C))
         report(hit < 1e-3, f"{variant} printed {label} by {err} mm: board overlap {hit:.3f} mm3")
     # shell and cover printed with opposite errors must still go together
+    from round1 import hooks
     S = to_manifold(shell).translate(-c).scale([1 - err / 50, 1 - err / 30, 1]).translate(c)
-    C = to_manifold(cover_asm).translate(-c).scale([1 + err / 50, 1 + err / 30, 1]).translate(c)
+    C = (to_manifold(cover_asm) - hooks()).translate(-c).scale([1 + err / 50, 1 + err / 30, 1]).translate(c)
     hit = vol(S ^ C)
-    report(hit < 1e-3, f"{variant} shell {err} mm small + cover {err} mm large: overlap {hit:.3f} mm3")
+    report(hit < 1e-3, f"{variant} shell {err} mm small + cover {err} mm large: overlap {hit:.3f} mm3 (the springy "
+                       f"clip hooks left out: round 36 checks them with print errors)")
 
 
 # ------------------------------------------------------------------ 5

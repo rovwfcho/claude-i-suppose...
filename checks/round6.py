@@ -58,7 +58,8 @@ def sweeps(variant):
                     f"overlaps {bad or 'none'}")
     # back cover: everything of it below the seam, projected and extruded straight up to the seam,
     # must miss the shell (the cover is lowered straight down)
-    below = C ^ case.box(-50, 150, -50, 150, -50, case.Z_SPLIT - 0.001)
+    from round1 import hooks
+    below = (C - hooks()) ^ case.box(-50, 150, -50, 150, -50, case.Z_SPLIT - 0.001)   # the hooks bend out of the way
     # anything of the cover below the seam, extruded straight up to the seam, must miss the shell
     proj = below.project()
     prism = Manifold.extrude(proj, case.Z_SPLIT - (case.Z_B - 1)).translate([0, 0, case.Z_B - 1])
@@ -68,11 +69,14 @@ def sweeps(variant):
     report(hit < 1e-3, f"{variant} sweep: every part of the cover that goes below the seam has a clear "
                        f"vertical path through the shell (overlap {hit:.4f} mm3)")
     # USB-C plug: overmold 12.4 x 6.6 (r 1 corners) pushed from 30 mm out to the receptacle face
-    zc = case.Z_B + 1.63
-    over = case.prism(case.rrect(12.4, 6.6, 1.0, case.USB_Y, zc), -0.4 - 25, -0.4).transform(
-        [[0, 0, 1, 0], [1, 0, 0, 0], [0, 1, 0, 0]])
-    hit = vol(swept(over.translate([-30, 0, 0]), [30, 0, 0]) ^ (S + C))
-    report(hit < 1e-3, f"{variant} sweep: USB-C plug pushed in from 30 mm away, overlap {hit:.4f} mm3")
+    hits = []
+    for dz in (0.0, case.STANDOFF_H - case.STANDOFF_H_MIN):          # 4 mm and 3 mm standoffs
+        zc = case.Z_B + 1.63 + dz
+        over = case.prism(case.rrect(12.4, 6.6, 1.0, case.USB_Y, zc), -0.4 - 25, -0.4).transform(
+            [[0, 0, 1, 0], [1, 0, 0, 0], [0, 1, 0, 0]])
+        hits.append(vol(swept(over.translate([-30, 0, 0]), [30, 0, 0]) ^ (S + C)))
+    report(max(hits) < 1e-3, f"{variant} sweep: USB-C plug pushed in from 30 mm away, overlap {hits[0]:.4f} mm3 "
+                             f"(4 mm standoffs) / {hits[1]:.4f} mm3 (3 mm)")
 
 
 # ------------------------------------------------------------------ 2
@@ -100,20 +104,24 @@ def packing(variant):
 
 # ------------------------------------------------------------------ 3
 def screw_walls(variant):
-    _, _, cover_asm, _ = load_assembled(variant)
-    for x, side in case.SCREWS:
-        p, d, _ = case.screw_frame(x, side)
-        o = p + d * (case.SCREW_HEAD_DEPTH + 4.0)  # middle of the thread
-        angles = np.radians(np.arange(0, 360, 15))
-        side_dir = np.array([abs(d[1]), abs(d[0]), 0.0])  # horizontal, across the screw axis
-        dirs = np.outer(np.cos(angles), side_dir) + np.outer(np.sin(angles), [0, 0, 1.0])
-        origins = o + dirs * (case.SCREW_PILOT_R + 0.01)
-        locs, ir, _ = cover_asm.ray.intersects_location(origins, dirs, multiple_hits=False)
-        dist = np.full(len(dirs), np.inf)
-        dist[ir] = np.linalg.norm(locs - origins[ir], axis=1)
-        wall = dist.min() + 0.01 - (1.0 - case.SCREW_PILOT_R)  # plastic beyond the thread crest (M2: r 1.0)
-        report(wall >= 0.6, f"{variant} screw {side} x={x:.0f}: thinnest plastic outside the M2 thread "
-                            f"{wall:.2f} mm (direction {math.degrees(angles[int(np.argmin(dist))]):.0f} deg around the axis)")
+    """Plastic round each corner screw, by rays from its axis: around the head's recess to the outside
+    (thinnest near the rounded corner) and around the hole in the post."""
+    _, _, cover_asm, z_total = load_assembled(variant)
+    angles = np.radians(np.arange(0, 360, 5))
+    dirs = np.column_stack([np.cos(angles), np.sin(angles), np.zeros(len(angles))])
+    for px, py in case.POSTS:
+        worst = {}
+        for label, z, r0 in (("recess", z_total - 0.05, case.SCREW_HEAD_R), ("recess", z_total - 0.3, case.SCREW_HEAD_R),
+                             ("recess", z_total - 1.0, case.SCREW_HEAD_R), ("post", case.Z_SPLIT + 1.0, case.SCREW_HOLE_R),
+                             ("post", case.POST_Z + 1.0, case.SCREW_HOLE_R)):
+            o = np.array([px, py, z]) + dirs * (r0 + 0.01)
+            locs, ir, _ = cover_asm.ray.intersects_location(o, dirs, multiple_hits=False)
+            dist = np.full(len(dirs), np.inf)
+            dist[ir] = np.linalg.norm(locs - o[ir], axis=1) + 0.01
+            worst[label] = min(worst.get(label, np.inf), dist.min())
+        report(worst["recess"] >= 0.8 and worst["post"] >= 0.6,
+               f"{variant} corner screw ({px:.1f}, {py:.1f}): thinnest plastic round the head recess "
+               f"{worst['recess']:.2f} mm, round the hole in the post {worst['post']:.2f} mm")
 
 
 # ------------------------------------------------------------------ 4
