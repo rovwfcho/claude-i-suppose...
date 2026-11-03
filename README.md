@@ -50,7 +50,7 @@ A two-piece case with rounded edges for the Waveshare ESP32-S3 3.97" e-Paper boa
 
 ## Printing
 
-- **PLA** (this version), **0.2 mm layers or finer** (0.1–0.2 mm), 3 perimeters, 15–20 % infill. **No supports needed.** Don't use 0.3 mm layers: the slicer rounds the faces that set the glass clearance too far.
+- **PLA** (this version), **0.2 mm layers or finer** (0.1–0.2 mm), 3 perimeters, 15–20 % infill. **No supports needed.** Don't use 0.3 mm layers: the clips' hooks are under 1 mm tall, so their 45° faces would print as three coarse steps.
 - **PLA softens at about 55 °C.** Keep the case out of direct sun, off sunny windowsills and out of a parked car. PLA is also more brittle than PETG: don't over-tighten the screws. **PETG** or **PCTG** would be tougher and take heat better, and need no other change.
 - **ASA or ABS:** these shrink more as they cool (roughly 0.5–0.7 %, depending on the brand), enough to make the board too tight. Turn on your slicer's XY shrinkage compensation for that filament (PrusaSlicer and OrcaSlicer have it in the filament settings) or print in PLA/PETG. PLA and PETG (about 0.2–0.4 %) need nothing.
 - **Front lid:** print display side down. The front edge uses an arc that ends in a 45° chamfer, so it prints cleanly against the bed.
@@ -113,4 +113,4 @@ Edit the matching constant in `case.py` and run `python3 case.py` (needs `pip in
 - **Speaker too tight or too loose in its pocket:** `SPEAKER_BOX` (the pocket's width and length; the brackets follow it)
 - **Tall parts:** `STANDOFF_H` only describes the board for the checks: set it to what you measure and run `python3 verify.py`. If that reports a collision, raise `PARTS_SPACE` (or `BATTERY_SPACE` for a thicker battery), which do change the case
 
-Then run `python3 verify.py` for the quick fit check, or `python3 checks/run_checks.py` for every check from the debugging rounds (about 15 minutes the first time; after that it only re-runs the rounds whose inputs changed, `--all` runs everything). The photo checks download Waveshare's images on first use; where `www.waveshare.com` can't be reached they report SKIP, never a pass. Round 19 onwards slice the parts with PrusaSlicer if `prusa-slicer` is installed.
+Then run `python3 verify.py` for the quick fit check, or `python3 checks/run_checks.py` for every check from the debugging rounds (about 25 minutes the first time; after that it only re-runs the rounds whose inputs changed, `--all` runs everything). The photo checks download Waveshare's images on first use; where `www.waveshare.com` can't be reached they report SKIP, never a pass. Round 19 onwards slice the parts with PrusaSlicer if `prusa-slicer` is installed.

@@ -637,3 +637,8 @@ You asked for the board to be held by four screws through its own corner standof
 - **The forces from the meshes:** round 36's bend curves (how far each hook is bent at each point of the lid's travel, found on the STLs) times the beams' stiffness, with the curve's slope as the angle the lid presses at. The peak push and the pull-off must match the README within 25 %.
 - **The same word for the same part** in the README and both guides: no "front shell", foam or pilot left outside file names; "преден капак", "втулки", "стълбчета" and "щипки" in Bulgarian, with no second name for any of them.
 - **Lying on its back:** the back face is the lowest plane, and a 1.8 mm head sits inside it.
+
+## Round 41: different methods
+**New methods:**
+- **`case.py`'s own comments, recomputed:** every number the comments beside the new constants state (how far the glass floats, how far a screw goes in, the holes' and the recesses' room, the posts' clearance along the corners' diagonal, what the clip length and undercut leave with print errors) is recomputed from the code.
+- **Heat and cold:** PLA grows about 68 µm per metre per degree, the board's glass-epoxy about 15. From 0 to 50 °C, the mismatch over the board's length must stay inside its 0.3 mm side clearance, each screw's shift inside its hole's play after round 35's worst offset, and the clips' preload must not vanish.

@@ -201,7 +201,7 @@ def readme_inventory():
         f1(case.PANEL_SPACE - case.PANEL_T + case.GLASS_RELIEF): "glass to lid",
         f"{case.CLIP_L:.0f}": "clip beam length", pull: "pull-off force (round 22)", f1(eps): "clip strain (round 22)",
         "0.15": "print error per side (round 36)", f"{reach:.2f}": "hook reach with errors (round 36)",
-        "35": "round 35",
+        "35": "round 35", "25": "full run time in minutes (round 38: 23 min)",
     })
     m = re.search(r"about (\d+) g of PLA", new)
     if m:

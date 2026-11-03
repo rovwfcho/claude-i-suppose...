@@ -131,7 +131,7 @@ POST_Z = Z_B + POST_STANDOFF     # post end (the standoff top)
 POST_R = 3.6
 POST_CORNER_R = 3.0              # plan radius of the posts' outer corners (the lid's inside corners: 2.3)
 SCREW_HOLE_R = 1.7               # 3.4 mm: an M2.5 (or M2) passes with 0.4 mm to spare
-SCREW_HEAD_R = 3.1               # 6.2 mm recess for a 5 mm head (or a 5 mm M2 washer) 0.4 mm off centre
+SCREW_HEAD_R = 3.1               # 6.2 mm recess: a 5 mm head (or a 5 mm M2 washer) fits 0.6 mm off centre
 SCREW_HEAD_DEPTH = T_BACK        # recess floor = the inside face of the back: heads up to 1.8 mm are flush
 SCREW_LEN = 8.0                  # under the head
 # the recess is printed face down, so its ceiling is a bridge: the first 0.2 mm over it is cut as a
