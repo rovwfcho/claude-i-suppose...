@@ -665,10 +665,12 @@ You sent four photos of the board's front against the ruler. **New methods** (`c
 ## Round 45: different methods
 **New methods** (`checks/round45.py`):
 - **Your two photos across the board** (photos 11 and 12, cropped into `checks/owner_photos/front_across_a.jpg` and `front_across_b.jpg`): round 44 measured the light field along the board; this measures it across. The board's own 60 mm is the scale, between the two long edges of the blue PCB. On each side the light field ends at a thin dark line, with about 0.9 mm of lighter glass border and the glass's bright edge beyond it. The text on the screen tells which way up the board lies (its tops point to the photo's left, so the top edge is on the left). The glass being nearer the camera than the PCB is left out, which makes the field look slightly larger, the safe way round.
+- **The window's corners:** the corners of the drawing's picture area and of the light field from both directions must lie inside the window's rounded corners too, not just between its straight edges, which is all rounds 2 and 44 looked at.
 - **The window as sliced:** in PrusaSlicer's G-code for the lid (face down, mirrored for print), the opening's four edges on four layers, two in the 45° chamfer and two below it, must sit where `case.py` puts them, within 0.1 mm. They are within 0.01 mm, and the 10.4 mm frame is on the USB-C end.
 
 **Mistakes found and fixed (design):**
 - **The window could hide the bottom of the light field.** Across the board, the light field runs y 3.04–56.36 mm (photo 11) and 3.18–56.42 mm (photo 12), and the window started at y 3.4. The window now runs y 2.9–57.0 (88.7 x 54.1 mm), so the bottom frame is 5.6 mm, like the top's 5.7.
+- **The window's 1 mm round corners clipped the light field's bottom-left corner by 0.11 mm** (inactive border, not pixels). The corners are now 0.5 mm round, and every corner of the light field is inside the window.
 - **The plate between the panel-tail relief and the window was exactly at round 4's 0.8 mm limit** after round 44 widened the window, and float rounding made the check fail. The relief now stops at x 6.8, which leaves 0.9 mm.
 
 **Check bug:** round 2 measured the window's margins round an active area it assumed was centred in the window. The window has not been centred on the picture since round 44, so round 2 now uses the drawing's active area (x 9.3–95.7, y 4.1–55.9).

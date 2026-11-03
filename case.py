@@ -46,7 +46,7 @@ PANEL_T = 1.2                    # e-paper glass + adhesive, estimated from phot
 # (round 45) the light field runs y 3.0-56.4, so the window reaches down to y 2.9. It covers the
 # drawing's area with >= 0.7 mm to spare, and the light field in both directions.
 WIN_CX, WIN_CY = 52.05, 29.95
-WIN_W, WIN_H, WIN_R = 88.7, 54.1, 1.0
+WIN_W, WIN_H, WIN_R = 88.7, 54.1, 0.5   # corners 0.5 mm round, so they don't clip the light field's (round 45)
 TAIL_X1 = 6.8                    # panel tail / driver-IC strip on the left (0.9 mm of plate left before the window)
 
 # brass standoffs on the back (front-view coordinates). Waveshare's photos put them at x 2.2 / 96.7,

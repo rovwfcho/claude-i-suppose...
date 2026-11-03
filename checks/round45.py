@@ -12,7 +12,10 @@
    The glass is nearer the camera than the PCB, so its features look further from the photo's centre
    than they are; leaving that out makes the field look larger, the safe way round for this check.
    The window must cover the light field in both photos, with at least 0.1 mm to spare.
-2. The window as sliced: in PrusaSlicer's G-code for the lid (printed face down, mirrored for print),
+2. The window's corners: the drawing's picture area and the light field from both front photos
+   (along the board, round 44; across it, above) must lie inside the window's rounded corners too,
+   not just between its straight edges, which is all rounds 2, 44 and the check above look at.
+3. The window as sliced: in PrusaSlicer's G-code for the lid (printed face down, mirrored for print),
    the opening's four edges, found along lines through the window's centre on four layers (two in the
    45 deg chamfer, two in the straight part), must sit where case.py puts them, within 0.1 mm. That
    also confirms that the wide frame is on the end the printer actually prints it on.
@@ -35,6 +38,7 @@ import case  # noqa: E402
 
 problems = []
 skipped = []
+LIGHT_Y = [3.0, 56.4]                    # replaced by what across_photos() measures
 
 
 def report(ok, msg):
@@ -79,6 +83,7 @@ def across_photos():
         res.append((name, meta[name]["photo"], right - left, to_y(lr), to_y(ll)))
     lo = min(r[3] for r in res)
     hi = max(r[4] for r in res)
+    LIGHT_Y[:] = [lo, hi]
     agree = max(abs(res[0][3] - res[1][3]), abs(res[0][4] - res[1][4]))
     ok = wb <= lo - 0.1 and wt >= hi + 0.1 and agree < 0.3 and all(abs(r[4] - r[3] - 53.2) < 0.6 for r in res)
     report(ok, "light field across the board: " + "; ".join(
@@ -88,6 +93,28 @@ def across_photos():
 
 
 # ------------------------------------------------------------------ 2
+def corners():
+    wl, wr = case.WIN_CX - case.WIN_W / 2, case.WIN_CX + case.WIN_W / 2
+    wb, wt = case.WIN_CY - case.WIN_H / 2, case.WIN_CY + case.WIN_H / 2
+    r = case.WIN_R
+
+    def margin(x, y):
+        """How far inside the rounded window the point is (negative: outside)."""
+        cx, cy = min(max(x, wl + r), wr - r), min(max(y, wb + r), wt - r)
+        if (cx, cy) == (x, y):
+            return min(x - wl, wr - x, y - wb, wt - y)
+        return r - float(np.hypot(x - cx, y - cy))
+    fields = {"drawing's picture area": (9.3, 95.7, 4.1, 55.9),
+              "light field (your photos)": (8.0, 95.2, LIGHT_Y[0], LIGHT_Y[1])}
+    out, ok = [], True
+    for name, (x0, x1, y0, y1) in fields.items():
+        m = [margin(x, y) for x, y in ((x0, y0), (x1, y0), (x0, y1), (x1, y1))]
+        ok = ok and min(m) > 0
+        out.append(f"{name} corners {min(m):.2f} mm inside at least")
+    report(ok, f"window corners ({r:.1f} mm round): " + "; ".join(out))
+
+
+# ------------------------------------------------------------------ 3
 def window_sliced():
     exe = shutil.which("prusa-slicer")
     if not exe:
@@ -139,6 +166,7 @@ def window_sliced():
 
 if __name__ == "__main__":
     across_photos()
+    corners()
     window_sliced()
     print(f"\nRound 45: {len(problems)} problem(s)" + (f", {len(skipped)} check(s) SKIPPED" if skipped else ""))
     for p in problems:
