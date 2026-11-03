@@ -21,6 +21,7 @@ Z_TOTAL = case.Z_B + case.CAVITY["battery"] + case.T_BACK
 WL, WR = case.WIN_CX - case.WIN_W / 2, case.WIN_CX + case.WIN_W / 2
 WB, WT = case.WIN_CY - case.WIN_H / 2, case.WIN_CY + case.WIN_H / 2
 LIGHT = (8.0, 95.2)            # the light field along the board in the owner's front photo (round 44)
+LIGHT_Y = (3.0, 56.4)          # and across it, in the two photos across the board (round 45)
 ACTIVE = (9.3, 95.7, 4.1, 55.9)  # Waveshare's drawing
 
 
@@ -65,12 +66,13 @@ def diagram(width):
     Y = lambda y: 30 + (case.BH - y) * k  # noqa: E731
     d.rounded_rectangle([X(0), Y(case.BH), X(case.BW), Y(0)], radius=int(case.BR * k), fill=(29, 79, 145))
     d.rectangle([X(0.75), Y(58.5), X(98.5), Y(1.5)], fill=(236, 236, 232))                  # glass
-    d.rectangle([X(LIGHT[0]), Y(57.6), X(LIGHT[1]), Y(2.4)], fill=(214, 216, 214))         # light field (photo)
+    d.rectangle([X(LIGHT[0]), Y(LIGHT_Y[1]), X(LIGHT[1]), Y(LIGHT_Y[0])], fill=(214, 216, 214))  # light field (photos)
     ax0, ax1, ay0, ay1 = ACTIVE
     d.rectangle([X(ax0), Y(ay1), X(ax1), Y(ay0)], outline=(60, 60, 60), width=2)            # drawing's picture
     d.rectangle([X(WL), Y(WT), X(WR), Y(WB)], outline=RED, width=4)                          # window
-    d.text((X(ax0) + 8, Y(ay1) + 8), "picture area (Waveshare's drawing)", font=f, fill=(60, 60, 60))
-    d.text((X(WL) + 8, Y(WB) - 30), "case window", font=f, fill=RED)
+    d.text((X(ax0) + 12, Y(ay1) + 12), "dark outline: picture area (Waveshare's drawing)", font=f, fill=(60, 60, 60))
+    d.text((X(ax0) + 12, Y(ay1) + 40), "red outline: case window", font=f, fill=RED)
+    d.text((X(ax0) + 12, Y(ay1) + 68), "grey fill: light field in your front photo", font=f, fill=MUTE)
     d.text((X(1.2), Y(30)), "glass\nstrip", font=f, fill=MUTE)
     return im
 
@@ -122,7 +124,8 @@ def compose():
                 f"cable. In your front photo the light field starts {LIGHT[0]:.1f} mm from the left edge and the centred "
                 f"text sits 1.2 mm left of the drawing's centre, so the window reaches to {WL:.1f} mm, "
                 f"{ax0 - WL:.1f} mm before the drawing's picture area (and {WR - ax1:.1f} mm past it on the right): "
-                f"whichever is right, no pixel is hidden.", font, 40, y, W - 80)
+                f"whichever is right, no pixel is hidden. Across the board, your photos put the light field at "
+                f"y {LIGHT_Y[0]:.1f}-{LIGHT_Y[1]:.1f} mm and the window runs {WB:.1f}-{WT:.1f}.", font, 40, y, W - 80)
     y = wrap(d, f"Seen edge-on (bottom edge): {Z_TOTAL:.1f} mm thick. The speaker sits beside the battery, so it adds "
                 f"no thickness; the opening is for the PWR and BOOT buttons.", font, 40, y + 14, W - 80)
     sheet.paste(edge, ((W - edge.width) // 2 - 100, y + 10))

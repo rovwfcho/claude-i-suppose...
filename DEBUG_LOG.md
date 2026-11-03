@@ -643,9 +643,33 @@ You asked for the board to be held by four screws through its own corner standof
 - **`case.py`'s own comments, recomputed:** every number the comments beside the new constants state (how far the glass floats, how far a screw goes in, the holes' and the recesses' room, the posts' clearance along the corners' diagonal, what the clip length and undercut leave with print errors) is recomputed from the code.
 - **Heat and cold:** PLA grows about 68 µm per metre per degree, the board's glass-epoxy about 15. From 0 to 50 °C, the mismatch over the board's length must stay inside its 0.3 mm side clearance, each screw's shift inside its hole's play after round 35's worst offset, and the clips' preload must not vanish.
 
+**Not clean:** reading the README back against the checks found two of its sentences wrong. It said 0.3 mm layers are too coarse because the slicer rounds the glass clearance faces too far; the real reason is the hooks, which are under 1 mm tall, so their 45° faces would print as three coarse steps. It also gave the full check run as about 15 minutes when it takes about 25. Both are corrected.
+
+## Round 42: different methods
+**New methods:**
+- **Opening at the notch, as a tilt:** with the cover held, the lid is turned open about its left end at the seam in 0.25° steps up to 8°. Nothing rigid may run into the cover, and the hooks must let go one after another from the right-hand end.
+- **The closing curve worked out by hand:** the bend each hook needs at each point of the lid's travel is written as a formula from the design's own numbers: the rim chamfer, the hook's faces and the preload. It must match round 36's mesh measurement to within 0.03 mm everywhere.
+
+## Round 43: different methods
+**New methods:**
+- **Every new number in both guides accounted for:** each number in the English and Bulgarian texts that was not in session 4's is traced to `case.py`, a check or a measurement.
+- **The zip as you will open it:** it is unpacked into an empty folder. Both STLs must load as single watertight parts of the right size, every picture must open, both PDFs must have all their pages and step headings, and the README's pictures must be found inside the zip.
+
 ## Round 44: your front photos (new methods)
 You sent four photos of the board's front against the ruler. **New methods** (`checks/round44.py`, photo 14 cropped into `checks/owner_photos/front_long.jpg`):
 - **A ruler that is not the same scale all along:** the camera was tilted, so the ruler reads 16.0 px/mm at the board's left end and 15.5 at the right. Positions are read on a smooth curve through its own cm and half-cm ticks (all within 0.28 mm of it; the 50 mm tick is left out, because the big circled 5 printed over it moves the found tick 0.5 mm).
 - **The light field and the text:** along a clean line through the display the light field runs from 8.0 to 95.2 mm from the left end, and the text the firmware centres on the screen is centred at 51.3 mm.
 
-**Mistake found and fixed (design):** Waveshare's drawing puts the picture at 9.3–95.7 mm (centre 52.5), and the window started at 8.4 mm. If the text is centred on the picture, the picture is at about 8.1–94.5 mm, and the window's left edge could have hidden up to 0.3 mm of it, more with the board's 0.3 mm of side play. The window now starts at 7.7 mm (88.7 mm wide, its right edge unchanged at 96.4 mm), and covers the drawing's picture area, the light field and the text-centred picture. The panel-tail relief under the plate now stops at 6.9 mm, so 0.8 mm of plate stays between it and the window. The left frame is 10.4 mm wide (was 11.1). `preview/explained.png` is now built by `docs/guide-src/make_explained.py`, with a to-scale diagram instead of Waveshare's photo (their site is blocked here), and without the old side screws.
+**Mistake found and fixed (design):** Waveshare's drawing puts the picture at 9.3–95.7 mm (centre 52.5), and the window started at 8.4 mm. If the text is centred on the picture, the picture is at about 8.1–94.5 mm, and the window's left edge could have hidden up to 0.3 mm of it, more with the board's 0.3 mm of side play. The window now starts at 7.7 mm (88.7 mm wide, its right edge unchanged at 96.4 mm), and covers the drawing's picture area, the light field and the text-centred picture. The panel-tail relief under the plate now stops at 6.9 mm (6.8 since round 45), so 0.9 mm of plate stays between it and the window. The left frame is 10.4 mm wide (was 11.1). `preview/explained.png` is now built by `docs/guide-src/make_explained.py`, with a to-scale diagram instead of Waveshare's photo (their site is blocked here), and without the old side screws.
+
+## Round 45: different methods
+**New methods** (`checks/round45.py`):
+- **Your two photos across the board** (photos 11 and 12, cropped into `checks/owner_photos/front_across_a.jpg` and `front_across_b.jpg`): round 44 measured the light field along the board; this measures it across. The board's own 60 mm is the scale, between the two long edges of the blue PCB. On each side the light field ends at a thin dark line, with about 0.9 mm of lighter glass border and the glass's bright edge beyond it. The text on the screen tells which way up the board lies (its tops point to the photo's left, so the top edge is on the left). The glass being nearer the camera than the PCB is left out, which makes the field look slightly larger, the safe way round.
+- **The window as sliced:** in PrusaSlicer's G-code for the lid (face down, mirrored for print), the opening's four edges on four layers, two in the 45° chamfer and two below it, must sit where `case.py` puts them, within 0.1 mm. They are within 0.01 mm, and the 10.4 mm frame is on the USB-C end.
+
+**Mistakes found and fixed (design):**
+- **The window could hide the bottom of the light field.** Across the board, the light field runs y 3.04–56.36 mm (photo 11) and 3.18–56.42 mm (photo 12), and the window started at y 3.4. The window now runs y 2.9–57.0 (88.7 x 54.1 mm), so the bottom frame is 5.6 mm, like the top's 5.7.
+- **The plate between the panel-tail relief and the window was exactly at round 4's 0.8 mm limit** after round 44 widened the window, and float rounding made the check fail. The relief now stops at x 6.8, which leaves 0.9 mm.
+
+**Check bug:** round 2 measured the window's margins round an active area it assumed was centred in the window. The window has not been centred on the picture since round 44, so round 2 now uses the drawing's active area (x 9.3–95.7, y 4.1–55.9).
+

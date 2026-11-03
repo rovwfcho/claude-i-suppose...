@@ -136,11 +136,12 @@ def opening_sizes(variant):
             report(False, f"{variant} display window not found at z={z}")
             continue
         (x0, y0, _), (x1, y1, _) = h
-        ax0, ax1 = case.WIN_CX - 43.2, case.WIN_CX + 43.2
-        ay0, ay1 = case.WIN_CY - 25.92, case.WIN_CY + 25.92
+        # the active area where Waveshare's drawing puts it (round 45: this used to assume it centred
+        # in the window, which the window has not been since round 44)
+        ax0, ax1, ay0, ay1 = 9.3, 95.7, 4.1, 55.9
         m = min(ax0 - x0, x1 - ax1, ay0 - y0, y1 - ay1)
         report(m >= 0.5, f"{variant} window at z={z:.2f}: {x1 - x0:.2f} x {y1 - y0:.2f} mm, "
-                         f"smallest margin around the 86.40 x 51.84 active area {m:.2f} mm")
+                         f"smallest margin around the drawing's 86.40 x 51.84 active area {m:.2f} mm")
     # button opening: rays from the switch tip outward along the wall plane measure the opening,
     # and a ray straight out from the tip must leave the case without touching plastic
     for name, bx in case.BUTTONS.items():
