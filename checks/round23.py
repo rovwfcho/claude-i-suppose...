@@ -16,7 +16,7 @@ heights the slicer really gives the lid's rim, its pad tops and the plate over t
 cover's rim and corner-post ends, are read from the G-code (the slicer rounds every face to a layer).
 From those, with the board screwed to the posts on 4 mm standoffs and a PCB 0.16 mm thicker than
 assumed and standoffs 0.1 mm taller, the pads must still not press the PCB and the glass must stay
-at least 0.4 mm clear of the lid (more with 3 mm standoffs).
+at least 0.25 mm clear of the lid (room for a panel stack 0.2 mm thicker than the 1.2 mm assumed).
 """
 import math
 import os
@@ -77,7 +77,16 @@ def front_shell():
     port_end = max(ends, key=lambda s: sum(b - a for a, b in ends[s]))
     L = np.array([-port_end, 0, 0.0])             # the end the rays came in from
     big = sorted(ends[port_end], key=lambda c: c[1] - c[0], reverse=True)[:2]
-    usb, sd = big[0], big[1]                       # USB-C is the widest opening, microSD the next
+    # USB-C is the taller opening: of the two, it alone is still open 3 mm higher up
+    z2 = z + 3.1
+    o2 = np.column_stack([np.full(len(ys), lo[0] - 5 if port_end > 0 else hi[0] + 5), ys, np.full(len(ys), z2)])
+    loc2, ray2, _ = tm.ray.intersects_location(o2, np.tile([port_end, 0, 0.0], (len(o2), 1)), multiple_hits=False)
+    depth2 = np.full(len(o2), np.inf)
+    depth2[ray2] = np.abs(loc2[:, 0] - o2[ray2, 0]) - 5
+    high = [c for c in clusters(ys[depth2 > 5.0]) if c[1] - c[0] > 2.0]
+    tall = lambda c: any(a < (c[0] + c[1]) / 2 < b for a, b in high)  # noqa: E731
+    big = sorted(big, key=lambda c: not tall(c))
+    usb, sd = big[0], big[1]
     U = np.array([0, np.sign((usb[0] + usb[1]) / 2 - (sd[0] + sd[1]) / 2), 0.0])
     h = np.dot(np.cross(L, U), n)
     report(len(big) == 2 and h < 0, f"front shell: port end at {'low' if port_end > 0 else 'high'} x with openings "
@@ -101,6 +110,8 @@ def back_cover():
     for h in hs:
         c = h.mean(0)
         ext = h.max(0) - h.min(0)
+        if min(ext[:2]) > 2.0:                     # the corner screw holes (3.4 mm, recess 6 mm) are not vents
+            continue
         info.append((c, max(ext) / max(min(ext), 0.1)))
     xs = np.array([c[0] for c, _ in info])
     slots = [c for c, asp in info if asp > 2.0]                  # the sensor vents are slots
@@ -164,7 +175,7 @@ def stack_as_printed():
         pad_gap = pcb_front - tops["pad"]
         glass_gap = pcb_front - case.PANEL_T - tops["lip"]
         worst_pad, worst_glass = pad_gap - 0.26, glass_gap - 0.26
-        ok = worst_pad >= 0.0 and worst_glass >= 0.4
+        ok = worst_pad >= 0.0 and worst_glass >= 0.25      # 0.25: the panel stack may be 0.2 mm thicker than 1.2
         msg = (f"{lh} mm layers: lid rim {tops['seam']}, pad top {tops['pad']}, plate over the glass {tops['lip']}; cover "
                f"rim {tops['rim']}, post end {tops['post']} -> pads {pad_gap:.2f} mm in front of the PCB (worst "
                f"{worst_pad:.2f}), glass {glass_gap:.2f} mm clear of the lid (worst {worst_glass:.2f})")

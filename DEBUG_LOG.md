@@ -562,3 +562,60 @@ You measured your battery, speaker and board against a ruler and sent photos, an
 - **Volume accounting against session 3:** session 3's back cover is read from git. With the screw blocks left out of both, its volume change must equal what this session's features add and remove, worked out by hand from their sizes: the new guide bars and brackets added, the slots cut out, the old guide bars removed and the 28 old grille holes filled in. Any change nobody intended would show up as a difference.
 - **Pictures and the text that points at them:** in both guides every marker must be in its picture's legend and every legend entry must have a marker, and "marked 3 in the picture above" must point at the foam.
 - **Is the measured battery a possible battery?** 1500 mAh at 3.7 V in the measured volume must give an energy density real LiPo pouch cells have (300–750 Wh/L).
+
+**Result of round 34 (all scripts, rounds 1–34):** every script passed, the same 4 SKIPPED. **Not clean:** reading the log back found three of its own sentences wrong (round 28's edge rows are 11–25, not 10–20; round 29's loop reaches to within 4.9 mm of the top wall, not 5.5 mm from it; round 33's grille has 0.13 mm of room at the membrane's edge, not 0.13 mm more). They are corrected above.
+
+## Session 5: the board screwed to the back, the lid on snap clips
+
+You asked for the board to be held by four screws through its own corner standoffs, from the back, with the front lid then locked onto the back over the display, and answered my questions: snap clips, firm; thread size unknown (so M2 or M2.5); standoffs 3–4 mm (posts built for 4 mm, the screw 2 mm into the standoff); heads sunk flush; display window kept; no foam; same battery and speaker; back edges less round; M2.5 x 8 (or M2 x 8) screws. Rounds 35 onwards add new methods and re-run every earlier check that could have changed, until two rounds in a row find no mistakes. `checks/run_checks.py` now skips a round only when nothing it reads has changed since it passed (its scripts, `case.py` without comments, the STLs, the README, the guides, the log, the photos, the slicer).
+
+**What changed in the design:**
+- **Side screws, screw blocks and foam rings removed.** Each corner of the back cover has a **post** that stands on a standoff's top, where a 4 mm standoff ends. A 3.4 mm hole and a 6.2 x 1.8 mm recess take an M2.5 x 8 screw, which then goes 2 mm into the standoff with 3 or 4 mm standoffs (with 3 mm ones the board sits 1 mm further back). The recess is printed face down, so its ceiling starts with two bridging layers (a slot across it, then a square) before the round hole.
+- **Standoff positions re-measured.** Waveshare's photos had put them at x 2.2 / 96.7, y 2.85 / 57.4. Your back photo (round 35, corrected for the standoff tops being nearer the camera) puts the right-hand pair 0.3–0.7 mm further right. The case now uses the symmetric layout between the two (x 2.45 / 97.05, y 2.725 / 57.275); every estimate is within 0.45 mm of it, and the holes allow 0.4.
+- **Snap clips:** four 28 mm stretches of the back cover's skirt along the long walls, freed from the cover by a 0.6 mm slot so each is a beam held at both ends, bending in the plane of the print layers. A hook on each (0.55 mm undercut, 45° catch) clicks into a groove inside the lid's wall; a 30° chamfer inside the lid's rim does the pushing. Closed, each beam stays bent 0.1 mm, so the lid can't rattle. About 17 N closes the lid and 29 N pulls it straight off; the beams bend at most 1.0 %. The existing notch in the right-hand end opens it.
+- **The lid never touches the board or the glass:** the plate is 0.3 mm thinner over the glass (0.8 mm clear with 4 mm standoffs, 1.8 mm with 3 mm), and the pads stop 0.5 mm short of the PCB, holding it off the glass only while the case is being closed.
+- **Back edge rounding 4.5 → 0.8 mm** (the front stays 4.5 mm), so the recesses keep about 1 mm of wall at the corners. You agreed to 2 mm; with the 6.2 mm recesses the holes need for the uncertain standoff positions, 2 mm left 0.3 mm.
+- **USB-C and microSD openings 1 mm taller toward the back**, so plugs and cards fit with 3 or 4 mm standoffs.
+- **Battery wire route** moved 0.4 mm away from the bottom-left post; the bottom guide bar is no longer broken by a screw block.
+
+**Checks updated for the change** (they described the old closure, not mistakes in it): `verify.py` and rounds 1–11, 17, 22, 23, 31 and 34 now test the corner screws, the posts, the clips, the pad and glass gaps and both standoff heights instead of the side screws and the foam. Where a rigid-fit check compared the lid and the cover, the clip hooks are left out: they bend, and press the lid by their designed preload.
+
+## Round 35: different methods (the new closure)
+**New methods:**
+- **Standoff positions measured in your back photo:** the board's left, right and top edges fitted as straight lines on clean stretches, the bottom edge from the 60 mm height; the brass rings fitted as circles; the ruler's 10 mm dots (it lies on the standoffs) give how much nearer the camera their tops are, and their image is pulled back by that much before it is mapped onto the board. With the point under the camera anywhere within 150 px of the photo's centre, every estimate (and Waveshare's) must be within 0.45 mm of `POSTS`, and for each one the board must have a place where all four screws pass their holes.
+- **The clips read back from the STLs:** each slot open along its length, each beam anchored at both ends, each hook reaching `CLIP_UNDERCUT` past the lid's wall into a deeper groove, and the closed hooks pressing the lid by exactly the designed preload (worked out by hand: 4 x 0.1 x 0.55 x 6 mm³).
+- **The clips and the screw recesses as sliced:** in PrusaSlicer's G-code, no plastic in the slot layers inside a beam, each beam and each recess ceiling starting as a bridge, and no plastic in any screw's path.
+
+**Mistakes found and fixed (design), by the new methods and by every earlier round run on the new design:**
+- **The screw recesses' ceilings printed over air.** Printed face down, each 6 mm recess has the post above it, with the 3.4 mm hole through it: a ring-shaped bridge with nothing to anchor its inner edge (round 2's overhang check). The first 0.2 mm over each recess is now a slot across it (two straight bridges ending on the recess wall), the next 0.2 mm a square, and only then the round hole. The slicer prints both as bridges (round 35).
+- **The pads could touch the board.** At 0.15 mm layers the slicer rounds the lid's rim, the pad tops, the cover's rim and the post ends so that the board ends up 0.15 mm nearer the pads and the pads 0.05 mm taller: with a 0.16 mm thicker PCB and 0.1 mm taller standoffs they would press it by 0.16 mm (round 23). The pads now stop 0.5 mm short (was 0.3), and the plate is 0.3 mm thinner over the glass (was 0.2), so the glass is 0.8 mm clear and still 0.3 mm off the lid while the board rests on the pads.
+- **The posts could touch the lid's inside corners.** With the lid printed 0.15 mm small and the cover 0.15 mm large, errors in x and y add up along the corners' diagonal to more than the 0.35 mm gap (round 3). The posts' outer corners are now rounded 3 mm (the lid's 2.3 mm), 0.8 mm off them along the diagonal.
+- **The lid's rim above the USB-C opening was 1 mm thin** where the hooks' lead-in chamfer ran (round 8). The chamfer now runs only along the long walls.
+- **The README overstated how well the standoff estimates agree** ("most within 0.3 mm"; they are within 0.43). It now gives the ranges round 35 measures and says the board can sit with no screw more than 0.3 mm off centre.
+
+**Checks updated:** round 2's Monte Carlo now lets the lid follow the board on its skirt (0.35 mm) when the screws put the board off centre; round 23 tells the USB-C from the microSD opening by height (they are now the same width at the height it looked at) and no longer counts the two left corner screw holes as microphone holes; round 31 counts the numbers new since session 4's README; rounds 3, 6 and 8 leave out a box just round each hook (subtracting the hooks themselves left float-rounding slivers that a projection turned into columns); round 8 sections each part on its own (the lid and the cover share points along the seam).
+
+## Round 36: different methods
+**New methods:**
+- **The lid closing, step by step, on the meshes:** from 3 mm short of closed to closed in 0.05 mm steps, the least each hook must bend to clear the lid, found by bisection. It must stay within `CLIP_UNDERCUT`, never rise faster than 1 mm per mm of travel, and end at the designed preload.
+- **The same with print errors:** the lid 0.15 mm small inside and the cover 0.15 mm large outside on each side, and the other way round.
+- **The wires with 3 mm standoffs:** the board and the wires lying on it 1 mm further back, against the bottom of your battery.
+
+**Mistake found and fixed (design):**
+- **The clips could crack, or barely hold.** With the errors the way PLA usually errs (the lid's inside a little small, the cover's outside a little large), the 22 mm beams bent 0.75 mm while the lid closed: 2.2 % strain, about where printed PLA yields. The other way round, the hooks reached only 0.15 mm past the lid's wall. The beams are now 28 mm long and the hooks 0.55 mm deep (their front is steeper, 55°, so they still fit on the beam; the lid's 30° rim chamfer does the leading): with those print errors the hooks bend it up to 1.56 % while closing, and the other way round they still reach 0.25 mm past the wall. About 17 N closes the lid, 29 N pulls it off.
+
+**Results:** the wires, with 3 mm standoffs, still clear your 4.3 mm battery by 0.30 mm (battery wire) and 0.45 mm (speaker cable); a swollen 4.8 mm cell would press them 0.20 and 0.05 mm.
+
+## Round 37: different methods
+**New methods:**
+- **The log's own numbers, recomputed:** every figure this session's entries give for the new closure is found by its wording and recomputed from `case.py` or from the check that measures it.
+- **Mistakes a person could make while assembling,** each answered in the README and both guides: 16 of them, from the battery in the wrong connector to screws of the wrong length and how to open the lid.
+- **Markdown that renders:** bold and code marks in pairs, tables square, links with targets.
+
+## Round 38: different methods
+**New methods:**
+- **Can the session-5 checks fail?** In a copy of the project, six deliberate mistakes are made in `case.py` one at a time: a post 0.8 mm off its standoff, the clip slots closed, hooks reaching only 0.1 mm, 1.0 mm deep recesses, pads touching the PCB, posts built for 6 mm standoffs. The check meant to catch each must report a problem.
+- **Margins against small changes:** each new dimension moved 0.1 mm either way (hole and recess: their diameter); every session-5 margin must stay at or above its limit.
+
+**Mistakes found and fixed (design):**
+- **Three margins sat on their limit.** A 5 mm head 0.37 mm off centre had 0.025 mm to spare in the 6.0 mm recess, and a 0.1 mm deeper hook would have taken the clips over 1.8 % with print errors. The recesses are now 6.2 mm, the back edge is rounded 0.8 mm (so the corner wall stays 1.0 mm), and the beams are 28 mm (the figures above are for those).

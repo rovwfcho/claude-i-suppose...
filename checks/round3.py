@@ -88,18 +88,18 @@ def calipers(variant):
     # hand calculation of the stack, written out from the design intent:
     # front wall 1.6 | panel room 1.2 + 0.5 | PCB 1.6 | clear depth behind PCB | back wall 1.8
     clear = {"battery": 5.0 + 5.0}[variant]  # battery: parts room + 454261 room
-    hand = {"lip": 1.6 - 0.2, "pcb_front": 1.6 + 1.7, "pcb_back": 1.6 + 1.7 + 1.6,
+    hand = {"lip": 1.6 - 0.3, "pcb_front": 1.6 + 1.7, "pcb_back": 1.6 + 1.7 + 1.6,
             "total": 1.6 + 1.7 + 1.6 + clear + 1.8}
     # lip thickness: ray through the bezel just below the window
     z = ray_z(shell, 52.0, 2.0)
     report(len(z) >= 2 and abs((z[1] - z[0]) - hand["lip"]) < 0.01,
-           f"{variant} caliper: bezel below window over the glass {z[1] - z[0]:.3f} mm thick (hand calc 1.6 - 0.2 "
+           f"{variant} caliper: bezel below window over the glass {z[1] - z[0]:.3f} mm thick (hand calc 1.6 - 0.3 "
            f"relief = {hand['lip']})")
-    # ledge pad: top face 0.3 mm in front of the PCB front face
+    # ledge pad: top face 0.5 mm in front of the PCB front face
     z = ray_z(shell, 50.0, -0.1)
-    report(len(z) >= 2 and abs(z[1] - (hand["pcb_front"] - 0.3)) < 0.01,
-           f"{variant} caliper: front pad ends at z={z[1]:.3f} (PCB front face less 0.3, hand calc "
-           f"{hand['pcb_front'] - 0.3:.2f})")
+    report(len(z) >= 2 and abs(z[1] - (hand["pcb_front"] - 0.5)) < 0.01,
+           f"{variant} caliper: front pad ends at z={z[1]:.3f} (PCB front face less 0.5, hand calc "
+           f"{hand['pcb_front'] - 0.5:.2f})")
     # corner post end: where a 4 mm standoff ends, 4.0 behind the PCB back face
     px, py = case.POSTS[1]
     z = ray_z(cover_asm, px - 2.6, py + 0.5)

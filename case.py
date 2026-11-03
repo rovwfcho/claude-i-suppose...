@@ -98,12 +98,13 @@ FLEX_RELIEF = 0.3                # extra wall clearance beside the display flex 
 WALL = 2.4
 T_FRONT = 1.6
 PANEL_SPACE = PANEL_T + 0.5      # PCB front face to the lid's plate
-GLASS_RELIEF = 0.2               # the plate is this much thinner over the glass: it floats 0.7 mm above it
-PAD_GAP = 0.3                    # ledge pads stop this far in front of the PCB (they never press it)
+GLASS_RELIEF = 0.3               # the plate is this much thinner over the glass: it floats 0.8 mm above it
+PAD_GAP = 0.5                    # ledge pads stop this far in front of the PCB (they never press it, even
+                                 # with the slicer's rounding at 0.15 mm layers and a 0.16 mm thicker PCB)
 T_BACK = 1.8
 RP = 7.0                         # plan-view corner radius
 RE = 4.5                         # edge rounding radius at the front
-RE_BACK = 1.0                    # ... and at the back, small so the screw recesses keep a wall at the corners
+RE_BACK = 0.8                    # ... and at the back, small so the screw recesses keep a wall at the corners
 CAVITY = {"battery": PARTS_SPACE + BATTERY_SPACE}  # clear depth behind the PCB
 
 Z_PF = T_FRONT + PANEL_SPACE     # PCB front face
@@ -130,7 +131,7 @@ POST_Z = Z_B + POST_STANDOFF     # post end (the standoff top)
 POST_R = 3.6
 POST_CORNER_R = 3.0              # plan radius of the posts' outer corners (the lid's inside corners: 2.3)
 SCREW_HOLE_R = 1.7               # 3.4 mm: an M2.5 (or M2) passes with 0.4 mm to spare
-SCREW_HEAD_R = 3.0               # 6.0 mm recess for a 5 mm head (or a 5 mm M2 washer) 0.4 mm off centre
+SCREW_HEAD_R = 3.1               # 6.2 mm recess for a 5 mm head (or a 5 mm M2 washer) 0.4 mm off centre
 SCREW_HEAD_DEPTH = T_BACK        # recess floor = the inside face of the back: heads up to 1.8 mm are flush
 SCREW_LEN = 8.0                  # under the head
 # the recess is printed face down, so its ceiling is a bridge: the first 0.2 mm over it is cut as a
@@ -140,8 +141,8 @@ RECESS_BRIDGE = 0.2
 # snap clips: four springy beams in the back cover's skirt along the long walls, each a bridge fixed
 # at both ends that bends in the plane of the print layers (the strong direction in PLA). A hook on
 # its middle catches a groove inside the lid's wall. (beam centre x, wall)
-CLIPS = [(19.5, "bottom"), (50.0, "bottom"), (19.5, "top"), (54.0, "top")]
-CLIP_L = 27.0                    # beam length: long enough that 0.3 mm of print error still bends it under 1.8 %
+CLIPS = [(20.0, "bottom"), (50.0, "bottom"), (20.0, "top"), (54.0, "top")]
+CLIP_L = 28.0                    # beam length: long enough that 0.3 mm of print error still bends it under 1.8 %
 CLIP_SLOT = 0.6                  # gap that frees the beam from the cover (bridged in print)
 CLIP_HOOK_L = 6.0                # hook length along the beam
 CLIP_UNDERCUT = 0.55             # how far the hook reaches past the lid's inner wall (0.25 left after 0.3 mm of error)
@@ -294,7 +295,7 @@ def front_shell(z_total):
     s -= box(0.7, TAIL_X1, 1.0, BH - 1.0, T_FRONT - 0.5, T_FRONT + 0.1)
 
     # the plate is GLASS_RELIEF thinner over the glass (and 0.4 mm round it, for the board's play on
-    # the screws), so the glass floats 0.7 mm behind it; the board is held by the screws, not the lid
+    # the screws), so the glass floats 0.8 mm behind it; the board is held by the screws, not the lid
     s -= box(0.35, 98.9, 1.1, 58.9, T_FRONT - GLASS_RELIEF, T_FRONT + 0.1)
 
     # ledge pads at the PCB's rim, PAD_GAP in front of it: they never press the board, they hold it off
@@ -313,10 +314,12 @@ def front_shell(z_total):
     # rim edge that the hooks ride up when the lid goes on
     for x, side in CLIPS:
         s -= clip_groove(x, side)
+    # (along the long walls only: the ends keep their full rim, above the USB-C opening too)
     cd, ca = RIM_CHAMFER
     ch = cd / math.tan(math.radians(ca))
     s -= Manifold.hull(prism(cavity_cs(0.0), Z_SPLIT - ch, Z_SPLIT - ch + 0.001)
-                       + prism(cavity_cs(cd + 0.01), Z_SPLIT + 0.01, Z_SPLIT + 0.02))
+                       + prism(cavity_cs(cd + 0.01), Z_SPLIT + 0.01, Z_SPLIT + 0.02)) \
+        ^ (box(-50, 150, -50, 3.0, 0, 50) + box(-50, 150, BH - 3.0, 150, 0, 50))
 
     # USB-C: rounded-rectangle opening sized for common cable overmolds (13 x 7), 1 mm taller toward the
     # back so it also fits when 3 mm standoffs put the board 1 mm further back

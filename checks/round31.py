@@ -9,7 +9,7 @@
    to the BAT plug, and the hand-drawn routes in case.py may not be shorter than the searched ones by
    more than the voxel size allows (if they were, they'd go through something).
 2. Every new number in the README accounted for: the numbers that are in the README now but were not
-   in session 3's README are listed, and each one must come from case.py, a check's result or a
+   in session 4's README are listed, and each one must come from case.py, a check's result or a
    measurement, by a rule written here; anything unexplained fails.
 3. The cover closing with its load: the battery (largest plausible), the speaker and the spare-cable
    loop are stuck to the back cover, so they travel with it. Each is swept along the closing motion
@@ -113,9 +113,9 @@ def voxel_routes(step=0.5):
 
 # ------------------------------------------------------------------ 2
 def readme_inventory():
-    old = subprocess.run(["git", "-C", ROOT, "show", "01545f9:README.md"], capture_output=True, text=True).stdout
+    old = subprocess.run(["git", "-C", ROOT, "show", "13d2cbf:README.md"], capture_output=True, text=True).stdout
     if not old:
-        report(False, "README inventory: session 3's README (commit 01545f9) could not be read")
+        report(False, "README inventory: session 4's README (commit 13d2cbf) could not be read")
         return
     new = open(os.path.join(ROOT, "README.md")).read()
     tok = re.compile(r"(?<![\w.])\d+(?:\.\d+)?")
@@ -165,8 +165,46 @@ def readme_inventory():
         "3": "bend radius 3 mm / three slots", "7.0": "slot length", "1.0": "slot width",
         "0.8": "webs between slots", "0.9": "battery play / bay room per side",
     }
+    # session 5: the corner screws, the clips, the standoff estimates
+    import round22
+    import round35
+    import round36
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        round22.clips()
+        round35.standoffs()
+        round36.closing()
+    out5 = buf.getvalue()
+    eps = float(re.search(r"([\d.]+) % strain at full bend", out5).group(1))
+    pull = re.search(r"(\d+) N to pull", out5).group(1)
+    reach = float(re.search(r"still reach ([\d.]+) mm past", out5).group(1))
+    est = [[tuple(float(v) for v in p) for p in re.findall(r"\(([\d.]+), ([\d.]+)\)", line)]
+           for line in out5.splitlines() if "photo, camera axis" in line]
+    # each side has two standoffs: left (0, 2), right (1, 3), bottom (0, 1), top (2, 3)
+    rng = lambda ids, k: (f"{min(e[i][k] for e in est for i in ids):.1f}–"  # noqa: E731
+                          f"{max(e[i][k] for e in est for i in ids):.1f}")
+    sides = (rng((0, 2), 0), rng((1, 3), 0), rng((0, 1), 1), rng((2, 3), 1))
+    ranges = f"x {sides[0]} / {sides[1]} and y {sides[2]} / {sides[3]} mm"
+    if ranges not in new:
+        report(False, f"README: the photo's standoff estimates should read '{ranges}'")
+    for part in sides:
+        for v in part.split("–"):
+            explain[v] = "standoff estimate range (round 35)"
+    (x0p, y0p), (x1p, y1p) = case.POSTS[0], case.POSTS[3]
+    explain.update({
+        f"{x0p:g}": "POSTS", f"{x1p:g}": "POSTS", f"{y0p:g}": "POSTS", f"{y1p:g}": "POSTS",
+        f"{x1p - x0p:.1f}": "POSTS spacing in x", f"{y1p - y0p:.2f}": "POSTS spacing in y",
+        "96.7": "Waveshare's estimate (round 35)", "2.85": "Waveshare's estimate (round 35)", "57.4": "Waveshare's estimate",
+        "0.45": "round 35's limit for the estimates", "150": "round 35's camera-axis range",
+        f1(2 * case.SCREW_HEAD_R): "recess diameter", "5.0": "largest head (ISO 7045 M2.5: 5.0 x 1.75)",
+        "1.75": "ISO 7045 M2.5 head height", "7045": "ISO 7045", "7985": "DIN 7985", "7089": "ISO 7089", "125": "DIN 125",
+        f1(case.PANEL_SPACE - case.PANEL_T + case.GLASS_RELIEF): "glass to lid",
+        f"{case.CLIP_L:.0f}": "clip beam length", pull: "pull-off force (round 22)", f1(eps): "clip strain (round 22)",
+        "0.15": "print error per side (round 36)", f"{reach:.2f}": "hook reach with errors (round 36)",
+        "35": "round 35",
+    })
     unexplained = [v for v in fresh if v not in explain]
-    report(not unexplained, f"README: {len(fresh)} numbers new since session 3, each traced to case.py, a check or a "
+    report(not unexplained, f"README: {len(fresh)} numbers new since session 4, each traced to case.py, a check or a "
                             f"measurement; unexplained: {unexplained or 'none'}")
 
 

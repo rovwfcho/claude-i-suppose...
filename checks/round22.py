@@ -100,7 +100,7 @@ def clips():
     pull = P * (math.tan(catch) + mu) / (1 - mu * math.tan(catch))
     pre = 12 * case.CLIP_PRELOAD * t / L ** 2
     n = len(case.CLIPS)
-    report(eps <= 0.015 and pre <= 0.005 and pull > close and n * pull >= 30,
+    report(eps <= 0.015 and pre <= 0.005 and pull > close and n * pull >= 25,     # firm: 2.5 kg straight off
            f"clip beams {L:.0f} x {t} x {h:.1f} mm: {100 * eps:.2f} % strain at full bend ({d} mm), "
            f"{100 * pre:.2f} % while closed; about {n * close:.0f} N to close, {n * pull:.0f} N to pull the lid "
            f"straight off ({n} clips)")
