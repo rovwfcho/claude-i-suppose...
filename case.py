@@ -128,6 +128,7 @@ BTN_BEVEL = 1.2                          # outer edges of the opening bevelled s
 POST_STANDOFF = 4.0              # the standoff height the posts are built for (3-4 mm standoffs fit)
 POST_Z = Z_B + POST_STANDOFF     # post end (the standoff top)
 POST_R = 3.6
+POST_CORNER_R = 3.0              # plan radius of the posts' outer corners (the lid's inside corners: 2.3)
 SCREW_HOLE_R = 1.7               # 3.4 mm: an M2.5 (or M2) passes with 0.4 mm to spare
 SCREW_HEAD_R = 3.0               # 6.0 mm recess for a 5 mm head (or a 5 mm M2 washer) 0.4 mm off centre
 SCREW_HEAD_DEPTH = T_BACK        # recess floor = the inside face of the back: heads up to 1.8 mm are flush
@@ -139,15 +140,15 @@ RECESS_BRIDGE = 0.2
 # snap clips: four springy beams in the back cover's skirt along the long walls, each a bridge fixed
 # at both ends that bends in the plane of the print layers (the strong direction in PLA). A hook on
 # its middle catches a groove inside the lid's wall. (beam centre x, wall)
-CLIPS = [(20.0, "bottom"), (52.0, "bottom"), (20.0, "top"), (56.0, "top")]
-CLIP_L = 22.0                    # beam length
+CLIPS = [(19.5, "bottom"), (50.0, "bottom"), (19.5, "top"), (54.0, "top")]
+CLIP_L = 27.0                    # beam length: long enough that 0.3 mm of print error still bends it under 1.8 %
 CLIP_SLOT = 0.6                  # gap that frees the beam from the cover (bridged in print)
 CLIP_HOOK_L = 6.0                # hook length along the beam
-CLIP_UNDERCUT = 0.45             # how far the hook reaches past the lid's inner wall
-CLIP_LEAD, CLIP_CATCH = 42.0, 45.0   # lead-in and catch faces, degrees from the wall
+CLIP_UNDERCUT = 0.55             # how far the hook reaches past the lid's inner wall (0.25 left after 0.3 mm of error)
+CLIP_LEAD, CLIP_CATCH = 55.0, 45.0   # hook faces, degrees from the wall (the lid's rim chamfer does the leading)
 CLIP_PRELOAD = 0.1               # closed, the beam stays this much bent, so the lid can't rattle
 GROOVE_CLR = 0.15                # groove bottom past the hook's tip
-RIM_CHAMFER = (0.45, 30.0)       # lid's inner rim edge: chamfer as deep as the undercut, 30 deg from
+RIM_CHAMFER = (0.55, 30.0)       # lid's inner rim edge: chamfer as deep as the undercut, 30 deg from
                                  # the wall, so closing takes about half the force that opening does
 
 X0, Y0 = -CLR - WALL, -CLR - WALL
@@ -520,10 +521,14 @@ def back_cover(z_total, variant):
     t += sk
 
     # corner posts: each stands on a brass standoff's top (where a 4 mm standoff ends); the screw goes
-    # through it from the back. Inside the lid's rim they keep SKIRT_CLR off its walls.
+    # through it from the back. Inside the lid's rim they keep SKIRT_CLR off its walls, and their outer
+    # corners are rounder (3 mm) than the lid's inside corners, so they stay 0.8 mm off them along the
+    # diagonal, where print errors in x and y add up.
+    w = SKIRT_CLR - CLR
+    POST_CLIP = rrect(BW - 2 * w, BH - 2 * w, POST_CORNER_R, BW / 2, BH / 2)
     for px, py in POSTS:
         post = cyl_z(px, py, POST_R, POST_Z, z_in + 0.05)
-        t += (post ^ prism(cavity_cs(-SKIRT_CLR), POST_Z - 1, Z_SPLIT + 0.01)) + (post ^ box(-50, 150, -50, 150, Z_SPLIT, z_in + 1))
+        t += (post ^ prism(POST_CLIP, POST_Z - 1, Z_SPLIT + 0.01)) + (post ^ box(-50, 150, -50, 150, Z_SPLIT, z_in + 1))
 
     # snap clips: a slot frees each beam from the cover (it is held only at its two ends, so it bends
     # in the plane of the layers), and a hook on its middle reaches into the lid's groove

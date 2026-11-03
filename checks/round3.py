@@ -187,9 +187,9 @@ def printer_error(variant, err=0.15):
         hit = vol(every ^ (S + C))
         report(hit < 1e-3, f"{variant} printed {label} by {err} mm: board overlap {hit:.3f} mm3")
     # shell and cover printed with opposite errors must still go together
-    from round1 import hooks
+    from round1 import hook_zones
     S = to_manifold(shell).translate(-c).scale([1 - err / 50, 1 - err / 30, 1]).translate(c)
-    C = (to_manifold(cover_asm) - hooks()).translate(-c).scale([1 + err / 50, 1 + err / 30, 1]).translate(c)
+    C = (to_manifold(cover_asm) - hook_zones()).translate(-c).scale([1 + err / 50, 1 + err / 30, 1]).translate(c)
     hit = vol(S ^ C)
     report(hit < 1e-3, f"{variant} shell {err} mm small + cover {err} mm large: overlap {hit:.3f} mm3 (the springy "
                        f"clip hooks left out: round 36 checks them with print errors)")

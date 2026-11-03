@@ -62,6 +62,19 @@ def hooks():
     return out
 
 
+def hook_zones():
+    """Boxes just enclosing each hook outside its beam's face (0.05 mm larger than the hook): cut from
+    the cover where rigid fits are tested, so float rounding in the STL leaves no sliver of a hook."""
+    out = Manifold()
+    p, za, zb, zc, zd = case.clip_levels()
+    yf = -case.CLR + case.SKIRT_CLR
+    for x, side in case.CLIPS:
+        b = case.box(x - case.CLIP_HOOK_L / 2 - 0.05, x + case.CLIP_HOOK_L / 2 + 0.05, yf - p - 0.05, yf + 0.02,
+                     za - 0.1, zd + 0.1)
+        out += b if side == "bottom" else b.mirror([0, 1, 0]).translate([0, case.BH, 0])
+    return out
+
+
 # ------------------------------------------------------------------ 1
 def check_integrity(variant):
     shell, cover, cover_asm, z_total = load_assembled(variant)

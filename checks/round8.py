@@ -106,8 +106,8 @@ def tessellation():
                 v = vol(g ^ (S + C))
                 if v > 1e-3:
                     bad[name] = round(v, 4)
-            from round1 import hooks
-            rigid = vol(S ^ (C - hooks()))
+            from round1 import hook_zones
+            rigid = vol(S ^ (C - hook_zones()))
             report(not bad and rigid < 1e-3,
                    f"{variant} at {case.SEG} segments per circle: board overlaps {bad or 'none'}, "
                    f"lid/cover overlap away from the clip hooks {rigid:.4f} mm3")

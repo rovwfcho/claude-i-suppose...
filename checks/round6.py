@@ -58,8 +58,8 @@ def sweeps(variant):
                     f"overlaps {bad or 'none'}")
     # back cover: everything of it below the seam, projected and extruded straight up to the seam,
     # must miss the shell (the cover is lowered straight down)
-    from round1 import hooks
-    below = (C - hooks()) ^ case.box(-50, 150, -50, 150, -50, case.Z_SPLIT - 0.001)   # the hooks bend out of the way
+    from round1 import hook_zones
+    below = (C - hook_zones()) ^ case.box(-50, 150, -50, 150, -50, case.Z_SPLIT - 0.001)   # the hooks bend out of the way
     # anything of the cover below the seam, extruded straight up to the seam, must miss the shell
     proj = below.project()
     prism = Manifold.extrude(proj, case.Z_SPLIT - (case.Z_B - 1)).translate([0, 0, case.Z_B - 1])
