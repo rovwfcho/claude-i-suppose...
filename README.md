@@ -20,7 +20,7 @@ A two-piece case with rounded edges for the Waveshare ESP32-S3 3.97" e-Paper boa
 | `case.py` | Parametric generator. Every dimension is a named constant at the top. |
 | `verify.py` | Quick fit check, with 4 mm and 3 mm standoffs: collisions, both insertion paths, the screws, pad and glass clearances. |
 | `checks/` | The debugging rounds (see [DEBUG_LOG.md](DEBUG_LOG.md)). `checks/run_checks.py` runs them, skipping any that already passed with the same inputs. `checks/owner_photos/` holds crops of your photos for rounds 28, 35 and 44. |
-| `preview/` | Renders, cross-sections, and `preview/owner_measurements.png`: your photos with every ruler tick, edge and landmark the measurements used. (`checks/round2.py` also draws the openings onto Waveshare's product photos, as `preview/photo_overlay.png`, when it can download them.) |
+| `preview/` | Renders, cross-sections, and `preview/owner_measurements.png`: your photos with every ruler tick, edge and landmark the measurements used. (`checks/round2.py` also draws the openings onto Waveshare's product photos when it can download them.) |
 | `docs/guide-src/` | Everything the guides and `preview/renders.png` are built from (`docs/guide-src/build_all.sh` rebuilds them). |
 
 ## You also need

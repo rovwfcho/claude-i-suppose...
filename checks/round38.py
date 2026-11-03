@@ -107,7 +107,10 @@ def margins(hole=0.0, recess=0.0, post=0.0, pad=0.0, relief=0.0, length=0.0, und
         "5 mm head 0.37 mm off centre in the recess": (r_r - 0.075) - (2.5 + E),
         "4.7 mm head 0.37 mm off centre bears 0.2 mm": (2.35 - E) - (r_h - 0.075) - 0.2,
         "wall at the corner": corner - 0.8,
-        "screw 1.5 mm into a standoff, 0.3 short of the PCB (3 mm ones)": min(into - 1.5, (case.STANDOFF_H_MIN - 0.3) - into),
+        # the tip must stop short of the PCB with 3 mm standoffs by more than an 8 mm screw's length
+        # tolerance (ISO 4759-1, js15: +/-0.29 mm); the print errors are the sweep's own 0.1 mm
+        "screw 1.5 mm into a standoff, its tip short of the PCB (3 mm ones, a 0.29 mm long screw)":
+            min(into - 1.5, (case.STANDOFF_H_MIN - 0.29) - into),
         "pads off a 1.76 mm PCB": pcb_front_hi - (case.Z_PF - (case.PAD_GAP + pad)) - 0.05,
         "glass off the lid, 1.4 mm panel": (pcb_front_hi - 1.4) - (case.T_FRONT - (case.GLASS_RELIEF + relief)) - 0.1,
         "clip strain with print errors, % under 1.8": 1.8 - 100 * 12 * (u + err) * case.SKIRT_T / L ** 2,

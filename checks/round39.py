@@ -77,7 +77,7 @@ def assembly():
         final = case.SCREW_LEN - (seat - case.POST_Z)
         rows.append((h, rest, glass, touches_pcb, hit, head_above, final))
         if not (touches_pcb and glass is not None and glass >= 0.2 and hit < 1e-3 and post_gap > 0
-                and caught >= 0.45 and abs(final - 2.0) < 0.05):
+                and caught >= 0.45 and abs(final - 2.6) < 0.05):      # 2.6 mm in: the README's figure
             bad.append(h)
     report(not bad, "assembly in the guides' order: " + "; ".join(
         f"{h:.0f} mm standoffs: the board rests on its pads {r:.2f} mm in front of its screwed place, glass "

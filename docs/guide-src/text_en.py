@@ -53,7 +53,7 @@ fig3=[("1", "Dial tab: it goes into the slot above the dial."), ("2", "Back cove
       ("3", "The dial in its notch."), ("4", "The 4 clips, two on each long edge.")],
 s4_h="Drive in the 4 corner screws",
 s4="The back now faces you. Drive one screw into each corner hole, into the board's brass standoff. Start each one by hand: an M2.5 turns in easily. <b>If it won't start without force, your standoffs are M2:</b> use the M2 × 8 mm screws, each with a washer under its head. If a screw just spins without catching, press it in gently as you turn: with 3 mm standoffs the board lies 1.5 mm from the posts until the screws pull it up. Tighten them in the order of the numbers in the picture (a cross pattern) with a small screwdriver turned by your fingertips, until each head sits snug in its recess and the board doesn't move.",
-s4_note="<b>Don't over-tighten</b>: the brass thread won't strip, but too much force can crack or squash the PLA posts. Use only 8 mm screws: shorter ones barely reach the thread, longer ones can reach the board.",
+s4_note="<b>Don't over-tighten</b>: the brass thread won't strip, but too much force can crack or squash the PLA posts. Use only 8 mm screws: shorter ones catch too little of the thread, longer ones can reach the board.",
 fig4a=[("1", "Corner screw 1."), ("2", "Corner screw 2."), ("3", "Corner screw 3."), ("4", "Corner screw 4.")],
 fig4b=[("1", "The opening notch in the right-hand end, on the seam.")],
 h_open="Opening and reassembling",
