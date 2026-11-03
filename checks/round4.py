@@ -175,7 +175,7 @@ def readme_numbers():
     m = re.search(r"opening ([\d.]+) mm wide", text)
     w = case.BTN_NOTCH[1] - case.BTN_NOTCH[0]
     report(m and abs(float(m.group(1)) - w) < 0.05, f"README button opening {m.group(1) if m else None} vs model {w:.1f}")
-    want = f"{len(case.POSTS)} × M2.5 × {case.SCREW_LEN:.0f} mm screws"
+    want = f"{len(case.POSTS)} × M2.5 × {case.SCREW_LEN:.0f} mm pan-head screws"
     report(want in text, f"README screws: '{want}' present: {want in text}")
 
 
