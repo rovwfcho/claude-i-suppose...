@@ -62,7 +62,7 @@ def log_numbers():
     claims = [
         (r"A ([\d.]+) mm hole and a ([\d.]+) x ([\d.]+) mm recess take an M2\.5 x (\d+) screw",
          (2 * case.SCREW_HOLE_R, 2 * case.SCREW_HEAD_R, case.SCREW_HEAD_DEPTH, case.SCREW_LEN)),
-        (r"which then goes (\d+) mm into the standoff", (into,)),
+        (r"which then goes ([\d.]+) mm into the standoff", (into,)),
         (r"with 3 mm ones the board sits (\d+) mm further back", (case.STANDOFF_H - case.STANDOFF_H_MIN,)),
         (r"\(x ([\d.]+) / ([\d.]+), y ([\d.]+) / ([\d.]+)\)",
          (case.POSTS[0][0], case.POSTS[3][0], case.POSTS[0][1], case.POSTS[3][1])),

@@ -224,21 +224,21 @@ def check_islands(variant, layer=0.2):
 # ------------------------------------------------------------------ 6
 def check_screws(variant):
     """Corner screws, read back from the STLs: an 8 mm screw seated in each recess clears the cover
-    (hole and recess), goes 2 mm into its standoff, and its head is not above the back face."""
+    (hole and recess), goes 2.6 mm into its standoff, and its head is not above the back face."""
     shell, _, cover_asm, z_total = load_assembled(variant)
     S, C = to_manifold(shell), to_manifold(cover_asm)
     so = case.board_model()["standoffs"]
     for px, py in case.POSTS:
         seat = z_total - case.SCREW_HEAD_DEPTH
-        head = case.cyl_z(px, py, 2.5, seat, seat + 1.8)               # pan head 5 x 1.8 (the largest allowed)
+        head = case.cyl_z(px, py, 2.5, seat, seat + case.SCREW_HEAD_K)  # pan head 5 x 2.1 (the largest allowed)
         shank = case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)  # M2.5 x 8
         bite = vol(shank ^ so) / (np.pi * 1.25 ** 2)
         # the screw may sit 0.4 mm off centre (standoff position uncertainty) and still clear the cover
         off = [vol(case.cyl_z(px + dx, py + dy, 1.25, seat - case.SCREW_LEN, seat) ^ C)
-               + vol(case.cyl_z(px + dx, py + dy, 2.5, seat, seat + 1.8) ^ C)
+               + vol(case.cyl_z(px + dx, py + dy, 2.5, seat, seat + case.SCREW_HEAD_K) ^ C)
                for dx, dy in ((0.4, 0), (-0.4, 0), (0, 0.4), (0, -0.4), (0.28, 0.28), (-0.28, -0.28), (0.28, -0.28), (-0.28, 0.28))]
         ok = (vol(head ^ C) < 1e-3 and vol(shank ^ C) < 1e-3 and vol((head + shank) ^ S) < 1e-3
-              and 1.9 <= bite <= 2.1 and max(off) < 1e-3)
+              and 2.5 <= bite <= 2.7 and max(off) < 1e-3)
         report(ok, f"{variant} corner screw ({px:.1f}, {py:.1f}): clear of the cover {vol((head + shank) ^ C):.4f}, "
                    f"0.4 mm off centre {max(off):.4f} mm3, {bite:.2f} mm into the standoff")
 

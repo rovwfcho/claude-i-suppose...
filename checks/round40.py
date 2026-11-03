@@ -11,7 +11,7 @@
    Bulgarian guide calls it the front cover ("преден капак") and never the old "предна част"; the
    standoffs, posts and clips have one name each per language.
 3. Lying on its back: the case rests on its back face, the screw heads sunk in their recesses (none
-   proud of the back face with a 1.8 mm head), and nothing else below that plane.
+   proud of the back face with the tallest head allowed, 2.1 mm), and nothing else below that plane.
 """
 import json
 import math
@@ -106,15 +106,15 @@ def lying_flat():
     _, _, cover, z_total = load_assembled("battery")
     zmax = cover.bounds[1][2]
     seat = z_total - case.SCREW_HEAD_DEPTH
-    head_top = seat + 1.8                              # the tallest head the README allows
+    head_top = seat + case.SCREW_HEAD_K                # the tallest head the README allows
     # the back face is the cover's highest plane; its area there (it rests on that)
     v = cover.vertices
     on_face = v[np.abs(v[:, 2] - zmax) < 1e-3]
     span = on_face[:, :2].max(0) - on_face[:, :2].min(0)
     report(abs(zmax - z_total) < 1e-3 and head_top <= z_total + 1e-9 and span[0] > 90 and span[1] > 55,
            f"lying on its back: the back face is the lowest plane (z {zmax:.2f}, {span[0]:.1f} x {span[1]:.1f} mm across); "
-           f"a 1.8 mm head sits {z_total - head_top:.2f} mm inside it, a DIN 7985 2.0 mm head "
-           f"{seat + 2.0 - z_total:.2f} mm proud")
+           f"a {case.SCREW_HEAD_K} mm head (ISO 7045) sits {z_total - head_top:.2f} mm inside it "
+           f"({z_total - head_top - 0.2:.2f} mm with the slicer's thick bridges)")
 
 
 if __name__ == "__main__":

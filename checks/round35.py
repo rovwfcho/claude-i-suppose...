@@ -301,15 +301,19 @@ def sliced():
     zs = sorted(ex)
 
     def inside(segs, x0, x1, y0, y1):
-        """Extrusion segments with their middle inside the box (design coordinates)."""
+        """Extrusion segments with any part inside the box (design coordinates), sampled every 0.2 mm
+        along each one (round 46: a long perimeter line has its middle far outside a short box)."""
         out = []
         for s in segs:
-            mx, my = (s[0] + s[2]) / 2 - shift[0], (s[1] + s[3]) / 2 - shift[1]
-            if x0 <= mx <= x1 and y0 <= my <= y1:
-                out.append(s)
+            n = max(1, int(math.hypot(s[2] - s[0], s[3] - s[1]) / 0.2))
+            for t in (np.arange(n) + 0.5) / n:
+                mx, my = s[0] + t * (s[2] - s[0]) - shift[0], s[1] + t * (s[3] - s[1]) - shift[1]
+                if x0 <= mx <= x1 and y0 <= my <= y1:
+                    out.append(s)
+                    break
         return out
     # print height: the back face is on the bed; z_print = z_total - z (design)
-    slot_lo, slot_hi = z_total - case.Z_SPLIT, z_total - (case.Z_SPLIT - case.CLIP_SLOT)
+    slot_lo, slot_hi = z_total - (case.Z_SPLIT + case.CLIP_SLOT_FLOOR), z_total - (case.Z_SPLIT - case.CLIP_SLOT)
     bad = []
     for x, side in case.CLIPS:
         yf = -case.CLR + case.SKIRT_CLR
@@ -340,7 +344,11 @@ def sliced():
         for z in zs:
             if z > top:
                 for s in inside(ex[z], px - 1.35, px + 1.35, py - 1.35, py + 1.35):
-                    mx, my = (s[0] + s[2]) / 2 - shift[0], (s[1] + s[3]) / 2 - shift[1]
+                    # the segment's nearest point to the screw's axis
+                    ax, ay, bx, by = s[0] - shift[0], s[1] - shift[1], s[2] - shift[0], s[3] - shift[1]
+                    L2 = (bx - ax) ** 2 + (by - ay) ** 2
+                    t = 0.0 if L2 == 0 else min(1.0, max(0.0, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / L2))
+                    mx, my = ax + t * (bx - ax), ay + t * (by - ay)
                     if math.hypot(mx - px, my - py) < 1.25 + 0.1 + s[4] / 2:
                         hole_layers.append((round(px, 1), round(py, 1), z))
     print("  ..   recess ceilings: " + "; ".join(f"({px:.1f}, {py:.1f}) first layer z {f}: {t}" for px, py, f, t in rec))

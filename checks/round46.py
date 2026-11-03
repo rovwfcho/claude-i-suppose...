@@ -15,6 +15,15 @@
    window chamfered, so only a band of the front face touches the bed. That band, cut from the STL
    just above the bed, must be one closed ring round the window, at least 2 mm wide everywhere
    (5 extrusion lines), so the frame is anchored all round and no side starts in mid-air.
+3. Air under the bridges, as sliced, with each extrusion's real height: PrusaSlicer's default "thick
+   bridges" prints bridges and overhang perimeters as 0.4 mm tall strands, so their undersides sit
+   0.2 mm lower than the layer they belong to (and a feature that ends on a layer boundary can land
+   on either side of it). Measured in the G-code (every extrusion sampled along its length, not by
+   its middle):
+   - each clip slot: from the top of the last plastic under the beam to the underside of the first
+     strand over it; at least 0.5 mm of air, so the beam can't fuse to the cover;
+   - each screw recess: from the bed (the back face) to the underside of the first strand where the
+     head bears; at least SCREW_HEAD_K (the tallest head the README allows), so the head is flush.
 """
 import os
 import sys
@@ -137,10 +146,99 @@ def bed_band():
                + f" mm, narrowest along any line from the window's centre {min(widths):.1f} mm (want 2.0)")
 
 
+# ------------------------------------------------------------------ 3
+def gcode_layers(gcode, shift):
+    """{layer z: [(x, y, strand height, type)]}: points every 0.2 mm along each extrusion (design x, y)."""
+    out, z, h, typ, x, y = {}, 0.0, 0.2, "", 0.0, 0.0
+    rel = "\nM83" in gcode
+    e = 0.0
+    for line in gcode.splitlines():
+        if line.startswith(";Z:"):
+            z = round(float(line[3:]), 3)
+        elif line.startswith(";HEIGHT:"):
+            h = float(line[8:])
+        elif line.startswith(";TYPE:"):
+            typ = line[6:].strip()
+        elif line.startswith("G92") and " E" in line:
+            e = 0.0
+        elif line.startswith(("G1 ", "G0 ")):
+            q = dict((m[0], float(m[1:])) for m in line.split(";")[0].split()[1:] if m[0] in "XYZE")
+            nx, ny = q.get("X", x), q.get("Y", y)
+            if "E" in q:
+                de = q["E"] if rel else q["E"] - e
+                if not rel:
+                    e = q["E"]
+                if de > 0 and (nx, ny) != (x, y):
+                    n = max(1, int(np.hypot(nx - x, ny - y) / 0.2))
+                    for t in (np.arange(n) + 0.5) / n:
+                        out.setdefault(z, []).append((x + t * (nx - x) - shift[0], y + t * (ny - y) - shift[1], h, typ))
+            x, y = nx, ny
+    return out
+
+
+def air_as_sliced():
+    import shutil
+    import subprocess
+    import tempfile
+    import trimesh
+    from round19 import SETTINGS
+    exe = shutil.which("prusa-slicer")
+    if not exe:
+        print("  SKIP air under the bridges: PrusaSlicer not installed")
+        return
+    stl = os.path.join(ROOT, "stl", "back_cover_battery.stl")
+    lo, hi = trimesh.load(stl).bounds
+    shift = np.array([125.0, 105.0]) - (lo[:2] + hi[:2]) / 2
+    with tempfile.TemporaryDirectory() as d:
+        g = os.path.join(d, "out.gcode")
+        subprocess.run([exe, "--export-gcode", *SETTINGS, "--support-material=0", "-o", g, stl],
+                       capture_output=True, text=True, timeout=900, check=True)
+        layers = gcode_layers(open(g).read(), shift)
+    zs = sorted(layers)
+
+    def pts(z, keep):
+        return [p for p in layers[z] if keep(p[0], p[1])]
+    z_total = case.Z_B + case.CAVITY["battery"] + case.T_BACK
+    split = z_total - case.Z_SPLIT                               # print height of the parting plane
+    slots = []
+    for x, side in case.CLIPS:
+        yf = -case.CLR + case.SKIRT_CLR
+        y0, y1 = (yf + 0.15, yf + case.SKIRT_T - 0.15) if side == "bottom" else \
+            (case.BH - yf - case.SKIRT_T + 0.15, case.BH - yf - 0.15)
+        x0, x1 = x - case.CLIP_L / 2 + 1.0, x + case.CLIP_L / 2 - 1.0
+        keep = lambda a, b: x0 <= a <= x1 and y0 <= b <= y1   # noqa: E731
+        filled = [z for z in zs if pts(z, keep)]
+        below = max((z for z in filled if z <= split + 0.15), default=None)
+        over = min((z for z in filled if z > split + 0.15), default=None)
+        if below is None or over is None:
+            slots.append((side, x, None))
+            continue
+        h = max(p[2] for p in pts(over, keep))
+        slots.append((side, x, round(over - h - below, 2)))
+    recesses = []
+    for px, py in case.POSTS:
+        r0, r1 = case.SCREW_HOLE_R + 0.2, 2.4                   # where a 5 mm head bears
+        keep = lambda a, b: r0 <= np.hypot(a - px, b - py) <= r1   # noqa: E731
+        first = min((z for z in zs if pts(z, keep)), default=None)
+        if first is None:
+            recesses.append((px, py, None))
+            continue
+        under = min(first - p[2] for p in pts(first, keep))
+        recesses.append((px, py, round(under, 2)))
+    ok_s = all(a is not None and a >= 0.5 for _, _, a in slots)
+    ok_r = all(u is not None and u >= case.SCREW_HEAD_K - 1e-6 for _, _, u in recesses)
+    report(ok_s, "clip slots as sliced, air between the cover and the beam's first strand: "
+                 + ", ".join(f"{side} x {x:.0f}: {a} mm" for side, x, a in slots) + " (want 0.5)")
+    report(ok_r, "screw recesses as sliced, bed to the underside of the first strand where the head bears: "
+                 + ", ".join(f"({px:.1f}, {py:.1f}): {u} mm" for px, py, u in recesses)
+                 + f" (the tallest head allowed: {case.SCREW_HEAD_K} mm)")
+
+
 if __name__ == "__main__":
     lip()
     back_plate()
     bed_band()
+    air_as_sliced()
     print(f"\nRound 46: {len(problems)} problem(s)")
     for p in problems:
         print("  -", p)

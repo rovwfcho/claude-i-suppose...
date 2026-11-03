@@ -130,7 +130,7 @@ def screw_length(variant):
             pcb = case.to_trimesh(b["pcb"])
             bl, _, _ = pcb.ray.intersects_location([o], [d], multiple_hits=False)
             res.append(seat - bl[0][2] if len(bl) else np.inf)            # seat to the PCB along the axis
-        longest = math.floor(min(res) - 0.5)
+        longest = math.floor(min(res) - 0.3)       # 0.3: more than a screw's length tolerance (+/-0.29)
         report(clear >= seat - case.POST_Z and longest >= case.SCREW_LEN and seat - case.POST_Z + 1.5 <= case.SCREW_LEN,
                f"{variant} corner screw ({px:.1f}, {py:.1f}): hole clear down to the standoff; seat to PCB "
                f"{res[0]:.2f} mm (4 mm standoffs) / {res[1]:.2f} mm (3 mm) -> M2.5 x {case.SCREW_LEN:.0f} goes "

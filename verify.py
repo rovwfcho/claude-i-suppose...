@@ -7,8 +7,8 @@ Checks, for each variant, with 4 mm and with 3 mm standoffs:
   * the board can be dropped into the lid from the back, and the back cover (with the board screwed
     on) can be lowered onto the lid, without hitting anything but the springy clip hooks
   * the back cover and the lid touch only where the hooks are meant to press (their preload)
-  * the corner posts land on the standoff tops, an 8 mm screw goes 2 mm into each standoff and its
-    head sits in the recess, not above the back
+  * the corner posts land on the standoff tops, an 8 mm screw goes 2.6 mm into each standoff, its tip
+    stops short of the PCB with 3 mm standoffs, and the tallest head allowed sits in the recess
   * the lid's pads stay PAD_GAP in front of the PCB, and the lip clears the glass
 """
 import math
@@ -88,16 +88,18 @@ def check_board(shell, bc, z_total, hooks, standoff_h):
     ok &= good
     print(f"  {'OK ' if good else 'BAD'} posts on the standoff tops (0.05 mm probe {touch:.2f} mm3)")
 
-    # screws: head in the recess, not above the back face; 8 mm shank goes 2 mm into the standoff
+    # screws: the tallest head allowed in the recess, not above the back face; the 8 mm shank goes
+    # 2.6 mm into the standoff
     for px, py in case.POSTS:
         seat = z_total - case.SCREW_HEAD_DEPTH
-        head = case.cyl_z(px, py, 2.5, seat, seat + 1.8)
+        head = case.cyl_z(px, py, 2.5, seat, seat + case.SCREW_HEAD_K)
         shank = case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)
         bite = vol(shank ^ so) / (math.pi * 1.25 ** 2)
-        good = vol(head ^ bc) < TOL and vol(shank ^ bc) < TOL and seat + 1.8 <= z_total + 1e-9 and 1.9 <= bite <= 2.1
+        good = vol(head ^ bc) < TOL and vol(shank ^ bc) < TOL and seat + case.SCREW_HEAD_K <= z_total + 1e-9 and 2.5 <= bite <= 2.7
         ok &= good
         below = (seat - case.SCREW_LEN) - (case.POST_Z - standoff_h)
-        good &= below >= 0.9
+        # 0.3 mm: more than an 8 mm screw's length tolerance (ISO 4759-1, js15: +/-0.29 mm)
+        good &= below >= 0.3
         ok &= good
         print(f"  {'OK ' if good else 'BAD'} screw at ({px:.1f}, {py:.1f}): head in its recess, {bite:.2f} mm into the "
               f"standoff, tip {below:.2f} mm short of the PCB")

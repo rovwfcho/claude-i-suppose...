@@ -48,7 +48,7 @@ def comments():
     reach = case.CLIP_UNDERCUT - 0.3
     claims = [
         (r"GLASS_RELIEF = [\d.]+ .*it floats ([\d.]+) mm above it", glass),
-        (r"so an 8 mm screw seated in the recess goes\s*#?\s*(\d+) mm into the standoff", into),
+        (r"so an 8 mm screw seated in the recess goes\s*#?\s*([\d.]+) mm into the standoff", into),
         (r"SCREW_HOLE_R = [\d.]+ .*passes with ([\d.]+) mm to spare", play),
         (r"SCREW_HEAD_R = [\d.]+ .*M2 washer\) fits ([\d.]+) mm off centre", room),
         (r"so they stay ([\d.]+) mm off them along the\s*#\s*diagonal", diag),

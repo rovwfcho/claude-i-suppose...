@@ -41,7 +41,7 @@ MUTANTS = [
     ("a corner post 0.8 mm off its standoff", "POSTS = [(2.45, 2.725),", "POSTS = [(3.25, 2.725),", "checks/round35.py"),
     ("clip slots closed", "CLIP_SLOT = 0.6 ", "CLIP_SLOT = 0.0 ", "checks/round35.py"),
     ("hooks reaching only 0.1 mm", "CLIP_UNDERCUT = 0.55 ", "CLIP_UNDERCUT = 0.1 ", "checks/round36.py"),
-    ("screw recesses 1.0 mm deep", "SCREW_HEAD_DEPTH = T_BACK ", "SCREW_HEAD_DEPTH = 1.0 ", "verify.py"),
+    ("screw recesses 1.0 mm deep", "SCREW_HEAD_DEPTH = 2.4 ", "SCREW_HEAD_DEPTH = 1.0 ", "verify.py"),
     ("pads touching the PCB", "PAD_GAP = 0.5 ", "PAD_GAP = 0.0 ", "checks/round23.py"),
     ("posts built for 6 mm standoffs", "POST_STANDOFF = 4.0 ", "POST_STANDOFF = 6.0 ", "checks/round4.py"),
 ]
@@ -107,7 +107,7 @@ def margins(hole=0.0, recess=0.0, post=0.0, pad=0.0, relief=0.0, length=0.0, und
         "5 mm head 0.37 mm off centre in the recess": (r_r - 0.075) - (2.5 + E),
         "4.7 mm head 0.37 mm off centre bears 0.2 mm": (2.35 - E) - (r_h - 0.075) - 0.2,
         "wall at the corner": corner - 0.8,
-        "screw 1.5-2.5 mm into a standoff": min(into - 1.5, 2.5 - into),
+        "screw 1.5 mm into a standoff, 0.3 short of the PCB (3 mm ones)": min(into - 1.5, (case.STANDOFF_H_MIN - 0.3) - into),
         "pads off a 1.76 mm PCB": pcb_front_hi - (case.Z_PF - (case.PAD_GAP + pad)) - 0.05,
         "glass off the lid, 1.4 mm panel": (pcb_front_hi - 1.4) - (case.T_FRONT - (case.GLASS_RELIEF + relief)) - 0.1,
         "clip strain with print errors, % under 1.8": 1.8 - 100 * 12 * (u + err) * case.SKIRT_T / L ** 2,

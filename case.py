@@ -74,8 +74,8 @@ DHT = (97.8, 48.5)               # temperature / humidity sensor, back side
 # lengthways in a pocket with about 0.45-0.55 mm clearance all round, located by four corner brackets whose
 # short legs leave the middle of every side open for the peg and the cable. The grille is three slots
 # under the membrane, well inside the speaker's sealed face, so no sound leaks round its edge. The
-# pocket is 7.9 mm (the brackets 6.7 mm) from the ESP32 module's antenna end (right-hand end of the
-# board, about x 93.5-99.5), so the magnet won't detune it.
+# pocket is 7.0 mm from the ESP32 module's antenna end (right-hand end of the board, x 92.6-99.5), so
+# the magnet won't detune it.
 SPEAKER_SIZE = (10.3, 14.2, 4.5)          # turned lengthways: x, y, z
 SPEAKER_WINDOW = (5.8, 10.0)              # membrane on the sound face, turned (x, y), centred
 SPEAKER_BOX = {"battery": (11.2, 15.3, 4.5)}   # the pocket inside the brackets (x, y, height kept)
@@ -84,7 +84,11 @@ SPEAKER = {"battery": (80.0, 15.5)}       # pocket centre
 SPK_BRACKET = (1.2, 2.0, 2.0, 1.2)        # corner brackets: wall, height, leg along the short / long sides
 SPK_CABLE_EXIT = 2.9                      # cable centre from the peg's end, along the long side
 GRILLE_SLOTS = (0.9, 7.0, 1.8)            # three slots along y: width, length, pitch (0.9 mm webs)
-ANTENNA = (93.5, 99.5, 14.0, 40.0)       # x0, x1, y0, y1 of the module's antenna end (estimate)
+# the ESP32-S3 module, in the owner's back photo (round 46: mapped onto the board's plane as round 35 does,
+# with its top 3.1 mm nearer the camera): x 73.2-99.1 including its pads, y 20.6-40.2 including the
+# board's solder pads round it; its shield can ends at x 92.9 and the antenna runs from there to the edge
+ESP32_MODULE = (73.0, 99.5, 20.5, 40.3)  # x0, x1, y0, y1 (with the pads, a little generous)
+ANTENNA = (92.6, 99.5, 20.5, 40.3)       # x0, x1, y0, y1 of the module's antenna end
 # Battery: the owner's Waveshare 3.7 V 1500 mAh LiPo (model 454261), measured against a ruler in their
 # photos (round 28): 61.1 x 40.7 x 4.3 mm including its taped protection-board end (+/-0.3). Its wires
 # leave that end at one corner. The bay is 62.5 x 42.5 mm (1.4 and 1.8 mm more than the cell, so it
@@ -129,15 +133,18 @@ BTN_BEVEL = 1.2                          # outer edges of the opening bevelled s
 # corner screws: the board is screwed to the back cover through its brass standoffs, one M2.5 x 8
 # (or M2 x 8 with a washer, if the standoffs turn out to be M2) per corner, from the back. Each post
 # stands on a standoff's top, where a 4 mm standoff ends, so an 8 mm screw seated in the recess goes
-# 2 mm into the standoff (safe for 3 and 4 mm standoffs). The recess sinks heads up to 1.8 mm tall
-# and 5 mm across, with room for the screw to sit 0.4 mm off centre.
+# 2.6 mm into the standoff (safe for 3 and 4 mm standoffs: with 3 mm ones its tip stops 0.4 mm short
+# of the PCB). The recess sinks heads up to 2.1 mm tall (ISO 7045 M2.5, the tallest pan head) and
+# 5 mm across, with room for the screw to sit 0.4 mm off centre.
 POST_STANDOFF = 4.0              # the standoff height the posts are built for (3-4 mm standoffs fit)
 POST_Z = Z_B + POST_STANDOFF     # post end (the standoff top)
 POST_R = 3.6
 POST_CORNER_R = 3.0              # plan radius of the posts' outer corners (the lid's inside corners: 2.3)
 SCREW_HOLE_R = 1.7               # 3.4 mm: an M2.5 (or M2) passes with 0.4 mm to spare
 SCREW_HEAD_R = 3.1               # 6.2 mm recess: a 5 mm head (or a 5 mm M2 washer) fits 0.6 mm off centre
-SCREW_HEAD_DEPTH = T_BACK        # recess floor = the inside face of the back: heads up to 1.8 mm are flush
+SCREW_HEAD_K = 2.1               # the tallest head the README allows (ISO 7045 M2.5: k max 2.1; DIN 7985: 2.0)
+SCREW_HEAD_DEPTH = 2.4           # recess depth, 0.6 mm into the post: such a head sits 0.3 mm inside the back
+                                 # face, 0.1 mm when the slicer's thick bridges print the ceiling 0.2 mm lower
 SCREW_LEN = 8.0                  # under the head
 # the recess is printed face down, so its ceiling is a bridge: the first 0.2 mm over it is cut as a
 # slot across the whole recess (two bridges, ends on the recess wall), the next 0.2 mm as a square
@@ -149,6 +156,8 @@ RECESS_BRIDGE = 0.2
 CLIPS = [(20.0, "bottom"), (50.0, "bottom"), (20.0, "top"), (54.0, "top")]
 CLIP_L = 28.0                    # beam length: long enough that 0.3 mm of print error still bends it under 1.8 %
 CLIP_SLOT = 0.6                  # gap that frees the beam from the cover (bridged in print)
+CLIP_SLOT_FLOOR = 0.3            # and it runs this far into the cover's rim under the beam: the slicer's thick
+                                 # bridges print the beam's underside 0.2-0.4 mm low, and 0.8 mm of air stays
 CLIP_HOOK_L = 6.0                # hook length along the beam
 CLIP_UNDERCUT = 0.55             # how far the hook reaches past the lid's inner wall (0.25 left after 0.3 mm of error)
 CLIP_LEAD, CLIP_CATCH = 55.0, 45.0   # hook faces, degrees from the wall (the lid's rim chamfer does the leading)
@@ -415,7 +424,8 @@ def clip_hook(x, side):
 def clip_slot(x, side):
     """The gap between the beam and the cover: the beam is then held only at its two ends."""
     yf = -CLR + SKIRT_CLR
-    return on_wall(box(x - CLIP_L / 2, x + CLIP_L / 2, yf - 0.3, yf + SKIRT_T + 0.3, Z_SPLIT - CLIP_SLOT, Z_SPLIT), side)
+    return on_wall(box(x - CLIP_L / 2, x + CLIP_L / 2, yf - 0.3, yf + SKIRT_T + 0.3, Z_SPLIT - CLIP_SLOT,
+                       Z_SPLIT + CLIP_SLOT_FLOOR), side)
 
 
 def clip_groove(x, side):
@@ -500,7 +510,7 @@ def speaker_cable_coil():
     sx, sy = SPEAKER["battery"]
     z_in = Z_B + CAVITY["battery"]
     r = 1.4
-    cx, cy, a, b, rc = sx - 0.5, 40.5, 7.5, 13.5, 4.0   # centre, half sizes, corner radius
+    cx, cy, a, b, rc = sx - 1.1, 41.0, 7.0, 14.0, 4.0   # centre, half sizes, corner radius
     pts = []
     for (qx, qy), a0 in (((cx + a - rc, cy + b - rc), 0), ((cx - a + rc, cy + b - rc), 90),
                          ((cx - a + rc, cy - b + rc), 180), ((cx + a - rc, cy - b + rc), 270)):
@@ -602,7 +612,7 @@ def board_model(standoff_h=STANDOFF_H):
         "fpc_fold": box(-0.1, 1.0, 19.4, 40.3, Z_PF - PANEL_T, Z_PF),
         "usb_c": box(-0.4, 7.0, USB_Y - 4.47, USB_Y + 4.47, zb, zb + 3.26),
         "sd_socket": box(1.5, 15.5, 6.5, 21.4, zb, zb + 1.9),
-        "esp32_module": box(81.5, 99.5, 14.0, 40.0, zb, zb + 3.3),
+        "esp32_module": box(*ESP32_MODULE, zb, zb + 3.3),
         "connectors": box(29.5, 38.5, 0.5, 5.0, zb, zb + 3.5) + box(40.5, 49.5, 0.5, 5.0, zb, zb + 3.5)
         + box(52.5, 61.5, 0.5, 5.0, zb, zb + 3.5),
         "wheel": cyl_z(WHEEL[0], WHEEL[1], WHEEL[2], zb + 0.2, zb + 2.8),

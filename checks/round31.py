@@ -196,12 +196,39 @@ def readme_inventory():
         f"{x1p - x0p:.1f}": "POSTS spacing in x", f"{y1p - y0p:.2f}": "POSTS spacing in y",
         "96.7": "Waveshare's estimate (round 35)", "2.85": "Waveshare's estimate (round 35)", "57.4": "Waveshare's estimate",
         "0.45": "round 35's limit for the estimates", "150": "round 35's camera-axis range",
-        f1(2 * case.SCREW_HEAD_R): "recess diameter", "5.0": "largest head (ISO 7045 M2.5: 5.0 x 1.75)",
-        "1.75": "ISO 7045 M2.5 head height", "7045": "ISO 7045", "7985": "DIN 7985", "7089": "ISO 7089", "125": "DIN 125",
+        f1(2 * case.SCREW_HEAD_R): "recess diameter", "5.0": "largest head (ISO 7045 M2.5: 5.0 x 2.1)",
+        f1(case.SCREW_HEAD_K): "ISO 7045 M2.5 head height (k max)", "2.0": "DIN 7985 M2.5 head height",
+        "7045": "ISO 7045", "7985": "DIN 7985", "7089": "ISO 7089", "125": "DIN 125",
+        f1(case.SCREW_HEAD_DEPTH): "recess depth (SCREW_HEAD_DEPTH)",
+        f1(case.SCREW_LEN - (case.Z_B + case.CAVITY["battery"] + case.T_BACK - case.SCREW_HEAD_DEPTH - case.POST_Z)):
+            "screw into the standoff",
+        f1(case.Z_B + case.CAVITY["battery"] + case.T_BACK - case.SCREW_HEAD_DEPTH - case.SCREW_LEN
+           - (case.POST_Z - case.STANDOFF_H_MIN)): "screw tip short of the PCB with 3 mm standoffs",
+        f1(case.PAD_GAP + case.STANDOFF_H - case.STANDOFF_H_MIN): "board to the posts before screwing, 3 mm standoffs",
+        f1(case.SCREW_LEN - (case.Z_B + case.CAVITY["battery"] + case.T_BACK - case.SCREW_HEAD_DEPTH - case.POST_Z)
+           - (case.PAD_GAP + case.STANDOFF_H - case.STANDOFF_H_MIN)): "screw reach into a 3 mm standoff before it catches",
+        "4.5": "cheese / button head diameters 4.5-4.7", "4.7": "cheese / button head diameters 4.5-4.7",
+        "6": "a 6 mm screw (round 22: too short)", "13": "USB-C grip width (the opening)",
         f1(case.PANEL_SPACE - case.PANEL_T + case.GLASS_RELIEF): "glass to lid",
         f"{case.CLIP_L:.0f}": "clip beam length", pull: "pull-off force (round 22)", f1(eps): "clip strain (round 22)",
         "0.15": "print error per side (round 36)", f"{reach:.2f}": "hook reach with errors (round 36)",
         "35": "round 35", "25": "full run time in minutes (round 38: 23 min)",
+    })
+    # rounds 44-46: the window from your front photos (figures printed by rounds 44 and 45, and drawn in
+    # preview/explained.png from make_explained.py's LIGHT and LIGHT_Y)
+    sys.path.insert(0, os.path.join(ROOT, "docs", "guide-src"))
+    import make_explained as mx
+    wl, wr = case.WIN_CX - case.WIN_W / 2, case.WIN_CX + case.WIN_W / 2
+    wb, wt = case.WIN_CY - case.WIN_H / 2, case.WIN_CY + case.WIN_H / 2
+    explain.update({
+        f1(case.WIN_W): "window width", f1(case.WIN_H): "window height", f1(wl): "window left edge",
+        f1(wb): "window bottom edge", f1(wt): "window top edge", f1(wl - case.X0): "frame width at the left end",
+        f1(mx.LIGHT[0]): "light field start (round 44)", f1(mx.LIGHT[1]): "light field end (round 44)",
+        f1(mx.LIGHT_Y[0]): "light field bottom (round 45)", f1(mx.LIGHT_Y[1]): "light field top (round 45)",
+        f1(mx.ACTIVE[0]): "drawing's picture area, left", f1(mx.ACTIVE[1]): "drawing's picture area, right",
+        f1((mx.ACTIVE[0] + mx.ACTIVE[1]) / 2): "drawing's picture centre", "51.3": "text centre (round 44)",
+        "16.0": "ruler scale at the left end (round 44)", "15.5": "ruler scale at the right end (round 44)",
+        "44": "round 44", "45": "round 45", "46": "round 46",
     })
     m = re.search(r"about (\d+) g of PLA", new)
     if m:

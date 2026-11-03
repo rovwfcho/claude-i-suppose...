@@ -59,7 +59,7 @@ def parts():
     screws = Manifold()
     for px, py in case.POSTS:              # M2.5 x 8 pan heads, seated in their recesses
         seat = z_total - case.SCREW_HEAD_DEPTH
-        screws += case.cyl_z(px, py, 2.5, seat, seat + 1.75) + case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)
+        screws += case.cyl_z(px, py, 2.5, seat, seat + case.SCREW_HEAD_K) + case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)
     out["screws"] = screws
     out["p_front"] = case.front_for_print(out["shell"])
     out["p_cover"] = case.flip_for_print(out["cover"], z_total)

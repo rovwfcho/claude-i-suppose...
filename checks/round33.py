@@ -52,7 +52,7 @@ MUTANTS = [
      "def grille_slots(variant=\"battery\"):\n    \"\"\"Speaker grille: three stadium slots (x0, x1, y0, y1) along y, centred under the speaker.\"\"\"\n    sx, sy = SPEAKER[variant]\n    sx += 2.0",
      "round13.py", None),
     ("bracket legs 3 mm long", "SPK_BRACKET = (1.2, 2.0, 2.0, 1.2)", "SPK_BRACKET = (1.2, 2.0, 3.0, 3.0)", "round28.py", None),
-    ("cable loop next to the antenna (clear of everything else)", "cx, cy, a, b, rc = sx - 0.5, 40.5, 7.5, 13.5, 4.0",
+    ("cable loop next to the antenna (clear of everything else)", "cx, cy, a, b, rc = sx - 1.1, 41.0, 7.0, 14.0, 4.0",
      "cx, cy, a, b, rc = sx + 4.0, 40.5, 7.5, 12.0, 4.0", "round14.py", None),
 ]
 
@@ -130,7 +130,7 @@ def margins(bay_dx=0.0, pocket_dx=0.0, pocket_dy=0.0, leg=0.0, pitch=0.0, slot=0
     x0, x1, y0, y1 = case.BATTERY_BAY
     pw, ph, _ = case.SPEAKER_BOX["battery"]
     pw, ph = pw + pocket_dx, ph + pocket_dy
-    wall, _, leg_x, leg_y = case.SPK_BRACKET
+    _, _, leg_x, leg_y = case.SPK_BRACKET
     leg_x, leg_y = leg_x + leg, leg_y + leg
     gw, gl, gp = case.GRILLE_SLOTS
     gp, gl = gp + pitch, gl + slot
@@ -144,7 +144,9 @@ def margins(bay_dx=0.0, pocket_dx=0.0, pocket_dy=0.0, leg=0.0, pitch=0.0, slot=0
         "slot webs": gp - gw - 0.8 + 1e-9,
         "cable to leg": (ph / 2 - leg_y) - (L / 2 - (case.SPK_CABLE_EXIT + exit_) + 1.0) - ry,
         "peg to leg": (pw / 2 - leg_x) - (abs(W / 2 - PEG_V) + 1.3) - rx,
-        "antenna": case.ANTENNA[0] - (case.SPEAKER["battery"][0] + pw / 2 + wall) - 6.0,
+        # the speaker (its magnet and frame) 6 mm from the antenna, anywhere in its pocket; the PLA brackets
+        # round it don't count (round 46: the back plate itself is PLA and lies right over the antenna)
+        "antenna": case.ANTENNA[0] - (case.SPEAKER["battery"][0] + pw / 2) - 6.0,
     }
     return out
 
