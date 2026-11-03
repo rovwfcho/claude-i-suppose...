@@ -15,7 +15,15 @@
 2. The window's corners: the drawing's picture area and the light field from both front photos
    (along the board, round 44; across it, above) must lie inside the window's rounded corners too,
    not just between its straight edges, which is all rounds 2, 44 and the check above look at.
-3. The window as sliced: in PrusaSlicer's G-code for the lid (printed face down, mirrored for print),
+3. How hard the screws may be tightened: the plastic each screw clamps, read from the back cover's
+   STL. Under the head: the recess floor's first layer is two bridged segments with a 3.4 mm slot
+   between them (round 35's bridging trick), so a head presses only on the parts of it outside the
+   slot. At the post's end: the ring of the brass standoff's top outside the 3.4 mm hole (4.5 mm
+   round as measured, or a 4 mm hex), with the screw up to 0.29 mm off centre (round 35's worst).
+   With a fingertip-tight 0.05 N m (preload about T / (0.2 d)), the pressure on the plastic must stay
+   under 30 MPa (printed PLA starts to yield at about 50 and creeps above about half that), for the
+   heads the README recommends.
+4. The window as sliced: in PrusaSlicer's G-code for the lid (printed face down, mirrored for print),
    the opening's four edges, found along lines through the window's centre on four layers (two in the
    45 deg chamfer, two in the straight part), must sit where case.py puts them, within 0.1 mm. That
    also confirms that the wide frame is on the end the printer actually prints it on.
@@ -115,6 +123,61 @@ def corners():
 
 
 # ------------------------------------------------------------------ 3
+def section_xy(mesh, z):
+    """The mesh's section at height z as a shapely geometry in the design's x, y."""
+    import trimesh
+    from shapely.geometry import Polygon
+    from shapely.ops import unary_union
+    sec = mesh.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
+    planar, tf = sec.to_2D()
+    to3 = lambda ring: trimesh.transform_points(np.column_stack([np.asarray(ring.coords), np.zeros(len(ring.coords))]), tf)[:, :2]  # noqa: E731
+    return unary_union([Polygon(to3(p.exterior), [to3(r) for r in p.interiors]) for p in planar.polygons_full])
+
+
+def clamp():
+    from shapely.geometry import Point, Polygon
+    sys.path.insert(0, HERE)
+    from round1 import load_assembled
+    _, _, cover, z_total = load_assembled("battery")
+    seat = z_total - case.SCREW_HEAD_DEPTH
+    floor = section_xy(cover, seat - case.RECESS_BRIDGE / 2)      # the layer the head presses on
+    end = section_xy(cover, case.POST_Z + 0.1)                      # the post's end face on the standoff
+    torque, k, d, limit = 0.05, 0.2, 2.5e-3, 30.0
+    force = torque / (k * d)                                       # N
+    offs = [(0.0, 0.0)] + [(0.29 * np.cos(a), 0.29 * np.sin(a)) for a in np.linspace(0, 2 * np.pi, 16, endpoint=False)]
+
+    def hexagon(cx, cy, af, rot):
+        rc = af / np.sqrt(3)
+        return Polygon([(cx + rc * np.cos(rot + i * np.pi / 3), cy + rc * np.sin(rot + i * np.pi / 3)) for i in range(6)])
+    heads = {"5.0 mm pan head (ISO 7045) or 5 mm M2 washer": 5.0, "4.7 mm button head (ISO 7380)": 4.7,
+             "4.5 mm cheese head (ISO 1207)": 4.5}
+    areas = {}
+    for px, py in case.POSTS:
+        for name, dk in heads.items():
+            for ox, oy in offs:
+                a = floor.intersection(Point(px + ox, py + oy).buffer(dk / 2, 256)).area
+                areas[name] = min(areas.get(name, 1e9), a)
+        for ox, oy in offs:
+            a = end.intersection(Point(px + ox, py + oy).buffer(case.STANDOFF_D / 2, 256)).area
+            areas["post end on a 4.5 mm round standoff"] = min(areas.get("post end on a 4.5 mm round standoff", 1e9), a)
+            for rot in np.linspace(0, np.pi / 3, 7):
+                a = end.intersection(hexagon(px + ox, py + oy, 4.0, rot)).area
+                areas["post end on a 4 mm hex standoff"] = min(areas.get("post end on a 4 mm hex standoff", 1e9), a)
+    # the README and both guides must steer away from the smaller heads; otherwise they count
+    g = os.path.join(ROOT, "docs", "guide-src")
+    warned = all(w in open(f, encoding="utf-8").read() for f, w in (
+        (os.path.join(ROOT, "README.md"), "Not cheese or button heads"),
+        (os.path.join(g, "text_en.py"), "Not cheese or button heads"),
+        (os.path.join(g, "text_bg.py"), "Не използвайте цилиндрични или плоски глави")))
+    recommended = [n for n in areas if "head" not in n or n.startswith("5.0") or not warned]
+    worst = max(force / areas[n] for n in recommended)
+    report(worst <= limit, f"screw clamp at a fingertip-tight {torque} N m ({force:.0f} N): " + "; ".join(
+        f"{n} {areas[n]:.1f} mm2, {force / areas[n]:.0f} MPa, yields at about {50e6 * areas[n] * 1e-6 * k * d:.2f} N m"
+        for n in areas) + f"; the README and both guides warn off the smaller heads: {warned}; worst for the heads they offer "
+             f"{worst:.0f} MPa (want {limit:.0f})")
+
+
+# ------------------------------------------------------------------ 4
 def window_sliced():
     exe = shutil.which("prusa-slicer")
     if not exe:
@@ -167,6 +230,7 @@ def window_sliced():
 if __name__ == "__main__":
     across_photos()
     corners()
+    clamp()
     window_sliced()
     print(f"\nRound 45: {len(problems)} problem(s)" + (f", {len(skipped)} check(s) SKIPPED" if skipped else ""))
     for p in problems:

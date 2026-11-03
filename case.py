@@ -305,9 +305,11 @@ def front_shell(z_total):
 
     # ledge pads at the PCB's rim, PAD_GAP in front of it: they never press the board, they hold it off
     # the glass while the case is being closed and would catch it if it were ever pushed forward.
-    # None on the left end: the glass edge is only about 0.75 mm in from the PCB edge there
+    # None on the left end: the glass edge is only about 0.75 mm in from the PCB edge there.
+    # The bottom one at the right runs along the whole PWR/BOOT opening: it stiffens the display lip
+    # that bridges the opening (round 45: the window's lower edge moved 0.5 mm toward it)
     pads = [
-        (6, 18, -CLR - 0.1, 0.5), (40, 58, -CLR - 0.1, 0.5), (86, 94, -CLR - 0.1, 0.5),
+        (6, 18, -CLR - 0.1, 0.5), (40, 58, -CLR - 0.1, 0.5), (BTN_NOTCH[0] - 2, 94, -CLR - 0.1, 0.5),
         (6, 18, BH - 0.5, BH + CLR + 0.1), (35, 60, BH - 0.5, BH + CLR + 0.1),
         (88, 94, BH - 0.5, BH + CLR + 0.1),
         (BW - 0.5, BW + CLR + 0.1, 5, 12), (BW - 0.5, BW + CLR + 0.1, 45, 55),

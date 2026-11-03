@@ -79,15 +79,45 @@ def line_of_sight(variant):
 
 
 # ------------------------------------------------------------------ 3
+def lip_modulus():
+    """Smallest section modulus (mm3, bending under a load on the front face) of the lid's lip over the
+    button opening: the lid's section across x, below the window's lower edge."""
+    import trimesh
+    from shapely import contains_xy
+    from shapely.geometry import Polygon, box as sbox
+    shell, _, _, _ = load_assembled("battery")
+    best = (np.inf, None)
+    for xc in np.arange(case.BTN_NOTCH[0] + 0.25, case.BTN_NOTCH[1], 0.5):
+        sec = shell.section(plane_origin=[xc, 0, 0], plane_normal=[1, 0, 0])
+        planar, tf = sec.to_2D()
+        pts = lambda r: trimesh.transform_points(np.column_stack([np.asarray(r.coords), np.zeros(len(r.coords))]), tf)[:, 1:3]  # noqa: E731
+        lip = None
+        for p in planar.polygons_full:
+            g = Polygon(pts(p.exterior), [pts(r) for r in p.interiors]).intersection(
+                sbox(-10, -10, case.WIN_CY - case.WIN_H / 2, case.Z_SPLIT))
+            if g.area > 0.01:
+                lip = g if lip is None else lip.union(g)
+        y0, z0, y1, z1 = lip.bounds
+        Y, Z = np.meshgrid(np.arange(y0, y1, 0.01) + 0.005, np.arange(z0, z1, 0.01) + 0.005)
+        m = contains_xy(lip, Y, Z)
+        zc = Z[m].mean()
+        inertia = ((Z[m] - zc) ** 2).sum() * 1e-4
+        w = inertia / max(Z[m].max() - zc, zc - Z[m].min())
+        if w < best[0]:
+            best = (w, xc)
+    return best
+
+
 def strength():
     s_allow = 30.0  # MPa, PLA printed, conservative
-    # display lip bridging the button opening: 3.7 x 1.6 mm bar (lip from the wall to the window),
-    # clamped at both ends, 10 N pressed onto its middle
-    b, t = case.WIN_CY - case.WIN_H / 2 + case.CLR, case.T_FRONT - case.GLASS_RELIEF   # thinner over the glass
+    # display lip bridging the button opening: a bar clamped at both ends of the opening, 10 N pressed
+    # onto its middle. Its section is measured on the STL (round 45: it used to be taken as a 3.7 x 1.3
+    # mm rectangle), every 0.5 mm along the opening, and the weakest one counts
     L, F = case.BTN_NOTCH[1] - case.BTN_NOTCH[0], 10.0
-    sigma = 6 * (F * L / 8) / (b * t ** 2)
-    report(sigma < s_allow, f"display lip over the button opening ({b:.1f} x {t} mm, {L:.0f} mm span): "
-                            f"{sigma:.1f} MPa at 10 N (allow {s_allow})")
+    W, where = lip_modulus()
+    sigma = (F * L / 8) / W
+    report(sigma < s_allow, f"display lip over the button opening ({L:.0f} mm span, weakest section at x {where:.1f}: "
+                            f"modulus {W:.2f} mm3): {sigma:.1f} MPa at 10 N (allow {s_allow})")
     # corner screws: M2.5 (or M2) in a brass standoff, 2 mm engaged, shear area pi*d1*L*0.6, brass ~200 MPa
     eng = case.SCREW_LEN - ((case.Z_B + case.CAVITY["battery"] + case.T_BACK - case.SCREW_HEAD_DEPTH) - case.POST_Z)
     pull = min(math.pi * 1.6 * (eng - 0.3) * 0.6 * 200.0, math.pi * 2.0 * eng * 0.6 * 200.0)  # M2 minor 1.6
@@ -95,9 +125,10 @@ def strength():
                        f"(an M2 with a 0.3 mm washer: {eng - 0.3:.1f} mm engaged); the board weighs about 40 g")
     # plastic under a snug screw (about 100 N): under the head, and where the post meets the standoff
     F = 100.0
-    # smallest allowed pan head (4.7 mm), on the recess floor less the bridging slot across it (round 35)
+    # the head the README asks for (a 5.0 mm ISO 7045 pan head, or the 5 mm washer with M2 screws; round
+    # 45 measures the smaller heads it used to allow), on the recess floor less the bridging slot (round 35)
     from shapely.geometry import Point, box as sbox
-    head = (Point(0, 0).buffer(2.35, 256) - sbox(-5, -case.SCREW_HOLE_R, 5, case.SCREW_HOLE_R)).area
+    head = (Point(0, 0).buffer(2.5, 256) - sbox(-5, -case.SCREW_HOLE_R, 5, case.SCREW_HOLE_R)).area
     foot = math.pi * (2.1 ** 2 - case.SCREW_HOLE_R ** 2)        # standoff top ring inside the hole's edge
     report(F / head < 40 and F / foot < 30, f"PLA under a snug screw (100 N): {F / head:.0f} MPa under the head, "
                                             f"{F / foot:.0f} MPa on the standoff top (PLA yields at about 60)")
