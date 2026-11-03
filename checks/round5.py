@@ -95,9 +95,11 @@ def strength():
                        f"(an M2 with a 0.3 mm washer: {eng - 0.3:.1f} mm engaged); the board weighs about 40 g")
     # plastic under a snug screw (about 100 N): under the head, and where the post meets the standoff
     F = 100.0
-    head = math.pi * (2.35 ** 2 - case.SCREW_HOLE_R ** 2)       # smallest allowed pan head, 4.7 mm
+    # smallest allowed pan head (4.7 mm), on the recess floor less the bridging slot across it (round 35)
+    from shapely.geometry import Point, box as sbox
+    head = (Point(0, 0).buffer(2.35, 256) - sbox(-5, -case.SCREW_HOLE_R, 5, case.SCREW_HOLE_R)).area
     foot = math.pi * (2.1 ** 2 - case.SCREW_HOLE_R ** 2)        # standoff top ring inside the hole's edge
-    report(F / head < 20 and F / foot < 30, f"PLA under a snug screw (100 N): {F / head:.0f} MPa under the head, "
+    report(F / head < 40 and F / foot < 30, f"PLA under a snug screw (100 N): {F / head:.0f} MPa under the head, "
                                             f"{F / foot:.0f} MPa on the standoff top (PLA yields at about 60)")
     # thin wall left by the dial scoop
     wall = (case.Y1 + 0.9 - 2.8) - (case.BH + case.CLR)

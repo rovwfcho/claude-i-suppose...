@@ -8,7 +8,7 @@
    intended would show up as a difference.
 2. Pictures and the text that points at them: in both guides every picture's markers must all be
    explained in its legend, and every legend entry must have a marker; where the text sends you to a
-   marker ("marked 3 in the picture above"), that marker's legend must be about the same thing.
+   marker ("marked 3 in the picture below"), that marker's legend must be about the same thing.
 3. Is the measured battery plausible? 1500 mAh at 3.7 V in the measured 61.1 x 40.7 x 4.3 mm is an
    energy density that must fall in the range LiPo pouch cells actually have (300-750 Wh/L); a
    misread thickness or width would show up as an impossible cell.
@@ -111,17 +111,17 @@ def figures():
             if set(mk) != leg:
                 bad.append(f"{lang} {name}: markers {sorted(set(mk))} vs legend {sorted(leg)}")
         # text that sends you to a marker
-        refs = {"en": (r"marked (\d) in the picture above", "s3", "fig2", "foam"),
-                "bg": (r"означени с (\d) на горната снимка", "s3", "fig2", "пяна")}[lang]
+        refs = {"en": (r"marked (\d) in the picture below", "s2_warn", "fig2", "corner posts"),
+                "bg": (r"означени с (\d) на долната снимка", "s2_warn", "fig2", "стълбчета")}[lang]
         m = re.search(refs[0], T[refs[1]])
         if not m:
-            bad.append(f"{lang}: the foam step no longer points at a marker")
+            bad.append(f"{lang}: the warning no longer points at the posts' marker")
         else:
             entry = dict(T[refs[2]]).get(m.group(1), "")
             if refs[3] not in entry.lower():
                 bad.append(f"{lang}: '{m.group(0)}' points at legend {m.group(1)}: '{entry}'")
-    report(not bad, f"{len(calls)} pictures in each guide: every marker in its legend and back, and the foam step's "
-                    f"'marked 3' points at the foam: {bad or 'yes'}")
+    report(not bad, f"{len(calls)} pictures in each guide: every marker in its legend and back, and the warning's "
+                    f"'marked 3' points at the corner posts: {bad or 'yes'}")
 
 
 # ------------------------------------------------------------------ 3

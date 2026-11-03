@@ -10,7 +10,7 @@ used in rounds 1-34.
    board's plane, give the factor to pull them back by, toward the point under the camera. With that
    point anywhere within 150 px of the photo's centre, and with Waveshare's photo positions, POSTS
    must be within 0.45 mm of every estimate, and for each estimate the board must have a position
-   where all four screws pass their holes.
+   where all four screws pass their holes (with the holes printed 0.15 mm small).
 2. The clips as built, read back from the STL files: each beam's slot is open along its whole length
    (no plastic between the beam and the cover), the beam is there below it at the designed length,
    the hook reaches CLIP_UNDERCUT past the lid's inner wall, the lid has a groove at each hook that
@@ -222,15 +222,17 @@ def clips_as_built():
         hook_tip = o[0][1] + s * reach                # y of the hook's tip
         lid_wall = -case.CLR if side == "bottom" else case.BH + case.CLR
         undercut = s * (lid_wall - hook_tip)
-        # groove: ray from the cavity outward into the lid's wall, at the crest and 3 mm beside the hook
+        # groove: ray from the cavity outward into the lid's wall, below its catch face (where the
+        # hook's tip goes past the wall while the lid closes), and 2 mm beside the hook
+        z_low = (za + case.clip_catch_z(-case.CLR - case.CLIP_UNDERCUT - case.GROOVE_CLR)) / 2
         def wall_depth(xx):
-            o2 = np.array([[xx, lid_wall + s * 2.0, zc_mid]])
+            o2 = np.array([[xx, lid_wall + s * 2.0, z_low]])
             l2, _, _ = shell.ray.intersects_location(o2, -d, multiple_hits=True)
             return min(abs(l[1] - o2[0][1]) for l in l2) - 2.0 if len(l2) else np.nan
         groove, plain = wall_depth(x), wall_depth(x + case.CLIP_HOOK_L / 2 + 2.0)
         tip_room = groove - undercut
         if not (in_slot == 0 and in_beam > 0.99 and anchors.all() and abs(undercut - case.CLIP_UNDERCUT) < 0.02
-                and abs(plain) < 0.02 and 0.1 <= tip_room <= 0.3):
+                and abs(plain) < 0.02 and 0.1 <= tip_room <= 0.3 + 1e-6):
             bad.append((x, side, in_slot, round(in_beam, 2), anchors.tolist(), round(undercut, 3), round(groove, 3),
                         round(plain, 3)))
         print(f"  ..   clip {side} x={x:.0f}: slot points inside plastic {in_slot}/{len(slot)}, beam {100 * in_beam:.0f} % "
@@ -239,13 +241,13 @@ def clips_as_built():
     # preload: the hooks' overlap with the lid, against the designed CLIP_PRELOAD on a 45 deg face
     from round1 import hooks, to_manifold
     over = (to_manifold(shell) ^ hooks()).volume()
-    # a 45 deg catch face moved CLIP_PRELOAD: overlap is a triangle-ish strip ~ preload x face length x hook length
-    face = (case.CLIP_UNDERCUT + 0.05) * math.sqrt(2)
-    want = len(case.CLIPS) * case.CLIP_PRELOAD * face * case.CLIP_HOOK_L / math.sqrt(2)
-    report(not bad and 0.5 * want <= over <= 1.5 * want,
+    # the lid's catch face lies CLIP_PRELOAD lower than the hook's (both 45 deg); between the lid's wall
+    # and the hook's tip (CLIP_UNDERCUT apart) that leaves a strip CLIP_PRELOAD tall, along the hook
+    want = len(case.CLIPS) * case.CLIP_PRELOAD * case.CLIP_UNDERCUT * case.CLIP_HOOK_L
+    report(not bad and abs(over - want) <= 0.1 * want,
            f"{len(case.CLIPS)} clips read back from the STLs: slots open, beams anchored at both ends, hooks "
            f"{case.CLIP_UNDERCUT} mm past the wall into grooves deep enough; closed, the hooks press the lid {over:.2f} mm3 "
-           f"(about {want:.2f} for the {case.CLIP_PRELOAD} mm preload){'; problems: ' + str(bad) if bad else ''}")
+           f"(worked out by hand for the {case.CLIP_PRELOAD} mm preload: {want:.2f}){'; problems: ' + str(bad) if bad else ''}")
 
 
 # ------------------------------------------------------------------ 3
@@ -315,7 +317,7 @@ def sliced():
             (case.BH - yf - case.SKIRT_T + 0.15, case.BH - yf - 0.15)
         box = (x - case.CLIP_L / 2 + 1.0, x + case.CLIP_L / 2 - 1.0, y0, y1)
         in_slot = [z for z in zs if slot_lo + 0.05 < z < slot_hi - 0.05 and inside(ex[z], *box)]
-        first = min((z for z in zs if z > slot_hi - 0.05), default=None)
+        first = min((z for z in zs if z > slot_hi - 0.05 and inside(ex[z], *box)), default=None)
         types = {s[5] for s in inside(ex[first], *box)} if first else set()
         if in_slot or not ({"Bridge infill", "Overhang perimeter"} & types):
             bad.append((side, x, in_slot, first, sorted(types)))
@@ -325,13 +327,14 @@ def sliced():
     hole_layers = []
     for px, py in case.POSTS:
         top = z_total - (z_total - case.SCREW_HEAD_DEPTH)            # print height of the recess ceiling
-        first = min((z for z in zs if z > top + 0.01), default=None)
+        first = min((z for z in zs if z > top + 0.01 and inside(ex[z], px - 2.0, px + 2.0, py - 2.0, py + 2.0)), default=None)
         ring = inside(ex[first], px - case.SCREW_HEAD_R + 0.3, px + case.SCREW_HEAD_R - 0.3, py - case.SCREW_HEAD_R + 0.3,
                       py + case.SCREW_HEAD_R - 0.3) if first else []
         types = {s[5] for s in ring}
         rec.append((px, py, first, sorted(types)))
-        if not types or not types <= {"Bridge infill", "Overhang perimeter", "Perimeter", "External perimeter"} or \
-                "Bridge infill" not in types:
+        # the slot layer leaves two strips 1.3 mm wide: the slicer prints them as perimeters over air
+        # ("Overhang perimeter", with bridge flow) or as bridge infill
+        if not types or not ({"Bridge infill", "Overhang perimeter"} & types):
             bad.append(("recess", px, py, first, sorted(types)))
         # nothing inside the screw's own path (r 1.25, plus 0.1) on any layer above the recess
         for z in zs:

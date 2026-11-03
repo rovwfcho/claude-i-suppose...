@@ -136,14 +136,14 @@ def free_depth_under_bay():
 # ------------------------------------------------------------------ 2
 ID_EXPECT = {
     "parts": [["shell"], ["board", "panel", "standoffs", "wheel"], ["cover"], ["battery", "battery_end"],
-              ["speaker", "speaker_peg"], ["foam"]],
+              ["speaker", "speaker_peg"], ["cover"]],
     "step1": [["shell", "wheel", "board"], ["shell", "board"], ["shell", "board"],
               ["board", "panel", "standoffs"], ["shell", "board"]],
-    "step2": [["battery", "battery_end"], ["speaker"], ["foam"], ["foam"], ["foam"], ["foam"], ["wire_bat"],
+    "step2": [["battery", "battery_end"], ["speaker"], ["cover"], ["cover"], ["cover"], ["cover"], ["wire_bat"],
               ["wire_spk"], ["wire_bat"], ["coil_spk"], ["speaker_peg"]],
-    "step3": [["cover"], ["cover"], ["wheel", "shell"]],
-    "step4a": [["screws"], ["screws"], ["screws"]],
-    "step4b": [["screws"]],
+    "step3": [["cover"], ["cover"], ["wheel", "shell"], ["cover"], ["cover"], ["cover"], ["cover"]],
+    "step4a": [["screws"], ["screws"], ["screws"], ["screws"]],
+    "step4b": [["shell", "cover"]],
     "print": [["p_front"], ["p_cover"]],
 }
 
@@ -254,15 +254,19 @@ def numbers(got):
     bat = [f(got["battery length"]), f(got["battery width"]), f(got["battery thickness"])]
     spk = [f(got["speaker length"]), f(got["speaker width"]), f(got["speaker thickness"])]
     bay = [f(x1 - x0), f(y1 - y0)]
+    L = f"{case.SCREW_LEN:.0f}"
     facts = {
         "battery size": (trip(*bat, " x ") + " mm", trip(*bat, " × ") + " mm", trip(*bat, " × ").replace(".", ",") + " мм"),
         "bay": (" x ".join(bay) + " mm", " × ".join(bay) + " × 5 mm", " × ".join(bay).replace(".", ",") + " × 5 мм"),
         "speaker size": (trip(*spk, " x ") + " mm", trip(*spk, " × ") + " mm", trip(*spk, " × ").replace(".", ",") + " мм"),
         "wire routes": (f"about {lb} mm and {ls} mm", f"about {lb} mm and {ls} mm", f"около {lb} мм и {ls} мм"),
         "play": (f"about {slide:.1f} mm", f"about {slide:.1f} mm", f"около {slide:.1f} мм".replace(".", ",")),
-        "screws": ("5–6 mm long", "5–6 mm long", "5–6 мм"),
-        "screw limit": ("never longer than 7 mm", "Never longer than 7 mm", "по-дълги от 7 мм"),
-        "material": ("about 26 g of PLA", "PLA filament", "Филамент PLA"),
+        "screws": (f"4 × M2.5 × {L} mm screws", f"M2.5 × {L} mm screws", f"Винтове M2,5 × {L} мм"),
+        "screw length": (f"{L} mm long under the head", f"Exactly {L} mm", f"Точно {L} мм"),
+        "screw head": ("5.0 mm across and 1.8 mm tall", "5.0 mm across and 1.8 mm tall", "5,0 мм в диаметър и 1,8 мм висока"),
+        "M2 washers": ("5 mm across, 0.3 mm thick", "5 mm across, 0.3 mm thick", "5 мм в диаметър и 0,3 мм дебели"),
+        "standoff height": ("3–4 mm tall", "3–4 mm tall", "високи 3–4 мм"),
+        "material": ("about 27 g of PLA", "about 27 g", "около 27 г"),
         "speaker cable": ("10–11 cm", "10–11 cm", "10–11 см"),
     }
     missing = []

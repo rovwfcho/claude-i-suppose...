@@ -7,9 +7,9 @@
    line). From those edges the printed bay and pocket must be within 0.15 mm of the design at 0.1, 0.15
    and 0.2 mm layers, and leave the measured battery and speaker 0.3-1.2 mm on every side.
 2. The order of the work: the assembly steps of the README and of both guides are read in order, and
-   the actions that must come before others must do so: foam on the rings and the plugs in before the
-   cover goes on, threads pre-cut before the cover goes on, the cover turned over along the bottom edge
-   before it is lowered, and the screws driven only after that.
+   the actions that must come before others must do so: the board in the lid and the plugs in before
+   the cover goes on, the cover turned over along the bottom edge before it is lowered, the clips
+   clicked (the lid lines the board up) and only then the corner screws.
 3. Sound, a textbook estimate: the grille's open area against the membrane (want 25 % or more), and the
    Helmholtz resonance of the small air space in front of the membrane with the slots as its neck
    (want it above the audible range the speaker can play, 12 kHz), so the grille doesn't muffle it.
@@ -135,18 +135,18 @@ def order():
     sect = readme.split("## Assembly", 1)[1].split("## Where the numbers", 1)[0]
     en = json.load(open(os.path.join(ROOT, "docs", "guide-src", "text_en.json"), encoding="utf-8"))
     bg = json.load(open(os.path.join(ROOT, "docs", "guide-src", "text_bg.json"), encoding="utf-8"))
-    steps = ("s1", "s2", "s2_warn", "s3", "s4", "s5", "s5_note")
+    steps = ("s1", "s2", "s2_warn", "s3", "s4", "s4_note")
     docs = {"README": sect,
             "EN guide": "\n".join(en[k] for k in steps),
             "BG guide": "\n".join(bg[k] for k in steps)}
     # (action, regex in English, regex in Bulgarian); the list is the order they must appear in
     actions = [
+        ("board into the lid", r"board face-down into the front lid|Put the board in <b>display side down", r"Сложете платката вътре"),
         ("plug in", r"into \*?\*?<?b?>?BAT|Plug the battery into", r"Включете батерията"),
-        ("foam on the rings", r"foam tape, about 1\.5", r"лентата от пяна, около 1,5"),
-        ("pre-cut the threads", r"[Pp]re-cut the threads", r"нарежете резбите"),
         ("turn the cover over along the bottom edge", r"page of a book", r"страница на книга"),
         ("lower it straight down", r"lower it straight down|lower it <b>straight down", r"спуснете <b>право надолу|право надолу"),
-        ("drive in the screws", r"drive in the 4 screws", r"завийте 4-те винта"),
+        ("the clips click", r"all four clips click|all 4 clips click", r"и 4-те щипки щракнат"),
+        ("drive in the screws", r"Drive in the \*\*4 corner screws|Drive one screw into each corner", r"Завийте по един винт"),
     ]
     problems_here = []
     for doc, text in docs.items():
@@ -157,11 +157,12 @@ def order():
         missing = [n for n, p in pos if p is None]
         found = [(n, p) for n, p in pos if p is not None]
         wrong = [f"{a} after {b}" for (a, pa), (b, pb) in zip(found[1:], found[:-1]) if pa < pb]
-        # foam is in its own step in the guides (step 3) and inside step 2 in the README: both before closing
+        # the lid clicks on first, so it lines the board up; the screws go in after
         if missing or wrong:
             problems_here.append(f"{doc}: missing {missing or 'none'}, out of order {wrong or 'none'}")
-    report(not problems_here, f"assembly order in the README and both guides (plugs, foam, pre-cut threads, turn over "
-                              f"along the bottom edge, lower straight down, screws): {problems_here or 'right in all three'}")
+    report(not problems_here, f"assembly order in the README and both guides (board into the lid, plugs, turn over along "
+                              f"the bottom edge, lower straight down, clips click, corner screws): "
+                              f"{problems_here or 'right in all three'}")
 
 
 # ------------------------------------------------------------------ 3

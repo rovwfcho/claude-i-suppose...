@@ -46,9 +46,9 @@ TAIL_X1 = 7.0                    # panel tail / driver-IC strip on the left
 
 # brass standoffs on the back (front-view coordinates). Waveshare's photos put them at x 2.2 / 96.7,
 # y 2.85 / 57.4; the owner's back photo (round 35, corrected for the standoff tops being nearer the
-# camera than the board) at x 2.2-2.7 / 97.1-97.2, y 2.3-2.9 / 57.1-57.4. The best estimate is the
-# symmetric layout below, 94.6 x 54.55 mm apart; every estimate is within 0.45 mm of it and most
-# within 0.3, and the screw holes take 0.4 mm either way.
+# camera than the board) at x 2.4-2.7 / 97.0-97.4, y 2.3-3.1 / 57.0-57.4. The best estimate is the
+# symmetric layout below, 94.6 x 54.55 mm apart; every estimate is within 0.45 mm of it, and for each
+# the board can sit with no screw more than 0.3 mm off its hole's centre (the holes take 0.4).
 POSTS = [(2.45, 2.725), (97.05, 2.725), (2.45, 57.275), (97.05, 57.275)]
 STANDOFF_D = 4.5                 # measured outer diameter incl. photo blur
 STANDOFF_H = 4.0                 # the owner's are 3-4 mm; the case is built for 4 (see POST_Z)
@@ -132,6 +132,10 @@ SCREW_HOLE_R = 1.7               # 3.4 mm: an M2.5 (or M2) passes with 0.4 mm to
 SCREW_HEAD_R = 3.0               # 6.0 mm recess for a 5 mm head (or a 5 mm M2 washer) 0.4 mm off centre
 SCREW_HEAD_DEPTH = T_BACK        # recess floor = the inside face of the back: heads up to 1.8 mm are flush
 SCREW_LEN = 8.0                  # under the head
+# the recess is printed face down, so its ceiling is a bridge: the first 0.2 mm over it is cut as a
+# slot across the whole recess (two bridges, ends on the recess wall), the next 0.2 mm as a square
+# (bridged across the slot), and only then the round hole; the head sits on the first layer
+RECESS_BRIDGE = 0.2
 # snap clips: four springy beams in the back cover's skirt along the long walls, each a bridge fixed
 # at both ends that bends in the plane of the print layers (the strong direction in PLA). A hook on
 # its middle catches a groove inside the lid's wall. (beam centre x, wall)
@@ -560,10 +564,15 @@ def back_cover(z_total, variant):
     for x in (93.0, 95.2):
         t -= slot_z(x - 0.6, x + 0.6, 40.5, 47.5, z_in - 1, z_total + 1)
 
-    # corner screws: clearance hole through each post, recess for the head in the back face
+    # corner screws: clearance hole through each post, recess for the head in the back face, and the
+    # two bridging layers over the recess (slot, then square) that let its ceiling print cleanly
     for px, py in POSTS:
-        t -= cyl_z(px, py, SCREW_HOLE_R, POST_Z - 1, z_total + 1)
-        t -= cyl_z(px, py, SCREW_HEAD_R, z_total - SCREW_HEAD_DEPTH, z_total + 1)
+        seat = z_total - SCREW_HEAD_DEPTH
+        b, rh, rr = RECESS_BRIDGE, SCREW_HOLE_R, SCREW_HEAD_R
+        t -= cyl_z(px, py, rh, POST_Z - 1, z_total + 1)
+        t -= cyl_z(px, py, rr, seat, z_total + 1)
+        t -= box(px - rr, px + rr, py - rh, py + rh, seat - b, seat + 0.01) ^ cyl_z(px, py, rr, seat - b - 0.01, seat + 0.02)
+        t -= box(px - rh, px + rh, py - rh, py + rh, seat - 2 * b, seat - b + 0.01)
     return t
 
 

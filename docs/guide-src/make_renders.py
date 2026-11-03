@@ -84,15 +84,15 @@ def screw_picture(font):
     pts = json.load(open(os.path.join(G, "labels.json")))[name]["labels"]
     white = Image.new("RGB", im.size, (255, 255, 255))
     x0, y0, x1, y1 = ImageChops.difference(im, white).getbbox()
-    im = im.crop((x0 - 40, y0 - 90, x1 + 40, y1 + 40))
+    im = im.crop((x0 - 40, y0 - 100, x1 + 40, y1 + 40))
     d = ImageDraw.Draw(im)
     small = ImageFont.truetype(FONT, 22)
     for i, (x, y) in enumerate(pts, 1):
-        x, y = x - (x0 - 40), y - (y0 - 90)
+        x, y = x - (x0 - 40), y - (y0 - 100)
         d.ellipse([x - 17, y - 17, x + 17, y + 17], fill=(224, 90, 0), outline=(255, 255, 255), width=3)
         d.text((x, y), str(i), font=small, fill=(255, 255, 255), anchor="mm")
-    d.text((24, 22), "The 4 corner screws (M2.5 x 8, from the back, into the board's brass standoffs)", font=font,
-           fill=(29, 29, 31))
+    d.text((24, 12), "The 4 corner screws", font=font, fill=(29, 29, 31))
+    d.text((24, 46), "M2.5 x 8 from the back, into the board's brass standoffs", font=small, fill=(90, 90, 96))
     out = os.path.join(ROOT, "preview", "screw_locations.png")
     im.save(out, optimize=True)
     print("wrote", out)

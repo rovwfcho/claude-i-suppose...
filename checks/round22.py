@@ -13,6 +13,7 @@
 
 The material values are typical published figures, not measured; treat the results as estimates.
 """
+import math
 import os
 import sys
 
@@ -93,13 +94,13 @@ def clips():
     P = 192 * E * I * d / L ** 3                  # fixed-fixed beam, load in the middle
     eps = 12 * d * t / L ** 2
     mu = 0.3
-    lead = math.radians(90 - (90 - case.RIM_CHAMFER[1]))    # the lid's 30 deg rim chamfer does the pushing
+    lead = math.radians(case.RIM_CHAMFER[1])      # the lid's 30 deg rim chamfer does the pushing
     catch = math.radians(case.CLIP_CATCH)
     close = P * (math.tan(lead) + mu) / (1 - mu * math.tan(lead))
     pull = P * (math.tan(catch) + mu) / (1 - mu * math.tan(catch))
     pre = 12 * case.CLIP_PRELOAD * t / L ** 2
     n = len(case.CLIPS)
-    report(eps <= 0.015 and pre <= 0.005 and n * pull >= 2 * n * close * 0.5 and n * pull >= 30,
+    report(eps <= 0.015 and pre <= 0.005 and pull > close and n * pull >= 30,
            f"clip beams {L:.0f} x {t} x {h:.1f} mm: {100 * eps:.2f} % strain at full bend ({d} mm), "
            f"{100 * pre:.2f} % while closed; about {n * close:.0f} N to close, {n * pull:.0f} N to pull the lid "
            f"straight off ({n} clips)")
