@@ -134,17 +134,17 @@ BTN_BEVEL = 1.2                          # outer edges of the opening bevelled s
 # (or M2 x 8 with a washer, if the standoffs turn out to be M2) per corner, from the back. Each post
 # stands on a standoff's top, where a 4 mm standoff ends, so an 8 mm screw seated in the recess goes
 # 2.6 mm into the standoff (safe for 3 and 4 mm standoffs: with 3 mm ones its tip stops 0.4 mm short
-# of the PCB). The recess sinks heads up to 2.1 mm tall (ISO 7045 M2.5, the tallest pan head) and
-# 5 mm across, with room for the screw to sit 0.4 mm off centre.
+# of the PCB). The recess sinks heads up to 2.0 mm tall (DIN 7985 M2.5, the taller of the two pan-head
+# standards) and 5 mm across, with room for the screw to sit 0.4 mm off centre.
 POST_STANDOFF = 4.0              # the standoff height the posts are built for (3-4 mm standoffs fit)
 POST_Z = Z_B + POST_STANDOFF     # post end (the standoff top)
 POST_R = 3.6
 POST_CORNER_R = 3.0              # plan radius of the posts' outer corners (the lid's inside corners: 2.3)
 SCREW_HOLE_R = 1.7               # 3.4 mm: an M2.5 (or M2) passes with 0.4 mm to spare
 SCREW_HEAD_R = 3.1               # 6.2 mm recess: a 5 mm head (or a 5 mm M2 washer) fits 0.6 mm off centre
-SCREW_HEAD_K = 2.1               # the tallest head the README allows (ISO 7045 M2.5: k max 2.1; DIN 7985: 2.0)
-SCREW_HEAD_DEPTH = 2.4           # recess depth, 0.6 mm into the post: such a head sits 0.3 mm inside the back
-                                 # face, 0.1 mm when the slicer's thick bridges print the ceiling 0.2 mm lower
+SCREW_HEAD_K = 2.0               # the tallest head the README allows (DIN 7985 M2.5; ISO 7045's is a little lower)
+SCREW_HEAD_DEPTH = 2.4           # recess depth, 0.6 mm into the post: such a head sits 0.4 mm inside the back
+                                 # face, 0.2 mm when the slicer's thick bridges print the ceiling 0.2 mm lower
 SCREW_LEN = 8.0                  # under the head
 # the recess is printed face down, so its ceiling is a bridge: the first 0.2 mm over it is cut as a
 # slot across the whole recess (two bridges, ends on the recess wall), the next 0.2 mm as a square

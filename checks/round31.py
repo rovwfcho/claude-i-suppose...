@@ -196,8 +196,8 @@ def readme_inventory():
         f"{x1p - x0p:.1f}": "POSTS spacing in x", f"{y1p - y0p:.2f}": "POSTS spacing in y",
         "96.7": "Waveshare's estimate (round 35)", "2.85": "Waveshare's estimate (round 35)", "57.4": "Waveshare's estimate",
         "0.45": "round 35's limit for the estimates", "150": "round 35's camera-axis range",
-        f1(2 * case.SCREW_HEAD_R): "recess diameter", "5.0": "largest head (ISO 7045 M2.5: 5.0 x 2.1)",
-        f1(case.SCREW_HEAD_K): "ISO 7045 M2.5 head height (k max)", "2.0": "DIN 7985 M2.5 head height",
+        f1(2 * case.SCREW_HEAD_R): "recess diameter", "5.0": "largest head (ISO 7045 / DIN 7985 M2.5: 5.0)",
+        f1(case.SCREW_HEAD_K): "tallest head allowed (DIN 7985 M2.5)",
         "7045": "ISO 7045", "7985": "DIN 7985", "7089": "ISO 7089", "125": "DIN 125",
         f1(case.SCREW_HEAD_DEPTH): "recess depth (SCREW_HEAD_DEPTH)",
         f1(case.SCREW_LEN - (case.Z_B + case.CAVITY["battery"] + case.T_BACK - case.SCREW_HEAD_DEPTH - case.POST_Z)):
@@ -229,6 +229,7 @@ def readme_inventory():
         f1((mx.ACTIVE[0] + mx.ACTIVE[1]) / 2): "drawing's picture centre", "51.3": "text centre (round 44)",
         "16.0": "ruler scale at the left end (round 44)", "15.5": "ruler scale at the right end (round 44)",
         "44": "round 44", "45": "round 45", "46": "round 46",
+        "2.3": "clip anchor stub by the button opening (round 46)", "2": "clip anchor stub between the bottom beams (round 46)", "2.4": "recess depth / clip anchor stub by the dial notch",
     })
     m = re.search(r"about (\d+) g of PLA", new)
     if m:

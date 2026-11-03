@@ -24,6 +24,9 @@
      strand over it; at least 0.5 mm of air, so the beam can't fuse to the cover;
    - each screw recess: from the bed (the back face) to the underside of the first strand where the
      head bears; at least SCREW_HEAD_K (the tallest head the README allows), so the head is flush.
+4. The clip beams' ends, as built: along each long wall, just inside the cover's rim (under the
+   slots' floor), where the skirt is joined to the cover; the stubs each beam ends on are measured,
+   and the README must give the short ones it warns about.
 """
 import os
 import sys
@@ -234,11 +237,49 @@ def air_as_sliced():
                  + f" (the tallest head allowed: {case.SCREW_HEAD_K} mm)")
 
 
+# ------------------------------------------------------------------ 4
+def anchors():
+    from round1 import load_assembled as la
+    _, _, cover, _ = la("battery")
+    yf = -case.CLR + case.SKIRT_CLR
+    z = case.Z_SPLIT + case.CLIP_SLOT_FLOOR / 2
+    xs = np.arange(-1.0, 101.0, 0.05)
+    stubs = {}
+    for side, ym in (("bottom", yf + case.SKIRT_T / 2), ("top", case.BH - yf - case.SKIRT_T / 2)):
+        solid = cover.contains(np.column_stack([xs, np.full_like(xs, ym), np.full_like(xs, z)]))
+        segs, start = [], None
+        for x, f in zip(xs, solid):
+            if f and start is None:
+                start = x
+            if not f and start is not None:
+                segs.append((start, x))
+                start = None
+        if start is not None:
+            segs.append((start, xs[-1]))
+        for x, s in case.CLIPS:
+            if s != side:
+                continue
+            for end in (x - case.CLIP_L / 2, x + case.CLIP_L / 2):
+                near = [b - a for a, b in segs if a - 0.1 <= end <= b + 0.1]
+                stubs[(side, x, end)] = near[0] if near else 0.0
+    short = {k: v for k, v in stubs.items() if v < 3.0}
+    import re
+    readme = open(os.path.join(ROOT, "README.md"), encoding="utf-8").read()
+    m = re.search(r"short stubs of skirt \(([^)]*)\)", readme)
+    stated = [float(v) for v in re.findall(r"([\d.]+) mm", m.group(1))] if m else []
+    vals = sorted({round(v, 1) for v in short.values()})
+    said = len(stated) == len(vals) and all(abs(a - b) < 0.1 for a, b in zip(sorted(stated), vals))
+    report(all(v > 1.5 for v in stubs.values()) and said,
+           "clip beams' ends, joined to the cover: " + ", ".join(f"{s} x {e:.0f}: {v:.1f} mm" for (s, _, e), v in stubs.items())
+           + f"; the short ones ({', '.join(f'{v:.1f}' for v in vals)} mm) {'are' if said else 'are NOT'} in the README")
+
+
 if __name__ == "__main__":
     lip()
     back_plate()
     bed_band()
     air_as_sliced()
+    anchors()
     print(f"\nRound 46: {len(problems)} problem(s)")
     for p in problems:
         print("  -", p)

@@ -59,11 +59,11 @@ def guides_inventory():
     m = re.search(r"about (\d+) g", json.dumps(json.load(open(os.path.join(g, "text_en.json"), encoding="utf-8"))))
     explain = {
         f"{case.SCREW_HOLE_R - 1.25:.1f}"[:3]: "the holes' play (SCREW_HOLE_R - 1.25 = 0.45, 'allow 0.4')",
-        f"{case.SCREW_HEAD_K:.1f}": "tallest head (SCREW_HEAD_K, ISO 7045 M2.5)",
+        f"{case.SCREW_HEAD_K:.1f}": "tallest head (SCREW_HEAD_K, DIN 7985 M2.5)",
         f"{case.PAD_GAP + case.STANDOFF_H - case.STANDOFF_H_MIN:.1f}": "board to the posts before screwing, 3 mm standoffs",
         f"{2 * 2.5:.1f}": "largest head, 5.0 mm (the checks' head model)",
         f"{back:.0f}": f"back cover volume ({back:.1f} cm3 in the STL)",
-        "7045": "ISO 7045", "7089": "ISO 7089", "125": "DIN 125",
+        "7045": "ISO 7045", "7985": "DIN 7985", "7089": "ISO 7089", "125": "DIN 125",
         "0.7": "the standoff estimates' spread (round 35: Waveshare's photos vs yours, up to 0.7 mm)",
     }
     if m:

@@ -230,7 +230,7 @@ def check_screws(variant):
     so = case.board_model()["standoffs"]
     for px, py in case.POSTS:
         seat = z_total - case.SCREW_HEAD_DEPTH
-        head = case.cyl_z(px, py, 2.5, seat, seat + case.SCREW_HEAD_K)  # pan head 5 x 2.1 (the largest allowed)
+        head = case.cyl_z(px, py, 2.5, seat, seat + case.SCREW_HEAD_K)  # pan head 5 x 2.0 (the largest allowed)
         shank = case.cyl_z(px, py, 1.25, seat - case.SCREW_LEN, seat)  # M2.5 x 8
         bite = vol(shank ^ so) / (np.pi * 1.25 ** 2)
         # the screw may sit 0.4 mm off centre (standoff position uncertainty) and still clear the cover
