@@ -39,10 +39,13 @@ PANEL_T = 1.2                    # e-paper glass + adhesive, estimated from phot
 
 # display window (active area 86.40 x 51.84 plus margin)
 # Waveshare's dimension drawing puts the active area at x 9.3-95.7, y 4.1-55.9; the photos put the
-# grey field at x 7.4-96.5, y 3.6-58.1. This window covers the drawing's area with >= 0.7 mm to spare.
-WIN_CX, WIN_CY = 52.4, 30.2
-WIN_W, WIN_H, WIN_R = 88.0, 53.6, 1.0
-TAIL_X1 = 7.0                    # panel tail / driver-IC strip on the left
+# grey field at x 7.4-96.5, y 3.6-58.1. In the owner's front photo (round 44) the light field runs
+# x 8.0-95.2 and the centred text sits 1.2 mm left of the drawing's centre, so the picture may start
+# up to about 1.2 mm earlier than the drawing says: the window reaches 0.7 mm further left than the
+# drawing alone would need (to x 7.7), and still covers the drawing's area with >= 0.7 mm to spare.
+WIN_CX, WIN_CY = 52.05, 30.2
+WIN_W, WIN_H, WIN_R = 88.7, 53.6, 1.0
+TAIL_X1 = 6.9                    # panel tail / driver-IC strip on the left (0.8 mm of plate left before the window)
 
 # brass standoffs on the back (front-view coordinates). Waveshare's photos put them at x 2.2 / 96.7,
 # y 2.85 / 57.4; the owner's back photo (round 35, corrected for the standoff tops being nearer the

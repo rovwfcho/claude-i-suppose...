@@ -1,5 +1,6 @@
 #!/bin/sh
-# Rebuild docs/assembly_guide_en.pdf, docs/assembly_guide_bg.pdf and preview/renders.png from case.py.
+# Rebuild docs/assembly_guide_en.pdf, docs/assembly_guide_bg.pdf, preview/renders.png and preview/explained.png
+# from case.py.
 # Needs python3 (manifold3d numpy pillow), node with playwright and its Chromium, and network access
 # to registry.npmjs.org the first time (for three.js r160).
 set -e
@@ -21,6 +22,9 @@ trap 'kill $SERVER' EXIT
 sleep 1
 node shoot.js renders_specs.json
 python3 make_renders.py compose
+python3 make_explained.py specs
+node shoot.js explained_specs.json
+python3 make_explained.py compose
 node shoot.js specs.json
 mkdir -p out
 python3 build.py en bg

@@ -124,8 +124,9 @@ def frame_widths():
     s = f"It starts {a0:.1f} mm from the left PCB edge but ends {a1:.1f} mm from the right one"
     report(s in text, f"README: '{s}': {s in text}")
     m0, m1 = a0 - (case.WIN_CX - case.WIN_W / 2), (case.WIN_CX + case.WIN_W / 2) - 95.7
-    report(abs(m0 - 0.9) < 0.05 and abs(m1 - 0.7) < 0.05,
-           f"window margin around the picture area: {m0:.2f} mm left, {m1:.2f} mm right (explained.png says 0.7-0.9)")
+    said = f"at least 0.7 mm of margin all round, and {m0:.1f} mm on the left" in text
+    report(m0 >= 0.7 and m1 >= 0.7 and said,
+           f"window margin around the drawing's picture area: {m0:.2f} mm left, {m1:.2f} mm right; the README says so: {said}")
 
 
 # ------------------------------------------------------------------ 3
