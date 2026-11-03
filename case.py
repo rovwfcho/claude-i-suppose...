@@ -89,6 +89,11 @@ GRILLE_SLOTS = (0.9, 7.0, 1.8)            # three slots along y: width, length, 
 # board's solder pads round it; its shield can ends at x 92.9 and the antenna runs from there to the edge
 ESP32_MODULE = (73.0, 99.5, 20.5, 40.3)  # x0, x1, y0, y1 (with the pads, a little generous)
 ANTENNA = (92.6, 99.5, 20.5, 40.3)       # x0, x1, y0, y1 of the module's antenna end
+# the BAT, RTC and SPK headers on the back, in the same photo (round 47): white housings x 29.3-38.1,
+# 40.7-49.5 and 52.2-60.9, from y 2.7 (RTC's ends at y 7.8); the plugs in BAT and SPK reach y 8.3 and
+# 8.6. Modelled at least 0.1 mm larger all round; plugs only in BAT and SPK (nothing goes into RTC)
+HEADERS = {"BAT": (29.1, 38.3), "RTC": (40.6, 49.8), "SPK": (52.0, 61.2)}   # x0, x1
+HEADER_Y, PLUG_Y1, HEADER_H = (2.5, 7.9), 8.7, 3.5                     # housing y0, y1; plug face; height
 # Battery: the owner's Waveshare 3.7 V 1500 mAh LiPo (model 454261), measured against a ruler in their
 # photos (round 28): 61.1 x 40.7 x 4.3 mm including its taped protection-board end (+/-0.3). Its wires
 # leave that end at one corner. The bay is 62.5 x 42.5 mm (1.4 and 1.8 mm more than the cell, so it
@@ -480,19 +485,21 @@ def battery_guides():
 def battery_wire_route():
     """Battery wire: leaves the taped end at its bottom corner, drops beside the bay, runs along the
     bottom of the board over the microSD socket and under the battery (clear of the corner screw
-    post), and ends in front of BAT."""
+    post), and ends at the face of the BAT plug (round 47: the headers from the owner's photo)."""
     x0, x1, y0, y1 = BATTERY_BAY
     z_in = Z_B + CAVITY["battery"]
     zs = Z_B + 1.9 + 1.25             # resting on top of the microSD socket (1.9 mm tall)
-    return [(x0 - 1.4, y0 + 3.5, z_in - BATTERY_SPACE / 2), (3.9, y0 + 3.5, zs), (3.9, 7.9, zs),
-            (34.0, 7.9, zs), (34.0, 6.4, zs)], 1.25
+    r = 1.25
+    yr = PLUG_Y1 + r + 0.05          # the run, just clear of the headers and the plugs
+    xb = sum(HEADERS["BAT"]) / 2
+    return [(x0 - 1.4, yr, z_in - BATTERY_SPACE / 2), (3.9, yr, zs), (xb, yr, zs)], r
 
 
 def speaker_wire_route():
     """Speaker cable (2.8 mm thick where it is sleeved): its thin leads leave the speaker's long side
     facing the battery (peg toward the top edge) and turn down the gap between the bay and the pocket;
     the sleeved part slopes down under the battery (no bend tighter than 3 mm) and runs to the front
-    of SPK (x 52.5-61.5)."""
+    of the SPK plug (x 52.0-61.2, round 47)."""
     sx, sy = SPEAKER["battery"]
     w, h, t = SPEAKER_BOX["battery"]
     z_in = Z_B + CAVITY["battery"]
@@ -500,8 +507,9 @@ def speaker_wire_route():
     zl = Z_B + 1.45 + r               # above the board's low parts (1.4 mm), under the battery
     xg = (BATTERY_BAY[1] + sx - w / 2 - SPK_BRACKET[0]) / 2   # middle of the gap between bay and pocket
     ye = sy + SPEAKER_SIZE[1] / 2 - SPK_CABLE_EXIT             # where the cable leaves the speaker
-    return [(sx - w / 2 - r - 0.05, ye, z_in - t / 2), (xg, ye, z_in - t / 2), (xg, 9.5, zl),
-            (57.0, 9.5, zl), (57.0, 6.4, zl)], r
+    yr = PLUG_Y1 + r + 0.05
+    return [(sx - w / 2 - r - 0.05, ye, z_in - t / 2), (xg, ye, z_in - t / 2), (xg, yr, zl),
+            (sum(HEADERS["SPK"]) / 2, yr, zl)], r
 
 
 def speaker_cable_coil():
@@ -601,6 +609,14 @@ def back_cover(z_total, variant):
     return t
 
 
+def headers(zb):
+    """The three headers, with the plugs in BAT and SPK."""
+    out = Manifold()
+    for name, (x0, x1) in HEADERS.items():
+        out += box(x0, x1, HEADER_Y[0], PLUG_Y1 if name != "RTC" else HEADER_Y[1], zb, zb + HEADER_H)
+    return out
+
+
 def board_model(standoff_h=STANDOFF_H):
     """Simplified board with the parts that matter for fit, screwed to the posts: with standoffs
     shorter than 4 mm the whole board sits that much further back (+z)."""
@@ -613,7 +629,7 @@ def board_model(standoff_h=STANDOFF_H):
         "usb_c": box(-0.4, 7.0, USB_Y - 4.47, USB_Y + 4.47, zb, zb + 3.26),
         "sd_socket": box(1.5, 15.5, 6.5, 21.4, zb, zb + 1.9),
         "esp32_module": box(*ESP32_MODULE, zb, zb + 3.3),
-        "connectors": box(29.5, 38.5, 0.5, 5.0, zb, zb + 3.5) + box(40.5, 49.5, 0.5, 5.0, zb, zb + 3.5)
+        "connectors": headers(zb)
         + box(52.5, 61.5, 0.5, 5.0, zb, zb + 3.5),
         "wheel": cyl_z(WHEEL[0], WHEEL[1], WHEEL[2], zb + 0.2, zb + 2.8),
         "wheel_body": box(WHEEL[0] - 6.5, WHEEL[0] + 6.5, 50.5, 58.5, zb, zb + 3.0),

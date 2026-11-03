@@ -131,14 +131,14 @@ def wires():
     spk = case.box(sx - w / 2, sx + w / 2, sy - h / 2, sy + h / 2, z_in - t, z_in)
     obst = S + C + every + bat + spk   # case, board parts, battery (whole bay) and speaker all count
     # battery wire: leaves the battery's end face, drops beside the bay, runs along the bottom of the
-    # board over the microSD socket and stops in front of the BAT header (x 29.5-38.5, y 0.5-5)
+    # board over the microSD socket and stops at the face of the BAT plug (case.HEADERS, from the photo in round 47)
     bat_path, rb = case.battery_wire_route()
     hit_b = vol(tube(bat_path, rb) ^ obst)
     Lb = sum(np.linalg.norm(np.subtract(a, b)) for a, b in zip(bat_path[:-1], bat_path[1:]))
     report(hit_b < 1e-3, f"battery wire route to the BAT header, clear of case, board parts, battery and speaker: "
                          f"{hit_b:.4f} mm3 (about {Lb:.0f} mm long; the wire is about 54 mm, round 30)")
     # speaker cable: leaves the speaker's long side facing the battery, drops through the gap between
-    # the bay and the pocket and runs under the battery to the front of the SPK header (x 52.5-61.5)
+    # the bay and the pocket and runs under the battery to the face of the SPK plug (case.HEADERS)
     spk_path, rs = case.speaker_wire_route()
     hit_s = vol(tube(spk_path, rs) ^ obst)
     Ls = sum(np.linalg.norm(np.subtract(a, b)) for a, b in zip(spk_path[:-1], spk_path[1:]))
