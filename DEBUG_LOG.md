@@ -619,3 +619,21 @@ You asked for the board to be held by four screws through its own corner standof
 
 **Mistakes found and fixed (design):**
 - **Three margins sat on their limit.** A 5 mm head 0.37 mm off centre had 0.025 mm to spare in the 6.0 mm recess, and a 0.1 mm deeper hook would have taken the clips over 1.8 % with print errors. The recesses are now 6.2 mm, the back edge is rounded 0.8 mm (so the corner wall stays 1.0 mm), and the beams are 28 mm (the figures above are for those).
+
+**Result of round 38 (all scripts, rounds 1–38, on the final geometry):** 381 checks passed, the same 4 SKIPPED. **Not clean:** besides round 38's own find above, the README still gave the lid as about 9 cm³; with the plate thinner over the glass it is about 8 cm³ (round 16). Corrected.
+
+**Check bugs:**
+- Round 38's first mistake (a post 0.8 mm off) was sent to `verify.py`, which cannot see it: moving `POSTS` moves the modelled standoffs with the holes. Only the photo measurement can, so it now goes to round 35, which catches it.
+- Round 31 had no rule for "27" once the clips stopped being 27 mm: it is now the PLA estimate, which round 19 checks against the slicer.
+- Round 20: rounds 38–40 were not yet in `checks/run_all.sh`.
+
+## Round 39: different methods
+**New methods:**
+- **The assembly in the guides' order, on the meshes,** with 4 mm and with 3 mm standoffs. The board is lowered face down into the lid until it rests on its pads; the glass must then be clear of the lid. With the cover clicked on, the posts must not reach the standoffs yet. Each screw, dropped through its hole onto its standoff, must catch at least one M2.5 thread (0.45 mm) before its head seats, then pull the board back off the pads until the standoff meets the post, ending 2 mm in.
+- **The lid as sliced:** in PrusaSlicer's G-code, no plastic inside the grooves over the layers they span, the lip printed above each, and the plate over the glass at its designed thickness.
+
+## Round 40: different methods
+**New methods:**
+- **The forces from the meshes:** round 36's bend curves (how far each hook is bent at each point of the lid's travel, found on the STLs) times the beams' stiffness, with the curve's slope as the angle the lid presses at. The peak push and the pull-off must match the README within 25 %.
+- **The same word for the same part** in the README and both guides: no "front shell", foam or pilot left outside file names; "преден капак", "втулки", "стълбчета" and "щипки" in Bulgarian, with no second name for any of them.
+- **Lying on its back:** the back face is the lowest plane, and a 1.8 mm head sits inside it.

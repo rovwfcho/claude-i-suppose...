@@ -203,6 +203,9 @@ def readme_inventory():
         "0.15": "print error per side (round 36)", f"{reach:.2f}": "hook reach with errors (round 36)",
         "35": "round 35",
     })
+    m = re.search(r"about (\d+) g of PLA", new)
+    if m:
+        explain[m.group(1)] = "PLA estimate (round 19 checks it against the slicer)"
     unexplained = [v for v in fresh if v not in explain]
     report(not unexplained, f"README: {len(fresh)} numbers new since session 4, each traced to case.py, a check or a "
                             f"measurement; unexplained: {unexplained or 'none'}")

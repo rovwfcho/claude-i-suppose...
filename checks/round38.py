@@ -37,7 +37,8 @@ def report(ok, msg):
 
 # ------------------------------------------------------------------ 1
 MUTANTS = [
-    ("a corner post 0.8 mm off its standoff", "POSTS = [(2.45, 2.725),", "POSTS = [(3.25, 2.725),", "verify.py"),
+    # POSTS moves the modelled standoff too, so only the photo measurement (round 35) can see it is wrong
+    ("a corner post 0.8 mm off its standoff", "POSTS = [(2.45, 2.725),", "POSTS = [(3.25, 2.725),", "checks/round35.py"),
     ("clip slots closed", "CLIP_SLOT = 0.6 ", "CLIP_SLOT = 0.0 ", "checks/round35.py"),
     ("hooks reaching only 0.1 mm", "CLIP_UNDERCUT = 0.55 ", "CLIP_UNDERCUT = 0.1 ", "checks/round36.py"),
     ("screw recesses 1.0 mm deep", "SCREW_HEAD_DEPTH = T_BACK ", "SCREW_HEAD_DEPTH = 1.0 ", "verify.py"),

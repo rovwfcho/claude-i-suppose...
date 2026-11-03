@@ -56,7 +56,7 @@ A two-piece case with rounded edges for the Waveshare ESP32-S3 3.97" e-Paper boa
 - **Front lid:** print display side down. The front edge uses an arc that ends in a 45° chamfer, so it prints cleanly against the bed.
 - **Back cover:** the STL is already flipped. Print it outside face down. The clip beams print as short bridges over their slots; keep the part cooling fan on.
 - **Material:** about 27 g of PLA for both parts with these settings (PrusaSlicer's estimate). Its generic profile estimates about 3 hours; a fast printer takes much less.
-- **Print the back cover first** (about 16 cm³) and lay it on the board's back: through each corner hole you should see the middle of a standoff's threaded hole, and each screw should start a few turns by hand. Then print the lid (about 9 cm³).
+- **Print the back cover first** (about 16 cm³) and lay it on the board's back: through each corner hole you should see the middle of a standoff's threaded hole, and each screw should start a few turns by hand. Then print the lid (about 8 cm³).
 
 ## Assembly
 
