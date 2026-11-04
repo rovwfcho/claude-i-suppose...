@@ -828,3 +828,13 @@ The full run with round 55 (run 10: 11 rounds run, 41 unchanged since they passe
 - **The README's Files table, the other way round:** round 12 checks that every file it names exists. Here every file and folder in the project is named in it, apart from the README itself and the tools' own settings (`.claude/`, `.gitignore`). While writing this check, it first flagged the README itself, which a Files table needn't list: that was a fault in the check, fixed before it ran.
 
 Round 56 found nothing.
+
+The full run with round 56 (run 11: 12 rounds run, 41 unchanged since they passed) found no problems: round 56 is clean.
+
+## Round 57: different methods
+**New methods** (`checks/round57.py`):
+- **Spelling, by a spell checker** (pyspellchecker's English word list): every word of the README, of the English guide and of the log's session-5 entries that the list doesn't know must be one of a short list of exceptions (British spellings such as centre and colour, units, names). One spelling must hold throughout: no word in both its British and its American form.
+- **The checks give the same answer twice:** rounds 52, 53 and 55 (random numbers, Chromium's layout, the meshes' booleans) are each run twice, and their output must be the same word for word.
+- **Enough random builds:** rounds 52 and 53 count rare events in 200 000 random builds. Each count must lie at least 5 standard errors under its 1 % limit, and five other random seeds must all stay under it too.
+
+Its first run flagged "booleans", "pyspellchecker's" and "txt" (from HOW-TO-USE.txt), all in the entries for rounds 56 and 57 written just before. All are spelled right: the check now leaves out file names and knows the two words. The Bulgarian guide isn't spell-checked: the checker has no Bulgarian word list (round 48 read it through).
