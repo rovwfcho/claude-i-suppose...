@@ -7,7 +7,11 @@
    more, so the walls are the limit. With the board pushed fully toward each wall, and into each
    corner, the window must still clear the light field in your photos (rounds 44 and 45) and the
    picture area on Waveshare's drawing by at least 0.1 mm on every side, and still cover the panel's
-   tail strip (TAIL_X1) on the left by at least 0.1 mm.
+   tail strip (TAIL_X1) on the left by at least 0.1 mm. The pads in front of the PCB's rim reach
+   deeper than the glass's front face, so with the board in any of those positions the glass must
+   also keep clear of them, and by more than its outline's measuring error (0.3 mm, the README's
+   figure for your photos): cut from the lid's STL at the pads' height, the nearest plastic to the
+   glass, moved 0.3 mm each way, must be at least 0.3 mm away.
 2. The lid's first layer, its true width. Round 46 measured the band of the lid's front face that
    lies on the bed along lines from the window's centre. At the corners those lines cross the band
    at a slant, so they read it wider than it is. Here every point of the band's inner edge is taken
@@ -16,6 +20,8 @@
 3. The download zip, file by file: every file in it must be byte for byte the file at the same
    place in the project, it must hold everything the README's Files table says the zip holds, and
    every picture the README shows must be in it, so the README reads the same inside the zip.
+4. Every picture the README and the guides show, looked at by me after rounds 47-49 changed the
+   connectors and the window (not a script). What it found is in DEBUG_LOG.md.
 """
 import contextlib
 import io
@@ -66,6 +72,28 @@ def window_with_play():
     report(ok, f"window with the board up to {p} mm off centre either way (worst of all 9 positions, mm to "
                f"spare): " + "; ".join(rows) + f"; the panel's tail strip stays {tail:.2f} mm under the frame "
                f"(want 0.1 everywhere)")
+
+
+def pads_and_glass():
+    import trimesh
+    from shapely.geometry import Polygon, box as sbox
+    from shapely.ops import unary_union
+    from round1 import load_assembled
+    shell = load_assembled("battery")[0]
+    g = case.board_model()["panel"].bounding_box()            # x0, y0, z0, x1, y1, z1
+    z = case.Z_PF - case.PAD_GAP - 0.05                       # just short of the pads' faces, inside the glass
+    sec = shell.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
+    planar, tf = sec.to_2D()
+    pts = lambda r: trimesh.transform_points(np.column_stack([np.asarray(r.coords), np.zeros(len(r.coords))]), tf)[:, :2]  # noqa: E731
+    lid = unary_union([Polygon(pts(p.exterior), [pts(r) for r in p.interiors]) for p in planar.polygons_full])
+    p, err = case.CLR, 0.3
+    edges = {"left": sbox(g[0] - p - 1e-3, g[1], g[0] - p, g[4]), "right": sbox(g[3] + p, g[1], g[3] + p + 1e-3, g[4]),
+             "bottom": sbox(g[0], g[1] - p - 1e-3, g[3], g[1] - p), "top": sbox(g[0], g[4] + p, g[3], g[4] + p + 1e-3)}
+    room = {k: e.distance(lid) for k, e in edges.items()}
+    report(min(room.values()) >= err - 1e-9 and g[2] < z < g[5],
+           f"glass ({g[0]:.2f}-{g[3]:.2f} x {g[1]:.2f}-{g[4]:.2f} mm) with the board {p} mm toward each wall, against "
+           f"the lid at the pads' height (z {z:.2f}): nearest plastic " + ", ".join(f"{k} {v:.2f}" for k, v in room.items())
+           + f" mm (want {err}, the measuring error)")
 
 
 # ------------------------------------------------------------------ 2
@@ -128,6 +156,7 @@ def download_zip():
 
 if __name__ == "__main__":
     window_with_play()
+    pads_and_glass()
     true_band()
     download_zip()
     print(f"\nRound 49: {len(problems)} problem(s)")

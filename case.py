@@ -332,7 +332,9 @@ def front_shell(z_total):
         (6, 18, -CLR - 0.1, 0.5), (40, 58, -CLR - 0.1, 0.5), (BTN_NOTCH[0] - 2, 94, -CLR - 0.1, 0.5),
         (6, 18, BH - 0.5, BH + CLR + 0.1), (35, 60, BH - 0.5, BH + CLR + 0.1),
         (88, 94, BH - 0.5, BH + CLR + 0.1),
-        (BW - 0.5, BW + CLR + 0.1, 5, 12), (BW - 0.5, BW + CLR + 0.1, 45, 55),
+        (BW - 0.3, BW + CLR + 0.1, 5, 12), (BW - 0.3, BW + CLR + 0.1, 45, 55),   # 0.3 under the PCB: the
+        # glass ends only 1.0 mm in from the PCB's right edge, so they keep 0.4 mm from it with the board
+        # 0.3 mm to the right (round 49)
     ]
     for x0, x1, y0, y1 in pads:
         s += box(x0, x1, y0, y1, T_FRONT - 0.1, Z_PF - PAD_GAP)
@@ -635,8 +637,7 @@ def board_model(standoff_h=STANDOFF_H):
         "usb_c": box(-0.4, 7.0, USB_Y - 4.47, USB_Y + 4.47, zb, zb + 3.26),
         "sd_socket": box(1.5, 15.5, 6.5, 21.4, zb, zb + 1.9),
         "esp32_module": box(*ESP32_MODULE, zb, zb + 3.3),
-        "connectors": headers(zb)
-        + box(52.5, 61.5, 0.5, 5.0, zb, zb + 3.5),
+        "connectors": headers(zb),
         "wheel": cyl_z(WHEEL[0], WHEEL[1], WHEEL[2], zb + 0.2, zb + 2.8),
         "wheel_body": box(WHEEL[0] - 6.5, WHEEL[0] + 6.5, 50.5, 58.5, zb, zb + 3.0),
     }
