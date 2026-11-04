@@ -49,8 +49,8 @@ def mutation():
     named = list(dict.fromkeys(re.findall(r"`([A-Z][A-Z0-9_]+)`", section)))
     src = open(os.path.join(ROOT, "case.py")).read()
     edits = {  # one small change per constant, made the way a user would make it
-        "WIN_CX": ("WIN_CX, WIN_CY = 52.05, 29.95", "WIN_CX, WIN_CY = 52.55, 29.95"),
-        "WIN_CY": ("WIN_CX, WIN_CY = 52.05, 29.95", "WIN_CX, WIN_CY = 52.05, 30.45"),
+        "WIN_CX": ("WIN_CX, WIN_CY = 52.0, 29.8", "WIN_CX, WIN_CY = 52.5, 29.8"),
+        "WIN_CY": ("WIN_CX, WIN_CY = 52.0, 29.8", "WIN_CX, WIN_CY = 52.0, 30.3"),
         "CLR": ("CLR = 0.3 ", "CLR = 0.4 "),
         "PANEL_T": ("PANEL_T = 1.2 ", "PANEL_T = 1.5 "),
         "PCB_T": ("PCB_T = 1.6 ", "PCB_T = 1.7 "),

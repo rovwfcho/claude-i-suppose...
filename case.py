@@ -43,17 +43,18 @@ PANEL_T = 1.2                    # e-paper glass + adhesive, estimated from phot
 # light field runs x 8.0-95.2 and the centred text sits 1.2 mm left of the drawing's centre, so the
 # picture may start up to about 1.2 mm earlier than the drawing says. In the two photos across the
 # board (round 45) the light field runs y 3.0-56.4. The board can sit up to CLR (0.3 mm) off centre in
-# the lid before the screws hold it (round 49), so the window runs x 7.5-96.4, y 2.6-57.0: with the
-# board pushed fully toward any wall it still clears the light field by at least 0.14 mm. It covers
-# the drawing's area with >= 0.7 mm to spare.
-WIN_CX, WIN_CY = 51.95, 29.8
-WIN_W, WIN_H, WIN_R = 88.9, 54.4, 0.5   # corners 0.5 mm round, so they don't clip the light field's (round 45)
+# the lid before the screws hold it (round 49), so the window runs x 7.6-96.4, y 2.6-57.0: with the
+# board pushed fully toward any wall it still clears the light field by at least 0.1 mm. It covers
+# the drawing's area with >= 0.7 mm to spare. (On the left it stops at 7.6, and the panel-tail relief
+# at 6.75, so the web between them is 0.85 mm, over two extrusion lines: round 50.)
+WIN_CX, WIN_CY = 52.0, 29.8
+WIN_W, WIN_H, WIN_R = 88.8, 54.4, 0.5   # corners 0.5 mm round, so they don't clip the light field's (round 45)
 WIN_CHAMFER = 0.8                       # chamfer on the outside: this deep, and this wide (45 deg) on the
-WIN_CHAMFER_LEFT = 0.6                  # top and right edges; narrower on the left and bottom ones, so the
+WIN_CHAMFER_LEFT = 0.7                  # top and right edges; narrower on the left and bottom ones, so the
 WIN_CHAMFER_BOTTOM = 0.5                # frame's front face (and its first layer on the bed) stays where a
                                         # 45 deg chamfer on a window x 7.7-96.4, y 2.9-57.0 put it (until
                                         # round 49), and the plate over the panel tail keeps its 0.1 mm
-TAIL_X1 = 6.8                    # panel tail / driver-IC strip on the left (the window's chamfer starts 0.1 mm past it)
+TAIL_X1 = 6.75                   # panel tail / driver-IC strip on the left (the window's chamfer starts 0.15 mm past it)
 
 # brass standoffs on the back (front-view coordinates). Waveshare's photos put them at x 2.2 / 96.7,
 # y 2.85 / 57.4; the owner's back photo (round 35, corrected for the standoff tops being nearer the
