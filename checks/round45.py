@@ -25,7 +25,7 @@
    heads the README recommends.
 4. The window as sliced: in PrusaSlicer's G-code for the lid (printed face down, mirrored for print),
    the opening's four edges, found along lines through the window's centre on four layers (two in the
-   45 deg chamfer, two in the straight part), must sit where case.py puts them, within 0.1 mm. That
+   chamfer, two in the straight part), must sit where case.py puts them, within 0.1 mm. That
    also confirms that the wide frame is on the end the printer actually prints it on.
 """
 import json
@@ -168,7 +168,7 @@ def clamp():
     warned = all(w in open(f, encoding="utf-8").read() for f, w in (
         (os.path.join(ROOT, "README.md"), "Not cheese or button heads"),
         (os.path.join(g, "text_en.py"), "Not cheese or button heads"),
-        (os.path.join(g, "text_bg.py"), "Не използвайте цилиндрични или плоски глави")))
+        (os.path.join(g, "text_bg.py"), "Не използвайте цилиндрични или полусферични (бутонни) глави")))
     recommended = [n for n in areas if "head" not in n or n.startswith("5.0") or not warned]
     worst = max(force / areas[n] for n in recommended)
     report(worst <= limit, f"screw clamp at a fingertip-tight {torque} N m ({force:.0f} N): " + "; ".join(
@@ -194,14 +194,15 @@ def window_sliced():
         subprocess.run([exe, "--export-gcode", *SETTINGS, "--support-material=0", "-o", g, stl],
                        capture_output=True, text=True, timeout=900, check=True)
         ex = extrusions_typed(open(g).read())
-    c = 0.8                                                        # the window's 45 deg chamfer (case.py)
+    c = case.WIN_CHAMFER                                           # the window's chamfer: depth, widths
+    width = {"left": case.WIN_CHAMFER_LEFT, "right": c, "bottom": case.WIN_CHAMFER_BOTTOM, "top": c}
     half_w, half_h = case.WIN_W / 2, case.WIN_H / 2
     rows, worst = [], 0.0
     for z_top in (0.4, 0.6, 1.0, 1.2):
         z = min(ex, key=lambda k: abs(k - z_top))
         seg = np.array([s[:5] for s in ex[z]])
         a, b, w = seg[:, :2], seg[:, 2:4], seg[:, 4]
-        grow = max(0.0, c - (z - 0.1))                             # sliced at the layer's middle
+        grow = max(0.0, 1 - (z - 0.1) / c)                         # share of the chamfer's width (layer middle)
         found = {}
         for name, d_ in (("left", (-1, 0)), ("right", (1, 0)), ("bottom", (0, -1)), ("top", (0, 1))):
             t = np.arange(0, 50, 0.01)
@@ -214,7 +215,7 @@ def window_sliced():
             dist = np.linalg.norm(a[None] + tt[..., None] * ab[None] - P[:, None, :], axis=2)
             hit = np.where((dist < w[None] / 2).any(1))[0]
             edge = t[hit[0]] if len(hit) else np.nan
-            want = (half_w if d_[0] else half_h) + grow
+            want = (half_w if d_[0] else half_h) + grow * width[name]
             found[name] = (edge, want)
             worst = max(worst, abs(edge - want)) if not np.isnan(edge) else 99
         rows.append((z, found))

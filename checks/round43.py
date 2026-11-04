@@ -12,6 +12,7 @@
 import contextlib
 import io
 import json
+import math
 import os
 import re
 import subprocess
@@ -68,6 +69,9 @@ def guides_inventory():
     }
     if m:
         explain[m.group(1)] = "PLA estimate (round 19 checks it against the slicer)"
+    for label, (pts, _) in (("battery wire", case.battery_wire_route()), ("speaker cable", case.speaker_wire_route())):
+        length = sum(math.dist(p, q) for p, q in zip(pts, pts[1:]))
+        explain.setdefault(f"{length:.0f}", f"{label} route in case.py (round 13 checks it)")
     unexplained = [v for v in fresh if v not in explain]
     report(not unexplained, f"guides: {len(fresh)} numbers new since session 4 ({', '.join(fresh)}), each traced to "
                             f"case.py, a check or a measurement; unexplained: {unexplained or 'none'}")

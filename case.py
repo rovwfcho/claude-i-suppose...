@@ -41,13 +41,19 @@ PANEL_T = 1.2                    # e-paper glass + adhesive, estimated from phot
 # Waveshare's dimension drawing puts the active area at x 9.3-95.7, y 4.1-55.9; the photos put the
 # grey field at x 7.4-96.5, y 3.6-58.1. In the owner's front photo along the board (round 44) the
 # light field runs x 8.0-95.2 and the centred text sits 1.2 mm left of the drawing's centre, so the
-# picture may start up to about 1.2 mm earlier than the drawing says: the window reaches 0.7 mm
-# further left than the drawing alone would need (to x 7.7). In the two photos across the board
-# (round 45) the light field runs y 3.0-56.4, so the window reaches down to y 2.9. It covers the
-# drawing's area with >= 0.7 mm to spare, and the light field in both directions.
-WIN_CX, WIN_CY = 52.05, 29.95
-WIN_W, WIN_H, WIN_R = 88.7, 54.1, 0.5   # corners 0.5 mm round, so they don't clip the light field's (round 45)
-TAIL_X1 = 6.8                    # panel tail / driver-IC strip on the left (0.9 mm of plate left before the window)
+# picture may start up to about 1.2 mm earlier than the drawing says. In the two photos across the
+# board (round 45) the light field runs y 3.0-56.4. The board can sit up to CLR (0.3 mm) off centre in
+# the lid before the screws hold it (round 49), so the window runs x 7.5-96.4, y 2.6-57.0: with the
+# board pushed fully toward any wall it still clears the light field by at least 0.14 mm. It covers
+# the drawing's area with >= 0.7 mm to spare.
+WIN_CX, WIN_CY = 51.95, 29.8
+WIN_W, WIN_H, WIN_R = 88.9, 54.4, 0.5   # corners 0.5 mm round, so they don't clip the light field's (round 45)
+WIN_CHAMFER = 0.8                       # chamfer on the outside: this deep, and this wide (45 deg) on the
+WIN_CHAMFER_LEFT = 0.6                  # top and right edges; narrower on the left and bottom ones, so the
+WIN_CHAMFER_BOTTOM = 0.5                # frame's front face (and its first layer on the bed) stays where a
+                                        # 45 deg chamfer on a window x 7.7-96.4, y 2.9-57.0 put it (until
+                                        # round 49), and the plate over the panel tail keeps its 0.1 mm
+TAIL_X1 = 6.8                    # panel tail / driver-IC strip on the left (the window's chamfer starts 0.1 mm past it)
 
 # brass standoffs on the back (front-view coordinates). Waveshare's photos put them at x 2.2 / 96.7,
 # y 2.85 / 57.4; the owner's back photo (round 35, corrected for the standoff tops being nearer the
@@ -298,12 +304,12 @@ def front_shell(z_total):
     outer = body(z_total) ^ box(-50, 150, -50, 150, -1, Z_SPLIT)
     s = outer - prism(cavity_cs(), T_FRONT, Z_SPLIT + 1)
 
-    # display window, 45 deg chamfer on the outside
-    c = 0.8
-    big = rrect(WIN_W + 2 * c, WIN_H + 2 * c, WIN_R + c)
-    sc = (WIN_W / (WIN_W + 2 * c), WIN_H / (WIN_H + 2 * c))
-    s -= Manifold.extrude(big, c, 0, 0, sc).translate([WIN_CX, WIN_CY, -0.001])
-    s -= prism(rrect(WIN_W, WIN_H, WIN_R, WIN_CX, WIN_CY), c - 0.01, T_FRONT + 0.1)
+    # display window, chamfered on the outside (45 deg, narrower on the left and bottom edges)
+    c, cl, cb = WIN_CHAMFER, WIN_CHAMFER_LEFT, WIN_CHAMFER_BOTTOM
+    inner = rrect(WIN_W, WIN_H, WIN_R, WIN_CX, WIN_CY)
+    face = rrect(WIN_W + c + cl, WIN_H + c + cb, WIN_R + c, WIN_CX + (c - cl) / 2, WIN_CY + (c - cb) / 2)
+    s -= Manifold.hull(prism(face, -0.001, 0.0) + prism(inner, c - 0.001, c))
+    s -= prism(inner, c - 0.01, T_FRONT + 0.1)
 
     # extra room for the display flex where it wraps round the left PCB edge (0.1 mm proud of it), so
     # normal plastic shrinkage (0.2-0.4 %) can't make it rub; the PCB itself keeps its CLR
