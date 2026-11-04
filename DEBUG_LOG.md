@@ -865,8 +865,13 @@ Smaller wording, all fixed: the README said the battery wire "lies across" the b
 
 Round 37 now also looks for the four new steps (the film, the wires on the rim, the beams after printing, the spare battery wire) in all three documents: 20 slips in all.
 
-## Round 59: different methods
-(Entry written when its run is done.)
+The full run after these fixes (run 13) got to round 37 before you asked me to stop: rounds 1–37 found no problems apart from two in the checks' own bookkeeping, both fixed (round 31's list of where each new README number comes from needed the new USB-C grip size, and round 20 ran while round 59's file was being written).
 
-## Round 60: different methods
-(Entry written when its run is done.)
+## Round 59: different methods
+**New methods** (`checks/round59.py`), run on their own and passing:
+- **Every numbered marker in the guide's pictures** (36 in 7 pictures) sits on the part its legend names, found from the rendered meshes, and in the right place on the case. As a control, two swapped legend items fail.
+- **The words for directions** (75 in the README's steps and both guides), each read in the view its step sets up: all right, and no "left" or "right" where the back faces you.
+- **The round 58 reviewer's own scripts** (kept in `checks/review58/`), run again on the fixed case: the README's USB-C grip fits, and the window keeps 0.1 mm.
+
+## Round 60: stopped
+Round 60 (every README number traced to the checks' output, and a second independent review) was started, then stopped at your request: you will print the case and report anything wrong. **The debugging stops here, after round 59, without the second clean round in a row.**
