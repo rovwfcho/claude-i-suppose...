@@ -48,7 +48,7 @@ def skip(msg):
 
 
 # ------------------------------------------------------------------ 1
-WIN = ("WIN_CX, WIN_CY = 52.0, 29.8", "WIN_W, WIN_H, WIN_R = 88.8, 54.4, 0.5")
+WIN = ("WIN_CX, WIN_CY = 52.0, 29.8", "WIN_W, WIN_H, WIN_R = 88.8, 54.4, 0.4")
 
 
 # a few catches whose message must name the right thing (target, words in its FAIL line)
@@ -61,7 +61,7 @@ WHY = {"headers 1 mm taller": ("r51 beams", "3 mm standoffs: nearest the connect
 
 def window_in(dx):
     """case.py edits that move the window's left edge dx further in and keep its right edge."""
-    return [(WIN[0], f"WIN_CX, WIN_CY = {52.0 + dx / 2:.3f}, 29.8"), (WIN[1], f"WIN_W, WIN_H, WIN_R = {88.8 - dx:.3f}, 54.4, 0.5")]
+    return [(WIN[0], f"WIN_CX, WIN_CY = {52.0 + dx / 2:.3f}, 29.8"), (WIN[1], f"WIN_W, WIN_H, WIN_R = {88.8 - dx:.3f}, 54.4, 0.4")]
 
 
 PADS = "(BW - 0.3, BW + CLR + 0.1, 5, 12), (BW - 0.3, BW + CLR + 0.1, 45, 55)"

@@ -10,8 +10,10 @@
    in the wrong connector or the wrong way round, the speaker upside down or turned, tape over the
    membrane, the cable near the antenna, wires over the posts or under the clips, the cover turned
    over the wrong edge, the screws tried before the lid is on, M2 standoffs, screws of the wrong
-   length or too tight, 0.3 mm layers, PLA in the sun, and how to open it: the README, the English
-   guide and the Bulgarian guide must each say what to do.
+   length or too tight, 0.3 mm layers, PLA in the sun, and how to open it; and (added in round 58)
+   the display's film left on, a wire left on the rim as the cover closes, a clip beam stuck to its
+   slot, and the spare battery wire left loose: the README, the English guide and the Bulgarian
+   guide must each say what to do.
 3. Markdown that renders: in README.md and DEBUG_LOG.md every paragraph has its ** and ` in pairs,
    every table row has as many cells as its header, and every link and image has a target.
 """
@@ -114,8 +116,17 @@ SLIPS = [  # (slip, README regex, English guide regex, Bulgarian guide regex)
     ("screws too tight", r"Don't over-tighten", r"Don't over-tighten", r"Не ги затягайте прекалено"),
     ("0.3 mm layers", r"Don't use 0\.3 mm layers", r"Don't use 0\.3 mm", r"Не използвайте 0,3 мм"),
     ("PLA in the sun", r"Keep the case out of direct sun", r"keep the case out of direct sun", r"пазете кутията от пряко слънце"),
-    ("how to open it", r"fingernail or a guitar pick into the notch in the right-hand end",
-     r"fingernail or a guitar pick into the <b>notch in the right-hand end", r"перце за китара във <b>вдлъбнатината в десния край"),
+    ("how to open it", r"fingernail or a guitar pick into the notch in the end opposite the USB-C port",
+     r"fingernail or a guitar pick into the <b>notch in the end opposite the USB-C port",
+     r"перце за китара във <b>вдлъбнатината в края срещу порта USB-C"),
+    # round 58 (the independent review): four more
+    ("the display's film left on, its tab trapped", r"peel it off first", r"<b>peel it off first</b>", r"<b>първо го махнете</b>"),
+    ("a wire left on the rim as the cover closes", r"push both wires inside the lid's rim",
+     r"<b>push both wires inside the lid's rim</b>", r"<b>избутайте двата кабела навътре от ръба"),
+    ("a clip beam's bridge stuck to its slot", r"press the middle of each beam inward", r"press the middle of each beam inward",
+     r"натиснете средата на всяка гредичка навътре"),
+    ("the spare battery wire left loose", r"tuck the spare length beside the cell's taped end",
+     r"Tuck the spare battery wire beside the cell's taped end", r"Излишъка от кабела на батерията приберете до облепения ѝ край"),
 ]
 
 

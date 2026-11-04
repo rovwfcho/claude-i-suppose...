@@ -44,11 +44,13 @@ PANEL_T = 1.2                    # e-paper glass + adhesive, estimated from phot
 # picture may start up to about 1.2 mm earlier than the drawing says. In the two photos across the
 # board (round 45) the light field runs y 3.0-56.4. The board can sit up to CLR (0.3 mm) off centre in
 # the lid before the screws hold it (round 49), so the window runs x 7.6-96.4, y 2.6-57.0: with the
-# board pushed fully toward any wall it still clears the light field by at least 0.1 mm. It covers
+# board anywhere in its play (a 0.3 mm circle, since the cavity is the PCB outline grown by CLR) it
+# still clears the light field by at least 0.1 mm, corners included (round 58). It covers
 # the drawing's area with >= 0.7 mm to spare. (On the left it stops at 7.6, and the panel-tail relief
 # at 6.75, so the web between them is 0.85 mm, over two extrusion lines: round 50.)
 WIN_CX, WIN_CY = 52.0, 29.8
-WIN_W, WIN_H, WIN_R = 88.8, 54.4, 0.5   # corners 0.5 mm round, so they don't clip the light field's (round 45)
+WIN_W, WIN_H, WIN_R = 88.8, 54.4, 0.4   # corners 0.4 mm round: 0.5 cut 0.02 mm into the light field's corner
+                                        # with the board pushed diagonally (round 58)
 WIN_CHAMFER = 0.8                       # chamfer on the outside: this deep, and this wide (45 deg) on the
 WIN_CHAMFER_LEFT = 0.7                  # top and right edges; narrower on the left and bottom ones, so the
 WIN_CHAMFER_BOTTOM = 0.5                # frame's front face (and its first layer on the bed) stays where a
@@ -62,6 +64,8 @@ TAIL_X1 = 6.75                   # panel tail / driver-IC strip on the left (the
 # symmetric layout below, 94.6 x 54.55 mm apart; every estimate is within 0.45 mm of it, and for each
 # the board can sit with no screw more than 0.3 mm off its hole's centre (the holes take 0.4).
 POSTS = [(2.45, 2.725), (97.05, 2.725), (2.45, 57.275), (97.05, 57.275)]
+SCREW_ORDER = (0, 3, 1, 2)       # tightening order, a cross (diagonal pairs): the guide's step 4 picture
+                                 # and preview/screw_locations.png both number the screws so (round 58)
 STANDOFF_D = 4.5                 # measured outer diameter incl. photo blur
 STANDOFF_H = 4.0                 # the owner's are 3-4 mm; the case is built for 4 (see POST_Z)
 STANDOFF_H_MIN = 3.0             # with 3 mm ones the board sits 1 mm further back; the checks try both
@@ -351,8 +355,10 @@ def front_shell(z_total):
                        + prism(cavity_cs(cd + 0.01), Z_SPLIT + 0.01, Z_SPLIT + 0.02)) \
         ^ (box(-50, 150, -50, 3.0, 0, 50) + box(-50, 150, BH - 3.0, 150, 0, 50))
 
-    # USB-C: rounded-rectangle opening sized for common cable overmolds (13 x 7), 1 mm taller toward the
-    # back so it also fits when 3 mm standoffs put the board 1 mm further back
+    # USB-C: rounded-rectangle opening 13 x 7, 1 mm taller toward the back so it also fits when 3 mm
+    # standoffs put the board 1 mm further back. With either standoff height a 12.4 x 6.6 overmold seats
+    # with the board centred (rounds 1 and 2), and a 12.3 x 6.5 one with the board anywhere in its play
+    # (round 58: 12.4 mm then just touches the side); a 13 x 7 one needs the board centred and 4 mm ones.
     usb_zc = Z_B + 2.1
     usb = rrect(13.0, 8.0, 1.2, USB_Y, usb_zc)
     s -= prism(usb, X0 - 1, 0.5).transform([[0, 0, 1, 0], [1, 0, 0, 0], [0, 1, 0, 0]])  # (y, z, x) -> (x, y, z)
@@ -493,8 +499,9 @@ def battery_guides():
 # take, and the guide draws them.
 def battery_wire_route():
     """Battery wire: leaves the taped end at its bottom corner, drops beside the bay, runs along the
-    bottom of the board over the microSD socket and under the battery (clear of the corner screw
-    post), and ends at the face of the BAT plug (round 47: the headers from the owner's photo)."""
+    bottom of the board over the microSD socket and on along the battery's bottom edge, between the
+    board and the cell (clear of the corner screw post), and ends at the face of the BAT plug (round
+    47: the headers from the owner's photo)."""
     x0, x1, y0, y1 = BATTERY_BAY
     z_in = Z_B + CAVITY["battery"]
     zs = Z_B + 1.9 + 1.25             # resting on top of the microSD socket (1.9 mm tall)
@@ -507,13 +514,13 @@ def battery_wire_route():
 def speaker_wire_route():
     """Speaker cable (2.8 mm thick where it is sleeved): its thin leads leave the speaker's long side
     facing the battery (peg toward the top edge) and turn down the gap between the bay and the pocket;
-    the sleeved part slopes down under the battery (no bend tighter than 3 mm) and runs to the front
+    the sleeved part slopes down between the board and the cell (no bend tighter than 3 mm) and runs to the front
     of the SPK plug (x 52.0-61.2, round 47)."""
     sx, sy = SPEAKER["battery"]
     w, h, t = SPEAKER_BOX["battery"]
     z_in = Z_B + CAVITY["battery"]
     r = 1.4
-    zl = Z_B + 1.45 + r               # above the board's low parts (1.4 mm), under the battery
+    zl = Z_B + 1.45 + r               # above the board's low parts (1.4 mm), between the board and the cell
     xg = (BATTERY_BAY[1] + sx - w / 2 - SPK_BRACKET[0]) / 2   # middle of the gap between bay and pocket
     ye = sy + SPEAKER_SIZE[1] / 2 - SPK_CABLE_EXIT             # where the cable leaves the speaker
     yr = PLUG_Y1 + r + 0.05

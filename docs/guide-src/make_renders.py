@@ -35,7 +35,8 @@ VIEWS = [
 ]
 W, H = 900, 640
 SCREWS = ("r_screws", {"parts": parts(["shell", "cover", "screws"] + BOARD), "cam": {"t": [49.75, 30, 9], "o": [0, -40, -230]},
-                       "labels": [[px, py, Z_TOTAL] for px, py in case.POSTS], "w": 1400, "h": 900})
+                       "labels": [[px, py, Z_TOTAL] for px, py in (case.POSTS[i] for i in case.SCREW_ORDER)],
+                       "w": 1400, "h": 900})   # numbered in the order to tighten them, as in the guide's step 4
 
 
 def specs():

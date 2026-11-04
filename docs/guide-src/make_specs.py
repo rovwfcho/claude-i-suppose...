@@ -83,7 +83,7 @@ def specs():
     shut = parts(["shell", "cover", "screws"] + BOARD)
     s["step4a"] = {"parts": shut, "cam": {"t": [49.75, 30, 9], "o": [40, -120, -210]},
                    # numbered in the order to tighten them: a cross pattern (diagonal pairs)
-                   "labels": [[px, py, Z_TOTAL] for px, py in (case.POSTS[i] for i in (0, 3, 1, 2))]}
+                   "labels": [[px, py, Z_TOTAL] for px, py in (case.POSTS[i] for i in case.SCREW_ORDER)]}
     s["step4b"] = {"parts": shut, "cam": {"t": [case.X1, 30, case.Z_SPLIT], "o": [130, -45, -55]}, "fov": 26,
                    "labels": [[case.X1, 30, case.Z_SPLIT]], "w": 1200, "h": 700}
     s["print"] = {"noflip": True, "parts": [{"f": "p_front", "c": C["p_front"]}, {"f": "p_cover", "c": C["p_cover"], "dx": 118}],

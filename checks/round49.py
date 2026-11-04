@@ -3,10 +3,12 @@
 
 1. The window with the board anywhere it can sit. Rounds 2, 44 and 45 put the board model in the
    middle of the lid. But the board lies loose in the lid until the screws hold it, and the lid's
-   walls let it sit up to CLR (0.3 mm) off centre either way, in x and in y; the screws' holes allow
-   more, so the walls are the limit. With the board pushed fully toward each wall, and into each
-   corner, the window must still clear the light field in your photos (rounds 44 and 45) and the
-   picture area on Waveshare's drawing by at least 0.1 mm on every side, and still cover the panel's
+   walls let it sit up to CLR (0.3 mm) off centre; the screws' holes allow more, so the walls are the
+   limit. The cavity is the PCB outline grown by CLR, so the board can move anywhere in a 0.3 mm
+   circle (pushed into a corner it moves 0.3 mm diagonally, not 0.3 each way). With the board at 360
+   points round that circle, the window, its rounded corners included (round 58), must still clear
+   the light field in your photos (rounds 44 and 45) and the picture area on Waveshare's drawing by
+   at least 0.1 mm on every side and at every corner, and still cover the panel's
    tail strip (TAIL_X1) on the left by at least 0.1 mm. The pads in front of the PCB's rim reach
    deeper than the glass's front face, so with the board in any of those positions the glass must
    also keep clear of them, and by more than its outline's measuring error (0.3 mm, the README's
@@ -25,6 +27,7 @@
 """
 import contextlib
 import io
+import math
 import os
 import re
 import sys
@@ -56,22 +59,30 @@ def window_with_play():
               "drawing's picture area": (9.3, 95.7, 4.1, 55.9)}
     wl, wr = case.WIN_CX - case.WIN_W / 2, case.WIN_CX + case.WIN_W / 2
     wb, wt = case.WIN_CY - case.WIN_H / 2, case.WIN_CY + case.WIN_H / 2
-    p = case.CLR
+    r, p = case.WIN_R, case.CLR
+
+    def margin(x, y):
+        """How far inside the rounded window the point is (round 45's measure)."""
+        cx, cy = min(max(x, wl + r), wr - r), min(max(y, wb + r), wt - r)
+        if (cx, cy) == (x, y):
+            return min(x - wl, wr - x, y - wb, wt - y)
+        return r - float(np.hypot(x - cx, y - cy))
+    play = [(0.0, 0.0)] + [(p * math.cos(a), p * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 360, endpoint=False)]
     rows, ok = [], True
     for name, (x0, x1, y0, y1) in fields.items():
         worst = {}
-        for dx in (-p, 0.0, p):
-            for dy in (-p, 0.0, p):
-                m = {"left": x0 + dx - wl, "right": wr - (x1 + dx), "bottom": y0 + dy - wb, "top": wt - (y1 + dy)}
-                for k, v in m.items():
-                    worst[k] = min(worst.get(k, 9.0), v)
+        for dx, dy in play:
+            m = {"left": x0 + dx - wl, "right": wr - (x1 + dx), "bottom": y0 + dy - wb, "top": wt - (y1 + dy),
+                 "corners": min(margin(x + dx, y + dy) for x in (x0, x1) for y in (y0, y1))}
+            for k, v in m.items():
+                worst[k] = min(worst.get(k, 9.0), v)
         ok &= min(worst.values()) >= 0.1 - 1e-9
         rows.append(f"{name}: " + ", ".join(f"{k} {v:.2f}" for k, v in worst.items()))
     tail = wl - (case.TAIL_X1 + p)
     ok &= tail >= 0.1 - 1e-9
-    report(ok, f"window with the board up to {p} mm off centre either way (worst of all 9 positions, mm to "
-               f"spare): " + "; ".join(rows) + f"; the panel's tail strip stays {tail:.2f} mm under the frame "
-               f"(want 0.1 everywhere)")
+    report(ok, f"window with the board anywhere within {p} mm of centre (360 points round the circle, mm to spare; "
+               f"window corners {r} mm round): " + "; ".join(rows) + f"; the panel's tail strip stays {tail:.2f} mm "
+               f"under the frame (want 0.1 everywhere)")
 
 
 def pads_and_glass():
