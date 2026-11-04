@@ -9,7 +9,8 @@ reads, worked out from its source (and its imports'):
   log       DEBUG_LOG.md         photos  checks/owner_photos
   zips      make_zips.py         slicer  the PrusaSlicer version
 A round that passed is skipped while all of its inputs hash the same as when it passed; everything
-else runs. Results are kept in checks/.cache/passed.json (not part of the project).
+else runs. Results are kept in checks/.cache/passed.json, and each round's last output in
+checks/.cache/out/ (round 60 reads them); neither is part of the project.
 
     python3 checks/run_checks.py            # run what changed
     python3 checks/run_checks.py --all      # run everything
@@ -122,6 +123,9 @@ def main(argv):
         r = subprocess.run([sys.executable, s], capture_output=True, text=True)
         sys.stdout.write(r.stdout + r.stderr)
         ran += 1
+        out = os.path.join(os.path.dirname(CACHE), "out")      # each round's last output (round 60 reads them)
+        os.makedirs(out, exist_ok=True)
+        open(os.path.join(out, os.path.basename(s)[:-3] + ".txt"), "w", encoding="utf-8").write(r.stdout)
         m = re.search(r"Round \d+: (\d+) problem", r.stdout)
         ok = r.returncode == 0 and ((m and m.group(1) == "0") or (s == "verify.py" and "ALL CHECKS PASSED" in r.stdout))
         if ok:

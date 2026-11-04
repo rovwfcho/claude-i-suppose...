@@ -864,3 +864,9 @@ Smaller wording, all fixed: the README said the battery wire "lies across" the b
 - **the window cut out of the lid's STL** (not worked out from `case.py`'s numbers), against the light field moved to 360 points round the play circle: it must stay at least 0.1 mm inside everywhere, and the corner radius measured from the section must be the README's 0.4 mm.
 
 Round 37 now also looks for the four new steps (the film, the wires on the rim, the beams after printing, the spare battery wire) in all three documents: 20 slips in all.
+
+## Round 59: different methods
+(Entry written when its run is done.)
+
+## Round 60: different methods
+(Entry written when its run is done.)

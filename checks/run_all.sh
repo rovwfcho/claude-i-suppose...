@@ -15,7 +15,7 @@ for s in verify.py checks/round1.py checks/round2.py checks/round3.py checks/rou
          checks/round39.py checks/round40.py checks/round41.py \
          checks/round42.py checks/round43.py checks/round44.py \
          checks/round45.py checks/round46.py checks/round47.py checks/round48.py \
-         checks/round49.py checks/round50.py checks/round51.py checks/round52.py checks/round53.py checks/round54.py checks/round55.py checks/round56.py checks/round57.py checks/round58.py; do
+         checks/round49.py checks/round50.py checks/round51.py checks/round52.py checks/round53.py checks/round54.py checks/round55.py checks/round56.py checks/round57.py checks/round58.py checks/round59.py checks/round60.py; do
   echo "=== $s"
   python3 "$s" || status=1
 done
