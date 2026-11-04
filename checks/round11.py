@@ -5,6 +5,8 @@
    inside the case (a fourth independent engine after booleans, KD-trees and rays)
 2. Screwdriver access: a 3 mm shaft, 60 mm long, must reach every screw head along its axis
 3. Table test: the case resting on each face and edge must not press a switch or the dial
+   (round 53: with the board up to 0.3 mm nearer the edge; the dial reaches the top face, so for
+   that edge the README must say not to stand the case on it)
 4. Smoothness: on the outer surface (where it meets its convex hull), neighbouring faces must
    meet at small angles; only real feature edges (openings) may be sharp
 """
@@ -72,10 +74,20 @@ def table(variant):
     sides = {"bottom edge": (1, lo[1], 1), "top edge": (1, hi[1], -1),
              "front face": (2, lo[2], 1), "back": (2, hi[2], -1),
              "left end": (0, lo[0], 1), "right end": (0, hi[0], -1)}
+    # round 53: on an edge the board can sit up to CLR nearer the table. The dial is meant to reach the top
+    # face (it is turned from there), so on the top edge it can take the case's weight: the README must say
+    # not to stand the case on that edge.
+    warned = "Don't stand it on its top edge" in open(os.path.join(ROOT, "README.md"), encoding="utf-8").read()
     for sname, (ax, plane, sign) in sides.items():
+        play = case.CLR if ax < 2 else 0.0
         worst = min(((tip[ax] - plane) * sign, n) for n, tip in tips.items())
-        report(worst[0] > 0.05, f"{variant} resting on its {sname}: nearest control ({worst[1]}) "
-                                f"is {worst[0]:.2f} mm off the table")
+        txt = (f"{variant} resting on its {sname}: nearest control ({worst[1]}) is {worst[0]:.2f} mm off the table"
+               + (f", {worst[0] - play:.2f} with the board {play} mm nearer" if play else ""))
+        if sname == "top edge" and worst[0] - play <= 0.05:
+            report(warned, txt + ": it can take the weight there, and the README "
+                   + ("says not to stand the case on that edge" if warned else "does not warn about it"))
+            continue
+        report(worst[0] - play > 0.05, txt)
 
 
 # ------------------------------------------------------------------ 4
