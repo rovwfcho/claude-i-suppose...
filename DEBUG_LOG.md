@@ -838,3 +838,5 @@ The full run with round 56 (run 11: 12 rounds run, 41 unchanged since they passe
 - **Enough random builds:** rounds 52 and 53 count rare events in 200 000 random builds. Each count must lie at least 5 standard errors under its 1 % limit, and five other random seeds must all stay under it too.
 
 Its first run flagged "booleans", "pyspellchecker's" and "txt" (from HOW-TO-USE.txt), all in the entries for rounds 56 and 57 written just before. All are spelled right: the check now leaves out file names and knows the two words. The Bulgarian guide isn't spell-checked: the checker has no Bulgarian word list (round 48 read it through).
+
+The full run with round 57 (run 12: 40 rounds run, 14 unchanged since they passed) found no problems: round 57 is clean. **Rounds 56 and 57 are two clean rounds in a row, so the debugging ends here.** One check could not run in this environment: round 5's colour segmentation of Waveshare's back photo, because `www.waveshare.com` can't be reached from here. It reports SKIP, not a pass; rounds 35 and 47 measured the same parts in your own back photo instead.
