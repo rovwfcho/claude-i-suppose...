@@ -71,7 +71,10 @@ def specs():
     s["step1"] = {"parts": parts(["shell"]) + parts(BOARD, dz=55), "cam": {"t": [49.75, 30, 26], "o": [90, -230, -190]},
                   "labels": [[79, 62.7, 4], [79, -2.7, 4], [-2.7, 30, 6], [49.75, 30, 59.9], [-2.7, 14, 6]], "h": 1000}
     s["step2"] = {"parts": parts(["cover"] + INSIDE + WIRES), "cam": {"t": [49.75, 30, 12], "o": [-40, -120, 210]},
-                  "labels": [bat, spk] + posts + [list(bat_wire[-1]), list(spk_wire[-1]), list(bat_wire[0]),
+                  # marker 6 sits 5 mm along the wire from where it leaves the cell, so it keeps clear of
+                  # the bottom-left post's marker 3 (round 52: at the wire's very end the two touched)
+                  "labels": [bat, spk] + posts + [list(bat_wire[-1]), list(spk_wire[-1]),
+                                                 [bat_wire[1][0] + 5.0, bat_wire[1][1], bat_wire[1][2]],
                                                  list(coil_top), [sx, sy + case.SPEAKER_SIZE[1] / 2 + 1.0, Z_IN - 1.5]]}
     s["step3"] = {"parts": parts(["shell"] + BOARD) + parts(["cover"] + INSIDE + WIRES, dz=22),
                   "cam": {"t": [49.75, 30, 16], "o": [110, 200, -170]},

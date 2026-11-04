@@ -13,6 +13,9 @@
    README asks for, and the quantity and every number in the row must be in the README too.
 3. A read-through of the README passages rounds 49 and 50 changed (the window, the battery wire),
    by me.
+4. The case as it will be used (by me, not a script): lying on its back on a desk, lying face down,
+   standing on each edge, held in a hand, with the USB-C cable in. What each does to the speaker,
+   the vents, the buttons, the dial and the display.
 """
 import os
 import re

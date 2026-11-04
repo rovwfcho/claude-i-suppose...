@@ -62,6 +62,7 @@ open=["To take the lid off, put a fingernail or a guitar pick into the <b>notch 
       "To close it again, press the lid back on until the 4 clips click. The clips can be opened and closed many times."],
 h_tips="Tips",
 tips=["The PWR and BOOT buttons stay fully uncovered in the bottom edge; press them straight on or slightly tilted.",
+      "The speaker plays through the slots in the back. Lying on its back on a table the case sounds muffled: stand it up, or lay it face down.",
       "To eject the microSD card, press it in with a fingernail or a pen tip: it sits about 4 mm inside the edge.",
       "Your standoffs are 3–4 mm tall. With 3 mm ones the board sits 1 mm further back and the display 1 mm deeper behind the window; that's expected, and everything still fits.",
       "The standoff positions were read from your back photo and Waveshare's photos, which differ by up to 0.7 mm; the corner holes allow 0.4 mm, so the board can always sit with no screw more than 0.3 mm off centre. The battery and speaker sizes were read off the ruler in your photos (about ±0.3 mm). A test fit of the back cover is the real check."],
