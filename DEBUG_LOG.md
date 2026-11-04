@@ -803,3 +803,18 @@ The full run with round 53 (run 8: 36 rounds run, 14 unchanged since they passed
 - **Page breaks in the guides:** in both PDFs no heading may end a page, and every picture's legend must be whole and on the picture's page. None ends a page, and all 7 legends are on their picture's page. The check catches a heading added at the foot of a page and the step 2 picture moved to the next page.
 
 While writing round 54 I found a fault in the round itself, not in the case. The copies were run with Python's compiled-file cache on. A mistake and the restore that follows it can leave `case.py` the same size and with the same second's timestamp, so Python reused the previous mistake's compiled `case.py`. The "headers 1 mm taller" run was then really caught by the 2.4 mm standoffs before it. The copies now run without the cache, and that catch must name the connectors with 3 mm standoffs, which it does. Round 38 makes the same kind of edits, but each of its checks runs for many seconds, so its timestamps always differ.
+
+The full run with round 54 (run 9: 11 rounds run, 40 unchanged since they passed) found no problems: round 54 is clean.
+
+## Round 55: different methods
+**New methods** (`checks/round55.py`):
+- **Put together the wrong way round.** Round 37 checked that the documents answer the mistakes a person could make. Here the parts themselves were tried. Each wrong way overlaps the lid by far more than 1 mm³, so none can sit flat or close without you noticing:
+  - the board turned round in its plane, display still down and the dial at the bottom: 43 mm³, mostly the dial against the bottom wall;
+  - the board turned over about either axis: 275 and 352 mm³;
+  - the back cover turned round, tab at the bottom: 94 mm³.
+
+  As a control, the right way round overlaps nothing.
+- **The guides' finished pages, looked at** (by me, not a script): all 7 pages of each PDF, as they print. The steps, pictures, markers and legends line up; the new speaker tip is on page 7 in both; the Cyrillic text, its "ѝ" included, renders in the guide's font. Pages 3, 5 and 6 end with white space, because each step is kept whole on one page, as intended.
+- **A read-through of the log's entries for rounds 51–54 as a whole,** for figures a later round changed and no later entry corrects.
+
+**Not clean:** the read-through found one such figure. Round 52's entry says the Bulgarian guide has 328 lines of text. Round 53's longer speaker tip made it 329, and round 53's entry doesn't say so. It is corrected here: the English guide has 301 lines and the Bulgarian 329, all inside their boxes. Nothing else in those entries was changed later without a correction.
