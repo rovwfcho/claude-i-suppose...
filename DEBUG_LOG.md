@@ -818,3 +818,13 @@ The full run with round 54 (run 9: 11 rounds run, 40 unchanged since they passed
 - **A read-through of the log's entries for rounds 51–54 as a whole,** for figures a later round changed and no later entry corrects.
 
 **Not clean:** the read-through found one such figure. Round 52's entry says the Bulgarian guide has 328 lines of text. Round 53's longer speaker tip made it 329, and round 53's entry doesn't say so. It is corrected here: the English guide has 301 lines and the Bulgarian 329, all inside their boxes. Nothing else in those entries was changed later without a correction.
+
+The full run with round 55 (run 10: 11 rounds run, 41 unchanged since they passed) found no problems.
+
+## Round 56: different methods
+**New methods** (`checks/round56.py`):
+- **The project with its history, as you will get it.** The last commit was packed the way the delivery zip is, as a `git archive` of the commit and a `git bundle` of the whole history (49 MB). It was unpacked into an empty folder, and the bundle was cloned into another one, as the zip's HOW-TO-USE.txt says. The clone checks out this branch at this commit, with all 40 commits. Its 98 files are byte for byte the archive's, and `verify.py` passes in it.
+- **No dead constants:** each of the 94 named constants at the top of `case.py` is used, 85 by its own code and the other 9 by the checks or the guide scripts, so none would mislead whoever edits them.
+- **The README's Files table, the other way round:** round 12 checks that every file it names exists. Here every file and folder in the project is named in it, apart from the README itself and the tools' own settings (`.claude/`, `.gitignore`). While writing this check, it first flagged the README itself, which a Files table needn't list: that was a fault in the check, fixed before it ran.
+
+Round 56 found nothing.
