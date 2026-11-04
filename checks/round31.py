@@ -229,7 +229,10 @@ def readme_inventory():
         f1((mx.ACTIVE[0] + mx.ACTIVE[1]) / 2): "drawing's picture centre", "51.3": "text centre (round 44)",
         "16.0": "ruler scale at the left end (round 44)", "15.5": "ruler scale at the right end (round 44)",
         "44": "round 44", "45": "round 45", "46": "round 46",
-        "2.3": "clip anchor stub by the button opening (round 46)", "2": "clip anchor stub between the bottom beams (round 46)", "2.4": "recess depth / clip anchor stub by the dial notch",
+        "2.3": "clip anchor stub by the button opening (round 46)", "2": "clip anchor stub between the bottom beams (round 46)", "2.4": "recess depth",
+        "2.5": "clip anchor stub by the dial notch (round 46)", "47": "round 47",
+        # round 58: the largest USB-C grip that seats with the board anywhere in its play (round 58 pushes it in)
+        "12.3": "USB-C grip width (round 58)", "6.5": "USB-C grip thickness (round 58)",
     })
     m = re.search(r"about (\d+) g of PLA", new)
     if m:
