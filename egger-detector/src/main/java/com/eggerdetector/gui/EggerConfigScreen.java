@@ -13,7 +13,6 @@ import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import me.shedaniel.clothconfig2.api.Requirement;
 import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
 import me.shedaniel.clothconfig2.gui.entries.IntegerListEntry;
@@ -60,24 +59,6 @@ public final class EggerConfigScreen {
                 .setDefaultValue(def.enabled)
                 .setTooltip(tip("Switch the whole mod on or off. You can also bind a key for this in Options > Controls > Key Binds > Egger Detector."))
                 .setSaveConsumer(v -> work.enabled = v)
-                .build());
-        general.addEntry(eb.startBooleanToggle(Component.literal("Chat notes"), work.statusMessages)
-                .setDefaultValue(def.statusMessages)
-                .setTooltip(tip("Notes only you see in chat: which egg is guarded, when guarding stops and why, when the egg moved."))
-                .setSaveConsumer(v -> work.statusMessages = v)
-                .build());
-        BooleanListEntry hud = eb.startBooleanToggle(Component.literal("Status line"), work.showHud)
-                .setDefaultValue(def.showHud)
-                .setTooltip(tip("A small line in a top corner of the screen: the guarded egg, how many players are near it and how close the nearest one is."))
-                .setSaveConsumer(v -> work.showHud = v)
-                .build();
-        general.addEntry(hud);
-        general.addEntry(eb.startEnumSelector(Component.literal("Status line position"), EggerConfig.HudPosition.class, work.hudPosition)
-                .setDefaultValue(def.hudPosition)
-                .setEnumNameProvider(p -> Component.literal(p == EggerConfig.HudPosition.TOP_LEFT ? "Top left" : "Top right"))
-                .setTooltip(tip("Which top corner the status line sits in."))
-                .setRequirement(Requirement.isTrue(hud))
-                .setSaveConsumer(v -> work.hudPosition = v)
                 .build());
         general.addEntry(eb.startBooleanToggle(Component.literal("Sound"), work.sound)
                 .setDefaultValue(def.sound)

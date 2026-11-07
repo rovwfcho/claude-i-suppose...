@@ -63,7 +63,6 @@ final class MessageSender {
         if (queue.size() >= MAX_QUEUE) {
             Queued dropped = queue.pollFirst();
             LOG.warn("Egger Detector: too many warnings waiting, dropped: {}", dropped.text());
-            local(mc, Component.literal("Too many warnings at once, one was not sent: " + dropped.text()).withStyle(ChatFormatting.GRAY));
         }
         queue.addLast(new Queued(message, nowMs));
     }
@@ -78,7 +77,6 @@ final class MessageSender {
         while (!queue.isEmpty() && nowMs - queue.peekFirst().atMs() > STALE_MS) {
             Queued old = queue.pollFirst();
             LOG.warn("Egger Detector: warning waited too long, not sent: {}", old.text());
-            local(mc, Component.literal("Not sent, it waited too long: " + old.text()).withStyle(ChatFormatting.GRAY));
         }
         if (queue.isEmpty() || nowMs - lastSentMs < gapMs || spamCount + SPAM_STEP > SPAM_HOLD_AT || !serverTimeFresh(mc.level)) {
             return;
@@ -131,7 +129,7 @@ final class MessageSender {
     }
 
 
-    /** A line in your own chat only, never sent to the server. */
+    /** A radius warning set to "Only me": a line in your own chat only, never sent to the server. */
     static void local(Minecraft mc, Component message) {
         MutableComponent line = Component.literal("[Egger Detector] ").withStyle(ChatFormatting.GOLD).append(message);
         mc.gui.getChat().addClientSystemMessage(line);

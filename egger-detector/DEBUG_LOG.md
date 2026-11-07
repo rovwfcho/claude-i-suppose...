@@ -283,3 +283,12 @@
 - Gradle 9.8.2 offline clean build: BUILD SUCCESSFUL, CoreTests 98/98; all 33 classes byte-identical to
   the javac build tested in passes 15/16 (Gradle jar adds LICENSE_eggerdetector + MANIFEST; fabric.mod.json
   same content). Full in-game run on the Gradle jar itself: 53/53 PASS, no kick; Cloth loads jar-in-jar.
+
+## Version 1.0.1 (user request: the mod shows nothing of its own)
+- Removed the on-screen status line (StatusHud + its registration), every chat note (guarding,
+  stopped, egg moved, too many / waited too long, error, settings-file problem, switched on/off key)
+  and the Chat notes / Status line / Status line position settings. Only the radius warnings remain
+  (Chat or Only me); details go to the game log; the settings screen still shows the status.
+- Old settings files (with statusMessages/showHud/hudPosition) load fine, other values kept.
+- javac -Xlint:all: 0 warnings; Gradle build: CoreTests 98/98. No in-game run or review passes
+  for this change (the user asked for none).

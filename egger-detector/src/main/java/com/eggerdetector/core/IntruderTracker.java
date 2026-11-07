@@ -186,7 +186,7 @@ public final class IntruderTracker {
         lastSent.clear();
     }
 
-    /** Players currently inside {@code radius} according to the last update (for the HUD). */
+    /** Players currently inside {@code radius} according to the last update. */
     public int countInside(double radius) {
         int n = 0;
         for (State s : states.values()) {

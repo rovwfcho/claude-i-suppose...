@@ -99,7 +99,7 @@ public final class Detector {
     /** Scans in a row the guarded egg's name was not seen (eggs without a block only). */
     private int labelMissingScans;
 
-    // what the screen and HUD show
+    // what the settings screen shows
     private @Nullable Integer myRgb;
     private List<String> myNames = List.of();
     private String waiting = "join a server";
@@ -149,15 +149,7 @@ public final class Detector {
         } catch (Throwable t) {
             failed = true;
             failedConnection = mc.getConnection();
-            LOG.error("Egger Detector hit an error and switched itself off", t);
-            try {
-                if (mc.level != null) {
-                    MessageSender.local(mc, Component.literal("Stopped because of an error (" + t + "). It starts again when you rejoin, or when you switch it off and on. Details are in the game log.")
-                            .withStyle(ChatFormatting.RED));
-                }
-            } catch (Throwable ignored) {
-                // nothing more we can do
-            }
+            LOG.error("Egger Detector hit an error and switched itself off (it starts again when you rejoin, or switch it off and on)", t);
             resetSession();
         }
     }
@@ -194,10 +186,6 @@ public final class Detector {
             unlock(mc, "you changed world");
             roundEggs.clear();
             lastLabels = List.of();
-        }
-        String problem = EggerConfig.takeLoadProblem();
-        if (problem != null) {
-            MessageSender.local(mc, Component.literal(problem).withStyle(ChatFormatting.RED));
         }
         EggerConfig cfg = EggerConfig.get();
         long now = nowMs();
@@ -301,8 +289,8 @@ public final class Detector {
                 send(mc, EggerConfig.get(), a);
             }
         }
-        if (egg != null && reason != null && EggerConfig.get().statusMessages) {
-            MessageSender.local(mc, Component.literal("Stopped guarding " + labelName(egg) + ": " + reason + ".").withStyle(ChatFormatting.YELLOW));
+        if (egg != null && reason != null) {
+            LOG.info("Egger Detector: stopped guarding {}: {}", labelName(egg), reason);
         }
         egg = null;
         lockedRgb = null;
@@ -531,13 +519,6 @@ public final class Detector {
         waiting = "";
         LOG.info("Egger Detector: guarding {} at {}, {} (color {} via {})", pick.text(), fmt(egg.x()), fmt(egg.z()),
                 myRgb == null ? "none" : ColorMatcher.hex(myRgb), verdict.source());
-        if (cfg.statusMessages) {
-            String delay = cfg.startDelaySeconds > 0 ? " Warnings start in " + trim(cfg.startDelaySeconds) + "s." : "";
-            Integer labelRgb = pick.rgb();
-            MessageSender.local(mc, Component.literal("Guarding ").withStyle(ChatFormatting.GREEN)
-                    .append(Component.literal(pick.text()).withStyle(s -> labelRgb == null ? s : s.withColor(labelRgb)))
-                    .append(Component.literal(" at " + fmt(egg.x()) + ", " + fmt(egg.z()) + "." + delay).withStyle(ChatFormatting.GREEN)));
-        }
     }
 
     /** While locked: if our egg's label shows up somewhere else, the egg was moved. */
@@ -592,9 +573,6 @@ public final class Detector {
         eggMissingTicks = 0;
         tracker.forgetPositions();
         LOG.info("Egger Detector: egg moved to {}, {}", fmt(egg.x()), fmt(egg.z()));
-        if (cfg.statusMessages) {
-            MessageSender.local(mc, Component.literal("Your egg moved to " + fmt(egg.x()) + ", " + fmt(egg.z()) + ".").withStyle(ChatFormatting.YELLOW));
-        }
     }
 
     private void checkEggStillThere(Minecraft mc) {
@@ -705,43 +683,7 @@ public final class Detector {
         return s;
     }
 
-    // ------------------------------------------------------------------ for the screen and HUD
-
-    /** One-line state for the HUD; null when there is nothing to show. */
-    @Nullable Component hudLine(Minecraft mc) {
-        EggerConfig cfg = EggerConfig.get();
-        if (!cfg.enabled || mc.level == null) {
-            return null;
-        }
-        if (failed) {
-            return Component.literal("Egger: stopped (error)").withStyle(ChatFormatting.RED);
-        }
-        if (egg == null) {
-            return Component.literal("Egger: waiting - " + waiting).withStyle(ChatFormatting.GRAY);
-        }
-        Component name = Component.literal(labelName(egg)).withStyle(s -> egg.labelRgb() == null ? s.withColor(ChatFormatting.WHITE) : s.withColor(egg.labelRgb()));
-        long left = armedAtMs - nowMs();
-        if (left > 0) {
-            return Component.literal("Egger: guarding ").withStyle(ChatFormatting.GRAY).append(name)
-                    .append(Component.literal(" in " + (left + 999) / 1000 + "s").withStyle(ChatFormatting.GRAY));
-        }
-        int biggest = 0;
-        for (RadiusRule r : cfg.radii) {
-            if (warns(r)) {
-                biggest = Math.max(biggest, r.radius);
-            }
-        }
-        if (biggest == 0) {
-            return Component.literal("Egger: ").withStyle(ChatFormatting.GRAY).append(name)
-                    .append(Component.literal(" | no radius is on (or all are empty)").withStyle(ChatFormatting.GRAY));
-        }
-        int inside = tracker.countInside(biggest);
-        double nearest = tracker.nearestDistance();
-        String tail = " | " + (inside == 0 ? "nobody" : inside + (inside == 1 ? " player" : " players")) + " within " + biggest
-                + (Double.isInfinite(nearest) ? "" : " | nearest " + (int) Math.floor(nearest));
-        return Component.literal("Egger: ").withStyle(ChatFormatting.GRAY).append(name)
-                .append(Component.literal(tail).withStyle(inside > 0 ? ChatFormatting.RED : ChatFormatting.GRAY));
-    }
+    // ------------------------------------------------------------------ for the settings screen
 
     /** Lines for the top of the settings screen. */
     List<Component> statusLines(Minecraft mc) {
@@ -794,9 +736,5 @@ public final class Detector {
 
     private static String fmt(double v) {
         return Integer.toString((int) Math.floor(v));
-    }
-
-    private static String trim(double v) {
-        return v == Math.rint(v) ? Long.toString((long) v) : String.format(Locale.ROOT, "%.1f", v);
     }
 }

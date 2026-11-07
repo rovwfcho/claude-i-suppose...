@@ -5,13 +5,17 @@ color of your name in the tab list ("Orange" name → the egg labelled **Orange'
 **warns your team in chat** when other players come inside the radii you set around it.
 Distances are measured **sideways only**: height doesn't count.
 
+It shows you **nothing of its own** – no status line on screen, no notes in chat. The only
+messages it ever makes are the radius warnings you set up (sent to chat, or *Only me*). What
+it is doing is shown at the top of its settings screen, and details go to the game log.
+
 ---
 
 ## Install
 
 1. Fabric Loader **0.18.4 or newer** for Minecraft 26.1.2.
 2. Put these in `.minecraft/mods`:
-   - `eggerdetector-1.0.0.jar` (this mod; **Cloth Config is already inside it**)
+   - `eggerdetector-1.0.1.jar` (this mod; **Cloth Config is already inside it**)
    - **Fabric API** for 26.1.2 (tested with `0.155.3+26.1.2`): <https://modrinth.com/mod/fabric-api>
    - **Mod Menu** (recommended, for the settings button; tested with `18.0.2`): <https://modrinth.com/mod/modmenu>
 3. Start the game. Settings: **Mods → Egger Detector → ⚙ (config button)**, or bind the key
@@ -19,8 +23,8 @@ Distances are measured **sideways only**: height doesn't count.
 
 Client-only: the server needs nothing, and the mod works on any server.
 
-`eggerdetector-1.0.0.jar` SHA-256:
-`eef222f63d4bfc655405dce8baded76f6f1ef372a9c74026bb19eb68fa6d5fee`
+`eggerdetector-1.0.1.jar` SHA-256:
+`fe03ae7e62585effd94ea8f2f168ad3c4c6f34c5cd36f4463442f256396c5f49`
 
 ---
 
@@ -45,7 +49,7 @@ Client-only: the server needs nothing, and the mod works on any server.
    closest egg*). In the pre-game glass boxes your name has no team color yet, so nothing
    starts; when the round starts and names get their colors, it locks onto your egg. It never
    starts guarding while you are dead or spectating.
-   You see *"Guarding Orange's Egg at x, z. Warnings start in 3s."* in chat (only you).
+   The settings screen shows what it is guarding.
    If guarding stops in the middle of a round (your egg was broken, you switched the mod off
    and on), it only takes an egg **with the same name** again until you change world or egg
    settings – so an enemy egg whose name is another word for your color (you are Lime, they
@@ -74,8 +78,8 @@ Client-only: the server needs nothing, and the mod works on any server.
    normal chat to your team chat). A message starting with `/` runs as a command. Each radius
    can instead be set to **Only me** (shown only to you). At most one chat message every 1.5 s
    (setting, minimum 1 s), so the server's spam protection doesn't kick you – extra messages wait
-   in line (up to 10; beyond that the oldest is dropped and you get a note; a warning that waited
-   more than 15 s is out of date and dropped with a note). The mod also keeps its own copy of
+   in line (up to 10; beyond that the oldest is dropped; a warning that waited more than 15 s is
+   out of date and dropped; both are written to the game log). The mod also keeps its own copy of
    the server's spam counter, **including the lines you type, the commands you click (counted
    when they really go out – after a confirmation screen only once you press Run) and what other
    mods send**, and waits a moment if you just sent a burst, always leaving room for 3 quick
@@ -83,8 +87,7 @@ Client-only: the server needs nothing, and the mod works on any server.
    once a second), so it also holds back when the server lags or freezes, and nothing is sent
    while the connection stalls (checked in a simulation: lag down to 5 TPS, connection stalls up
    to 30 s, server freezes up to 15 s, your own typing in between).
-9. **Stops guarding** (and tells you why, except when you leave the server or a proxy moves you
-   to another server) when you change
+9. **Stops guarding** (the reason goes to the game log) when you change
    world/server (lobby ↔ map), your name loses or changes its team color for more than 1 second
    (not while you are dead or spectating – servers often give you a "respawning" color then;
    with a typed *Color name override* it keeps guarding and uses your new color for teammates),
@@ -111,9 +114,6 @@ Every option has a **Reset** button and a tooltip; there is a search bar at the 
 |---|---|---|
 | (status) | – | Your detected tab color and the egg being guarded (read when the screen opens). |
 | Enabled | Yes | On/off switch for the whole mod (also bindable to a key). |
-| Chat notes | Yes | Notes only you see: egg found, guarding stopped and why, egg moved. |
-| Status line | Yes | One line in a top corner: guarded egg, players within your largest radius, nearest distance (or "no radius is on"). |
-| Status line position | Top left | Top left / Top right. |
 | Sound | Yes | A ping only you hear when a warning goes out (higher pitch for your smallest radius); a low note if your egg disappears. |
 
 ### Your egg
@@ -159,8 +159,7 @@ are kept; a file that can't be read is kept as `eggerdetector.json.broken`). Adv
 
 - **The mod only sees what the game shows you.** Players and egg labels are only known to your
   client within the server's *entity tracking range* (often 48–128 blocks, set by the
-  server). A radius bigger than that, or an egg far away from you, can't be watched. The
-  status line shows *nobody within …* / the nearest distance so you can see it working.
+  server). A radius bigger than that, or an egg far away from you, can't be watched.
 - Once guarding started, it keeps guarding that egg wherever you go – but it can only warn
   about players your game can see.
 - If your chat is set to **Hidden** in Options, the server refuses chat messages; warnings
@@ -169,8 +168,8 @@ are kept; a file that can't be read is kept as `eggerdetector.json.broken`). Adv
   *Gap between messages*.
 - The spam safety follows the server's own clock, which the server sends once a second (vanilla
   does; servers built on it normally do too). On a server that never sends it, chat warnings are
-  never sent: each one is dropped after 15 s with a *Not sent, it waited too long* note
-  (*Only me* warnings still show). That is the safe way round: it never risks a kick.
+  never sent: each one is dropped after 15 s (written to the game log; *Only me* warnings
+  still show). That is the safe way round: it never risks a kick.
 - On an extremely bad connection (2.5 s or more round trip) together with a server freeze of
   5–15 s and you typing 8 lines around it, the simulation could still reach the kick (8 of 2772
   cases). At up to 2 s round trip: never.
@@ -195,8 +194,10 @@ are kept; a file that can't be read is kept as `eggerdetector.json.broken`). Adv
 - **Unit tests** for the game-independent logic: 98 checks, run on every build.
 - **Debugging passes**: each pass = the full in-game run + an independent review of the whole
   code. Bugs found were fixed and the next pass started over; passes 15 and 16 found nothing
-  (two clean passes in a row). The jar here is the Gradle build: its classes are byte-identical
-  to the ones tested, and it passed the full in-game run itself too.
+  (two clean passes in a row).
+- **Version 1.0.1** only removes the mod's own on-screen and chat messages (status line, chat
+  notes, the *Chat notes* / *Status line* settings). It was compiled with zero warnings and the
+  unit tests pass; the full in-game run above was done on 1.0.0, before this removal.
 - `build.bat` was tested with Wine (paths with spaces, `&`, `!` and parentheses).
 - **Not tested**: a real Windows double-click of `build.bat`, your actual server and its plugins,
   and signed chat on an online-mode server (the test server ran offline).
@@ -222,7 +223,7 @@ are kept; a file that can't be read is kept as `eggerdetector.json.broken`). Adv
 ### Rebuild it yourself
 Windows: double-click **`build.bat`** (needs Java 25: e.g. Eclipse Temurin 25). The jar is
 copied to `OUTPUT\`. Linux/macOS: `./build.sh`. Or run `gradlew build` and take
-`build/libs/eggerdetector-1.0.0.jar`.
+`build/libs/eggerdetector-1.0.1.jar`.
 
 ---
 
@@ -237,7 +238,6 @@ copied to `OUTPUT\`. Linux/macOS: `./build.sh`. Or run `gradlew build` and take
 | `src/main/java/com/eggerdetector/core/MessageFormatter.java` | Placeholders, chat-safe text, 256 limit. |
 | `src/main/java/com/eggerdetector/TabColors.java` | Reads a name's color from the tab list. |
 | `src/main/java/com/eggerdetector/MessageSender.java` | Sends chat/commands with the gap between messages. |
-| `src/main/java/com/eggerdetector/StatusHud.java` | The status line. |
 | `src/main/java/com/eggerdetector/gui/EggerConfigScreen.java` | The settings screen (Cloth Config). |
 | `src/main/java/com/eggerdetector/config/` | Settings and the JSON file. |
 | `src/main/java/com/eggerdetector/mixin/` | Two small hooks: counts every chat line/command that goes to the server, and reads the server's clock. |

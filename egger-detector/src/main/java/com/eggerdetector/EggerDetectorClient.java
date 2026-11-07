@@ -6,12 +6,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 /** Entry point (client only). */
@@ -31,7 +27,6 @@ public final class EggerDetectorClient implements ClientModInitializer {
             handleKeys(mc);
             Detector.INSTANCE.onEndTick(mc);
         });
-        HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.fromNamespaceAndPath(MOD_ID, "status"), new StatusHud());
     }
 
     private static void handleKeys(Minecraft mc) {
@@ -40,10 +35,6 @@ public final class EggerDetectorClient implements ClientModInitializer {
             c.enabled = !c.enabled;
             EggerConfig.apply(c);
             Detector.INSTANCE.onSettingsChanged();
-            if (mc.level != null) {
-                MessageSender.local(mc, Component.literal(c.enabled ? "switched ON" : "switched OFF")
-                        .withStyle(c.enabled ? ChatFormatting.GREEN : ChatFormatting.RED));
-            }
         }
         while (settingsKey.consumeClick()) {
             if (mc.screen == null) {

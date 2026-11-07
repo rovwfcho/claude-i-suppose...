@@ -32,13 +32,7 @@ public final class EggerConfig {
     // vanilla kicks at 10 quick chat messages and forgives one per second: never send faster than that
     public static final double MAX_COOLDOWN = 3600, MAX_GROUP = 10, MIN_GAP = 1, MAX_GAP = 10, MAX_START_DELAY = 60;
 
-    /** Where the on-screen status line sits. */
-    public enum HudPosition { TOP_LEFT, TOP_RIGHT }
-
     public boolean enabled = true;
-    public boolean statusMessages = true;
-    public boolean showHud = true;
-    public HudPosition hudPosition = HudPosition.TOP_LEFT;
     public boolean sound = true;
     /** Your color name as written on your egg; blank = read it from your name color in the tab list. */
     public String colorOverride = "";
@@ -57,7 +51,6 @@ public final class EggerConfig {
     public List<ColorMatcher.Entry> palette = ColorMatcher.defaultPalette();
 
     private static EggerConfig current = defaults();
-    private static String loadProblem;
 
     public static EggerConfig defaults() {
         EggerConfig c = new EggerConfig();
@@ -70,19 +63,9 @@ public final class EggerConfig {
         return current;
     }
 
-    /** Problem met while loading the file (shown once in chat), or null. */
-    public static String takeLoadProblem() {
-        String p = loadProblem;
-        loadProblem = null;
-        return p;
-    }
-
     public EggerConfig copy() {
         EggerConfig c = new EggerConfig();
         c.enabled = enabled;
-        c.statusMessages = statusMessages;
-        c.showHud = showHud;
-        c.hudPosition = hudPosition;
         c.sound = sound;
         c.colorOverride = colorOverride;
         c.labelFormat = labelFormat;
@@ -110,9 +93,6 @@ public final class EggerConfig {
         colorOverride = colorOverride.strip();
         if (labelFormat == null || !labelFormat.toLowerCase(Locale.ROOT).contains(LabelParser.COLOR_PLACEHOLDER)) {
             labelFormat = LabelParser.DEFAULT_FORMAT;
-        }
-        if (hudPosition == null) {
-            hudPosition = HudPosition.TOP_LEFT;
         }
         startDelaySeconds = clamp(startDelaySeconds, 0, MAX_START_DELAY, 3);
         cooldownSeconds = clamp(cooldownSeconds, 0, MAX_COOLDOWN, 20);
@@ -196,7 +176,6 @@ public final class EggerConfig {
             } catch (IOException moveError) {
                 LOG.error("Egger Detector: could not move the broken settings file aside", moveError);
             }
-            loadProblem = "Your settings file could not be read (" + e.getMessage() + "), defaults are used. The old file was saved as eggerdetector.json.broken.";
             current = defaults();
             save(current);
         }
@@ -228,9 +207,6 @@ public final class EggerConfig {
         JsonObject o = new JsonObject();
         o.addProperty("configVersion", 1);
         o.addProperty("enabled", enabled);
-        o.addProperty("statusMessages", statusMessages);
-        o.addProperty("showHud", showHud);
-        o.addProperty("hudPosition", hudPosition.name());
         o.addProperty("sound", sound);
         o.addProperty("colorOverride", colorOverride);
         o.addProperty("labelFormat", labelFormat);
@@ -271,9 +247,6 @@ public final class EggerConfig {
         EggerConfig d = defaults();
         EggerConfig c = new EggerConfig();
         c.enabled = bool(o, "enabled", d.enabled);
-        c.statusMessages = bool(o, "statusMessages", d.statusMessages);
-        c.showHud = bool(o, "showHud", d.showHud);
-        c.hudPosition = enumValue(o, "hudPosition", HudPosition.class, d.hudPosition);
         c.sound = bool(o, "sound", d.sound);
         c.colorOverride = string(o, "colorOverride", d.colorOverride);
         c.labelFormat = string(o, "labelFormat", d.labelFormat);
@@ -314,7 +287,7 @@ public final class EggerConfig {
             }
             if (c.radii.isEmpty() && !rs.getAsJsonArray().isEmpty()) {
                 c.radii = d.radii; // nothing readable: better the defaults than silently no warnings
-                loadProblem = "The radii in your settings file could not be read, the default radii are used.";
+                LOG.warn("Egger Detector: the radii in the settings file could not be read, the default radii are used");
             }
         } else {
             c.radii = d.radii;
