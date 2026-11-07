@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    // Gradle itself (and Fabric Loom) must already run on Java 25; this plugin only lets Gradle
+    // fetch the Java used for compiling if it can't find one
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'egger-detector'

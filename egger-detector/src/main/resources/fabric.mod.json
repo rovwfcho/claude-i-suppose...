@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "eggerdetector",
+  "version": "${version}",
+  "name": "Egger Detector",
+  "description": "Finds your team's dragon egg (\"Orange's Egg\") from your name color in the tab list and warns your team in chat when other players come inside the radii you set around it (measured sideways only).",
+  "authors": ["secccaccccc"],
+  "license": "MIT",
+  "icon": "assets/eggerdetector/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.eggerdetector.EggerDetectorClient"],
+    "modmenu": ["com.eggerdetector.compat.ModMenuIntegration"]
+  },
+  "mixins": [
+    "eggerdetector.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
+    "fabric-api": "*",
+    "cloth-config": ">=26.1.154"
+  },
+  "recommends": {
+    "modmenu": "*"
+  }
+}

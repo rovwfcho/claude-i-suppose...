@@ -1,0 +1,75 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    // Mod Menu (only needed to compile the "Config" button; not bundled) and Cloth Config
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+        filter {
+            includeGroup 'maven.modrinth'
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+    // the settings screen; bundled inside the jar, so players don't need to install it separately
+    implementation "maven.modrinth:cloth-config:${project.cloth_config_version}"
+    include "maven.modrinth:cloth-config:${project.cloth_config_version}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': inputs.properties.version
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:all', '-Xlint:-classfile', '-Xlint:-processing']
+}
+
+// The logic checks in src/test are a plain main() (no test library to download).
+tasks.register('coreTests', JavaExec) {
+    description = 'Runs the checks of the game-independent logic (radii, cooldowns, labels, colors, messages).'
+    group = 'verification'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.eggerdetector.core.CoreTests'
+}
+tasks.named('test') {
+    enabled = false
+}
+tasks.named('check') {
+    dependsOn 'coreTests'
+}
+
+def licenseName = "LICENSE_${project.archives_base_name}"
+jar {
+    from('LICENSE') {
+        rename { licenseName }
+    }
+}

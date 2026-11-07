@@ -1,0 +1,2 @@
+eef222f63d4bfc655405dce8baded76f6f1ef372a9c74026bb19eb68fa6d5fee  eggerdetector-1.0.0.jar
+e7da9d837d3451ffcb95647f0ae686bff43e1b1fe6a6f821be9327bf14f14a86  egger-detector-1.0.0-source.zip
